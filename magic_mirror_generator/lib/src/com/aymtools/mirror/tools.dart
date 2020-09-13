@@ -1,5 +1,6 @@
 import 'dart:mirrors';
 
+import 'package:analyzer/dart/element/type.dart';
 import 'package:source_gen/source_gen.dart';
 
 T genAnnotation<T>(ConstantReader annotation) {
@@ -153,6 +154,26 @@ dynamic _type(TypeMirror typeMirror, ConstantReader reader) {
 //  }
   return null;
 }
+
+
+bool isDartCoreType(DartType type) =>
+    type.isDartCoreMap ||
+        type.isDynamic ||
+        type.isVoid ||
+        type.isBottom ||
+        type.isDartAsyncFuture ||
+        type.isDartAsyncFutureOr ||
+        type.isDartCoreBool ||
+        type.isDartCoreDouble ||
+        type.isDartCoreFunction ||
+        type.isDartCoreInt ||
+        type.isDartCoreList ||
+        type.isDartCoreNull ||
+        type.isDartCoreNum ||
+        type.isDartCoreObject ||
+        type.isDartCoreString ||
+        type.isDartCoreSymbol ||
+        type.isDartCoreSet;
 
 class Log {
   static void log(String msg) {

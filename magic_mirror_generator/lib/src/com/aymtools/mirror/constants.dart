@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:analyzer/dart/element/type.dart';
 import 'package:dart_style/dart_style.dart';
 import 'package:magic_mirror/mirror.dart';
 
@@ -135,21 +134,3 @@ Future<void> delDartFile(String fileName) async {
 //  return asStrTemp;
 //}
 
-bool isDartCoreType(DartType type) =>
-    type.isDartCoreMap ||
-    type.isDynamic ||
-    type.isVoid ||
-    type.isBottom ||
-    type.isDartAsyncFuture ||
-    type.isDartAsyncFutureOr ||
-    type.isDartCoreBool ||
-    type.isDartCoreDouble ||
-    type.isDartCoreFunction ||
-    type.isDartCoreInt ||
-    type.isDartCoreList ||
-    type.isDartCoreNull ||
-    type.isDartCoreNum ||
-    type.isDartCoreObject ||
-    type.isDartCoreString ||
-    type.isDartCoreSymbol ||
-    type.isDartCoreSet;

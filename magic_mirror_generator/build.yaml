@@ -4,45 +4,15 @@ targets:
     builders:
       # The end-user of a builder which applies "source_gen|combining_builder"
       # may configure the builder to ignore specific lints for their project
-      magic_mirror_generator|mirror_scan:
+      magic_mirror_generator|mirror:
         enabled: true
         generate_for:
           - lib/**.dart
-        options:
-          ignore_for_file:
-            - lib/**/**.aymtools.dart
-      magic_mirror_generator|mirror_init:
-        enabled: true
-        generate_for:
-          - lib/**/mirror_config.dart
-      magic_mirror_generator|mirror:
-        enabled: true
-
 
 builders:
-
-#  mirror_scan:
-#    import: 'package:magic_mirror_generator/src/com/aymtools/mirror/builder.dart'
-#    builder_factories: [ 'scan' ]
-#    build_extensions: { '.dart': [ '.scan.mirror.aymtools.dart' ] }
-#    #    is_optional: true
-#    #    runs_before: ['mirror_generator|mirror']
-#    #    applies_builders: ['mirror_generator|mirror_init']
-#    #    auto_apply: all_packages
-#    auto_apply: root_package
-#    build_to: cache
-#
-#  mirror_init:
-#    import: 'package:magic_mirror_generator/src/com/aymtools/mirror/builder.dart'
-#    builder_factories: [ 'init' ]
-#    build_extensions: { 'mirror.dart': [ '.init.mirror.aymtools.dart' ] }
-#    runs_before: [ 'magic_mirror_generator|mirror_scan' ]
-#    auto_apply: root_package
-#    build_to: cache
-
   mirror:
     import: 'package:magic_mirror_generator/src/com/aymtools/mirror/builder.dart'
     builder_factories: [ 'mirror' ]
-    build_extensions: { 'mirror.dart': [ '.init.mirror.aymtools.dart' ] }
+    build_extensions: { '.dart': [ '.mirror.aymtools.dart' ] }
     auto_apply: root_package
     build_to: source
