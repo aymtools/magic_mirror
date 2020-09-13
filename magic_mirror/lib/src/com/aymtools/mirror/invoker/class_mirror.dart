@@ -94,11 +94,14 @@ class MirrorFunction<T, R> {
   final List<MirrorParam> params;
   final TypeToken returnType;
   final MirrorFunctionInvoker<T, R> invoker;
+  final MirrorFunctionInstance<T> function;
 
   const MirrorFunction(this.annotation, this.annotationType, this.name,
-      this.params, this.returnType, this.invoker);
+      this.params, this.returnType, this.invoker, this.function);
 
   R invoke(T bean, Map<String, dynamic> params) => invoker.call(bean, params);
+
+  MirrorFunctionInstance<T> getFunction(T bean) => function.call(bean);
 
   String get key => annotation.key.isEmpty ? name : annotation.key;
 }
@@ -147,6 +150,7 @@ typedef MirrorConstructorInvoker<T> = T Function(Map<String, dynamic> params);
 
 typedef MirrorFieldGetInvoker<T, V> = V Function(T bean);
 typedef MirrorFieldSetInvoker<T, V> = void Function(T bean, V value);
+typedef MirrorFunctionInstance<T> = Function Function(T bean);
 
 typedef MirrorFunctionInvoker<T, R> = R Function(
     T bean, Map<String, dynamic> params);

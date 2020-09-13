@@ -1,5 +1,6 @@
 import 'package:magic_mirror/mirror.dart';
 import 'package:source_gen/source_gen.dart';
+
 // ignore: library_prefixes
 import 'dart:math' as Math;
 
@@ -336,6 +337,7 @@ String _genCodeFunction(
     ],
     TypeToken<${returnTypeStr}>(),
     ${_genCodeFunctionInvoker(classTypeName, function, paramTypeStrMaker, returnTypeStr)},
+    ${_genCodeFunctionInstance(classTypeName, function)},
   )
   '''
       .trim();
@@ -451,6 +453,13 @@ String _genCodeFunctionInvoker(String classTypeName, GFunction function,
     cmdAfter: cmdAfter,
   )}
    }
+  ''';
+}
+
+String _genCodeFunctionInstance(String classTypeName, GFunction function) {
+  if (function == null) return '';
+  return '''
+   (${classTypeName} bean ) => bean.${function.element.displayName}
   ''';
 }
 
