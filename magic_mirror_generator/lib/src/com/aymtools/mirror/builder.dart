@@ -12,11 +12,11 @@ import 'entities.dart';
 import 'gen_code.dart';
 import 'scan.dart';
 import 'tools.dart';
-
+///builder的入口
 Builder mirror(BuilderOptions options) => MirrorBuilder();
-
+///查找配置信息
 final TypeChecker _configChecker = TypeChecker.fromRuntime(MirrorConfig);
-
+///从lib/mirror_config.dart中加载配置信息
 Future<MirrorConfig> _initConfig(BuildStep buildStep) async {
   MirrorConfig config;
   var package = buildStep.inputId.package;
@@ -33,7 +33,7 @@ Future<MirrorConfig> _initConfig(BuildStep buildStep) async {
   config.importLibsNames['magic_mirror'] = 'mirror';
   return config;
 }
-
+///将所有医用的库扫描库中的类信息
 Future<List<GLibrary>> _importLibs(BuildStep buildStep) async {
   var list = <GLibrary>[];
   for (var lib in config.importLibsNames.entries) {
@@ -43,23 +43,26 @@ Future<List<GLibrary>> _importLibs(BuildStep buildStep) async {
   return list;
 }
 
-
+///所有已扫描到的库
 final Map<String, GLibrary> libraries = {};
-
-
-
+///记录配置信息
 MirrorConfig _config;
 
+///记录配置信息
 MirrorConfig get config => _config;
 
+///设定配置信息
 void setMirrorConfig(    MirrorConfig config) {
   if (config == null) return;
   _config = config;
 }
 
+///扫描器
 class MirrorBuilder implements Builder {
-  final writeDartFileFormatter = DartFormatter();
-  String implementationTemp, registerTemp;
+  ///输出文件自动格式化
+  final _writeDartFileFormatter = DartFormatter();
+  ///缓存已经生成的信息不在二次扫描生成
+  String _implementationTemp, _registerTemp;
 
   @override
   Map<String, List<String>> get buildExtensions {
@@ -138,20 +141,20 @@ class MirrorBuilder implements Builder {
         libs: libraryInfo.where((element) => element.isNotEmpty).toList());
 
     if (config.isGenInvoker) {
-      implementationTemp ??= writeDartFileFormatter
+      _implementationTemp ??= _writeDartFileFormatter
           .format(genMirrorImplementation(libraries.values.toList()));
       await buildStep.writeAsString(
-          _implementationFileOutput(buildStep), implementationTemp);
+          _implementationFileOutput(buildStep), _implementationTemp);
       await buildStep.writeAsString(_projectFileOutput(buildStep),
-          writeDartFileFormatter.format(genCodeMirrorInfo(lib)));
+          _writeDartFileFormatter.format(genCodeMirrorInfo(lib)));
 
-      registerTemp ??= writeDartFileFormatter.format(genMirrorRegister(
+      _registerTemp ??= _writeDartFileFormatter.format(genMirrorRegister(
           package, [
         'project.mirror.aymtools.dart',
         'implementation.mirror.aymtools.dart'
       ]));
       await buildStep.writeAsString(
-          _registerFileOutput(buildStep), registerTemp);
+          _registerFileOutput(buildStep), _registerTemp);
     }
     if (config.isGenLibExport) {
       await buildStep.writeAsString(_exportFileOutput(buildStep), '');

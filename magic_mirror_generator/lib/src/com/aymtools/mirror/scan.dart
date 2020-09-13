@@ -94,18 +94,18 @@ GClass _scanClass(Element element, ConstantReader annotation) {
   }
   var constructors = classAnnotation.scanConstructors
       ? _scanConstructors(
-          classElement, !classAnnotation.scanConstructorsUsedBlackList)
+          classElement, !classAnnotation.scanConstructorsUsedBlockList)
       : <GConstructor>[];
 
   var fields = classAnnotation.scanFields
       ? _scanFields(element, classAnnotation.scanSuperFields,
-          !classAnnotation.scanFieldsUsedBlackList)
+          !classAnnotation.scanFieldsUsedBlockList)
       : <GField>[];
   fields = removeDuplicate<GField, String>(fields, (e) => e.element.name);
 
-  var functions = classAnnotation.scanMethods
-      ? _scanFunctions(element, classAnnotation.scanSuperMethods,
-          !classAnnotation.scanMethodsUsedBlackList)
+  var functions = classAnnotation.scanFunctions
+      ? _scanFunctions(element, classAnnotation.scanSuperFunctions,
+          !classAnnotation.scanFunctionsUsedBlockList)
       : <GFunction>[];
   functions =
       removeDuplicate<GFunction, String>(functions, (e) => e.element.name);
@@ -116,14 +116,14 @@ GClass _scanClass(Element element, ConstantReader annotation) {
 }
 
 List<GConstructor> _scanConstructors(
-    ClassElement element, bool scanUsedWhiteList) {
+    ClassElement element, bool scanUsedAllowList) {
   return element.constructors
       .where((ele) => !ele.displayName.startsWith('_'))
       .where((ele) =>
           '' == ele.displayName ||
-          (scanUsedWhiteList &&
+          (scanUsedAllowList &&
               _classConstructorAnnotation.firstAnnotationOf(ele) != null) ||
-          (!scanUsedWhiteList &&
+          (!scanUsedAllowList &&
               _classConstructorNotAnnotation.firstAnnotationOf(ele) == null))
       .map((e) => _scanConstructor(e))
       .toList(growable: true);
@@ -137,7 +137,7 @@ GConstructor _scanConstructor(ConstructorElement element) {
 }
 
 List<GField> _scanFields(
-    ClassElement element, bool scanSuper, bool scanUsedWhiteList) {
+    ClassElement element, bool scanSuper, bool scanUsedAllowList) {
   var fields = element.fields
       .where((ele) => !ele.displayName.startsWith('_'))
       //当前的gen 不支持set get的属性 不知道后续会不会支持
@@ -147,15 +147,15 @@ List<GField> _scanFields(
       //   return e;
       // })
       .where((ele) =>
-          (scanUsedWhiteList &&
+          (scanUsedAllowList &&
               _classFieldAnnotation.firstAnnotationOf(ele) != null) ||
-          (!scanUsedWhiteList &&
+          (!scanUsedAllowList &&
               _classFieldNotAnnotation.firstAnnotationOf(ele) == null))
       .map((e) => _scanField(e))
       .toList(growable: true);
   if (scanSuper) {
     fields.addAll(
-        _scanFields(element.supertype.element, scanSuper, scanUsedWhiteList));
+        _scanFields(element.supertype.element, scanSuper, scanUsedAllowList));
   }
   return fields;
 }
@@ -166,19 +166,19 @@ GField _scanField(FieldElement element) {
 }
 
 List<GFunction> _scanFunctions(
-    ClassElement element, bool scanSuper, bool scanUsedWhiteList) {
+    ClassElement element, bool scanSuper, bool scanUsedAllowList) {
   var functions = element.methods
       .where((ele) => !ele.displayName.startsWith('_'))
       .where((ele) =>
-          (scanUsedWhiteList &&
+          (scanUsedAllowList &&
               _classMethodAnnotation.firstAnnotationOf(ele) != null) ||
-          (!scanUsedWhiteList &&
+          (!scanUsedAllowList &&
               _classMethodNotAnnotation.firstAnnotationOf(ele) == null))
       .map((e) => _scanFunction(e))
       .toList(growable: true);
   if (scanSuper) {
     functions.addAll(_scanFunctions(
-        element.supertype.element, scanSuper, scanUsedWhiteList));
+        element.supertype.element, scanSuper, scanUsedAllowList));
   }
   return functions;
 }

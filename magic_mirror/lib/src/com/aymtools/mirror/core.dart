@@ -1,10 +1,14 @@
 import 'keygen.dart';
 
-/// 定义Bean生成器注解 dart特殊机制 自动化的入口
+/// 定义Class生成器注解 dart特殊机制 自动化的入口 必须为lib/mirror_config.dart 内
 class MirrorConfig {
+  ///需要扫描的类库
   final Map<String, String> importLibsNames;
 
+  ///是否生成执行内容 生成Register
   final bool isGenInvoker;
+
+  ///是否生成lib库文件 包含所有的注解的类
   final bool isGenLibExport;
 
   static const int GEN_GROUP_BY_NONE = 0;
@@ -26,17 +30,37 @@ class MirrorConfig {
 
 ///基本注解需要的内容
 abstract class AnnBase {
+  ///key 主键
   final String key;
+
+  ///tag 附加内容
   final String tag;
+
+  ///ext 扩展属性
   final int ext;
+
+  ///flag 标识属性
   final bool flag;
+
+  ///extType 标识Type的属性 暂未实现
   final Type extType;
+
+  ///tag1 附加内容1
   final String tag1;
+
+  ///ext1 扩展属性1
   final int ext1;
+
+  ///flag1 标识属性1
   final bool flag1;
 
+  ///String的标识列表
   final List<String> tagList;
+
+  ///int的标识列表
   final List<int> extList;
+
+  ///Type的标识列表 暂未实现
   final List<Type> extTypeList;
 
   const AnnBase(
@@ -63,6 +87,7 @@ class MClass extends AnnBase {
       KeyGen.KEY_GEN_TYPE_BY_CLASS_SIMPLE_NAME;
   static const int KEY_GEN_TYPE_BY_SEQUENCE = KeyGen.KEY_GEN_TYPE_BY_SEQUENCE;
 
+  ///生成主键时的策略
   final int keyGenType;
 
   ///必须是继承目标或实现目标的类
@@ -71,13 +96,28 @@ class MClass extends AnnBase {
   ///继承任意一个目标或实现目标的类
   final List<Type> anyOneAssignableFrom;
 
+  ///必须扫描构造函数，不可更改
   final bool scanConstructors = true;
-  final bool scanConstructorsUsedBlackList;
-  final bool scanMethods;
-  final bool scanMethodsUsedBlackList;
-  final bool scanSuperMethods;
+
+  ///扫描构造函数时使用禁止模式 也就是默认加入
+  final bool scanConstructorsUsedBlockList;
+
+  ///是否开启扫描函数
+  final bool scanFunctions;
+
+  ///扫描函数时使用禁止模式 也就是默认加入
+  final bool scanFunctionsUsedBlockList;
+
+  ///扫描函数时是否扫描父类的函数
+  final bool scanSuperFunctions;
+
+  ///是否开启扫描属性
   final bool scanFields;
-  final bool scanFieldsUsedBlackList;
+
+  ///扫描属性时使用禁止模式 也就是默认加入
+  final bool scanFieldsUsedBlockList;
+
+  ///扫描属性时是否扫描父类的属性
   final bool scanSuperFields;
 
   const MClass({
@@ -94,12 +134,12 @@ class MClass extends AnnBase {
     this.needAssignableFrom = const [],
     this.anyOneAssignableFrom = const [],
     bool scanConstructors,
-    this.scanConstructorsUsedBlackList = false,
-    this.scanMethods = false,
-    this.scanMethodsUsedBlackList = false,
-    this.scanSuperMethods = false,
+    this.scanConstructorsUsedBlockList = false,
+    this.scanFunctions = false,
+    this.scanFunctionsUsedBlockList = false,
+    this.scanSuperFunctions = false,
     this.scanFields = false,
-    this.scanFieldsUsedBlackList = false,
+    this.scanFieldsUsedBlockList = false,
     this.scanSuperFields = false,
   }) : super(
             key: key,
@@ -112,19 +152,10 @@ class MClass extends AnnBase {
             tagList: tagList,
             extList: extList);
 
-//  bool get isNeedScanConstructors => scanConstructors;
-//
-//  bool get isNeedScanMethods => scanMethods || scanSuperMethods;
-//
-//  bool get isNeedScanSuperMethods => scanSuperMethods;
-//
-//  bool get isNeedScanFields => scanFields || scanSuperFields;
-//
-//  bool get isNeedScanSuperFields => scanSuperMethods;
 }
 
-/// 指定Bean的构造函数 结合 BeanCreateParam 来指定参数来源 不指定参数来源视为无参构造
-/// 只可以使用在命名构造函数上 使用在默认构造函数上时  会生成两种构造路径
+/// 指定Class的构造函数
+/// 当使用在默认构造函数上时（非命名构造函数）  会生成两种构造路径
 /// "" 代表默认构造函数 就是非命名构造函数
 class MConstructor extends AnnBase {
   const MConstructor({
@@ -149,36 +180,12 @@ class MConstructor extends AnnBase {
             extList: extList);
 }
 
-///黑名单模式模式时有效 不扫描的构造函数
+///禁止模式模式时有效 不扫描的构造函数
 class MConstructorNot {
   const MConstructorNot();
 }
 
-///一般用来测试接受到的参数 构造函数 必须为两个参数 的第一个参数为dynamic类型(调用者传入参数) 第二个为Map<String,dynamic>(uri中参数) 类型 若不符要求则不识别当前的构造函数
-class MConstructorFor2Params extends MConstructor {
-  const MConstructorFor2Params({
-    String key = '',
-    String tag = '',
-    int ext = -1,
-    bool flag = false,
-    String tag1 = '',
-    int ext1 = -1,
-    bool flag1 = false,
-    List<String> tagList = const [],
-    List<int> extList = const [],
-  }) : super(
-            key: key,
-            tag: tag,
-            ext: ext,
-            flag: flag,
-            tag1: tag1,
-            ext1: ext1,
-            flag1: flag1,
-            tagList: tagList,
-            extList: extList);
-}
-
-/// Bean构造函数或factory或方法体参数指定在map参数中的名字
+/// 函数的参数 构造函数也是 可用来指定map中key 与实际不一致
 class MParam extends AnnBase {
   const MParam({
     String key = '',
@@ -202,6 +209,7 @@ class MParam extends AnnBase {
             extList: extList);
 }
 
+/// 标注Class内的函数
 class MFunction extends AnnBase {
   const MFunction({
     String key = '',
@@ -225,11 +233,11 @@ class MFunction extends AnnBase {
             extList: extList);
 }
 
-///黑名单模式模式时有效 不扫描的方法
+///禁止模式模式时有效 不扫描的方法
 class MMethodNot {
   const MMethodNot();
 }
-
+///指定Class的属性
 class MField extends AnnBase {
   const MField({
     String key = '',
@@ -253,7 +261,7 @@ class MField extends AnnBase {
             extList: extList);
 }
 
-///黑名单模式模式时有效 不扫描的属性
+///禁止模式时有效 不扫描的属性
 class MFieldNot {
   const MFieldNot();
 }

@@ -6,7 +6,7 @@ class RoutePage extends MClass {
       : super(
             key: uri,
             keyGenType: MClass.KEY_GEN_TYPE_BY_URI,
-            scanConstructorsUsedBlackList: scanConstructorsUsedBlackList);
+            scanConstructorsUsedBlockList: scanConstructorsUsedBlackList);
 }
 
 /// 每个页面都必须添加一个接受此参数的构造函数
@@ -37,7 +37,7 @@ class RouterInterceptor extends MClass {
           keyGenType: MClass.KEY_GEN_TYPE_BY_CLASS_NAME,
           needAssignableFrom: const [RouterInterceptorBase],
           scanConstructors: true,
-          scanMethods: true,
+          scanFunctions: true,
           scanFields: true,
         );
 }

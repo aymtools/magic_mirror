@@ -316,7 +316,7 @@ class MagicMirror implements IMirrorRegister {
           return function.invoke(bean, params);
         } else {
           if (canThrowException) {
-            throw NoSuchMethodException(bean.runtimeType, methodName);
+            throw NoSuchFunctionException(bean.runtimeType, methodName);
           }
         }
       } else {

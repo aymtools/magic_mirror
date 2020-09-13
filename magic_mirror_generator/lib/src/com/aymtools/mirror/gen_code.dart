@@ -233,12 +233,12 @@ String _genCodeMClass(MClass mClass) {
       needAssignableFrom: ${mClass.needAssignableFrom},
       anyOneAssignableFrom: ${mClass.anyOneAssignableFrom},
       scanConstructors: ${mClass.scanConstructors},
-      scanConstructorsUsedBlackList: ${mClass.scanConstructorsUsedBlackList},
-      scanMethods: ${mClass.scanMethods},
-      scanMethodsUsedBlackList: ${mClass.scanMethodsUsedBlackList},
-      scanSuperMethods: ${mClass.scanSuperMethods},
+      scanConstructorsUsedBlackList: ${mClass.scanConstructorsUsedBlockList},
+      scanMethods: ${mClass.scanFunctions},
+      scanMethodsUsedBlackList: ${mClass.scanFunctionsUsedBlockList},
+      scanSuperMethods: ${mClass.scanSuperFunctions},
       scanFields: ${mClass.scanFields},
-      scanFieldsUsedBlackList: ${mClass.scanFieldsUsedBlackList},
+      scanFieldsUsedBlackList: ${mClass.scanFieldsUsedBlockList},
       scanSuperFields: ${mClass.scanSuperFields},
     )
   '''

@@ -1,7 +1,9 @@
 import '../tools.dart';
-
+///类信息无法找到异常
 class ClassNotFoundException implements Exception {
+  ///触发异常的uri
   final String uri;
+  ///其他信息
   final message;
 
   ClassNotFoundException(this.uri, {this.message});
@@ -14,25 +16,31 @@ class ClassNotFoundException implements Exception {
     return '$def\n$message';
   }
 }
-
-class NoSuchMethodException implements Exception {
+///函数未找到异常
+class NoSuchFunctionException implements Exception {
+  ///所发生异常时的类型
   final Type type;
-  final String methodName;
+  ///要查找的函数的名字
+  final String functionName;
+  ///其他信息
   final message;
 
-  NoSuchMethodException(this.type, this.methodName, {this.message});
+  NoSuchFunctionException(this.type, this.functionName, {this.message});
 
   @override
   String toString() {
-    final def = 'NoSuchMethodException:\n${type} : $methodName not found !';
+    final def = 'NoSuchFunctionException:\n${type} : $functionName not found !';
     if (message == null) return def;
     return '$def\n$message';
   }
 }
-
+///属性未找到异常
 class NoSuchFieldException implements Exception {
+  ///所发生异常时的类型
   final Type type;
+  ///要查找的属性的名字
   final String fieldName;
+  ///其他信息
   final message;
 
   NoSuchFieldException(this.type, this.fieldName, {this.message});
@@ -44,12 +52,17 @@ class NoSuchFieldException implements Exception {
     return '$def\n$message';
   }
 }
-
+///参数类型异常
 class IllegalArgumentException implements Exception {
+  ///所发生异常时的类型
   final Type type;
+  ///发生异常的函数。构造函数。属性的名字
   final String name;
+  ///目标所需要的类型
   final List<Pair<String, Type>> paramsTypes;
+  ///当前能提供的类型
   final List<Pair<String, Type>> valuesTypes;
+  ///其他信息
   final message;
 
   IllegalArgumentException(

@@ -3,12 +3,14 @@ import 'dart:mirrors';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:source_gen/source_gen.dart';
 
+///从DartObjec转换为具体的注解类型
 T genAnnotation<T>(ConstantReader annotation) {
   if (annotation == null) return null;
   var classMirror = reflectClass(T);
   return _gen(classMirror, annotation) as T;
 }
 
+///根据类型的反射来生成
 dynamic _gen(ClassMirror classMirror, ConstantReader annotation) {
   try {
     var methodMirror = classMirror.declarations.values
@@ -68,6 +70,7 @@ dynamic _gen(ClassMirror classMirror, ConstantReader annotation) {
   return null;
 }
 
+///获取Symbol的名字 反射时保证不变
 String _getName(Symbol symbol) {
 //  var i = reflect(symbol);
 //  i.type.declarations.forEach((key, value) {Log.log(key.toString());});
@@ -79,6 +82,7 @@ String _getName(Symbol symbol) {
   return symbol.toString().substring(8, symbol.toString().length - 2);
 }
 
+///自动转换过程
 dynamic _type(TypeMirror typeMirror, ConstantReader reader) {
   if (reader == null || reader.isNull) return null;
   if (reader.isString && String == typeMirror.reflectedType) {
@@ -155,27 +159,29 @@ dynamic _type(TypeMirror typeMirror, ConstantReader reader) {
   return null;
 }
 
-
+///判断type是否时core中的类型 无需导包的类型
 bool isDartCoreType(DartType type) =>
     type.isDartCoreMap ||
-        type.isDynamic ||
-        type.isVoid ||
-        type.isBottom ||
-        type.isDartAsyncFuture ||
-        type.isDartAsyncFutureOr ||
-        type.isDartCoreBool ||
-        type.isDartCoreDouble ||
-        type.isDartCoreFunction ||
-        type.isDartCoreInt ||
-        type.isDartCoreList ||
-        type.isDartCoreNull ||
-        type.isDartCoreNum ||
-        type.isDartCoreObject ||
-        type.isDartCoreString ||
-        type.isDartCoreSymbol ||
-        type.isDartCoreSet;
+    type.isDynamic ||
+    type.isVoid ||
+    type.isBottom ||
+    type.isDartAsyncFuture ||
+    type.isDartAsyncFutureOr ||
+    type.isDartCoreBool ||
+    type.isDartCoreDouble ||
+    type.isDartCoreFunction ||
+    type.isDartCoreInt ||
+    type.isDartCoreList ||
+    type.isDartCoreNull ||
+    type.isDartCoreNum ||
+    type.isDartCoreObject ||
+    type.isDartCoreString ||
+    type.isDartCoreSymbol ||
+    type.isDartCoreSet;
 
+///默认的日志工具
 class Log {
+  ///记录日志
   static void log(String msg) {
     print(msg);
   }

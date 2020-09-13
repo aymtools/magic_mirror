@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:example/tools/ann.dart';
 import 'package:example/entity/user.dart';
-import 'package:magic_mirror/mirror.dart';
 
 @RoutePage("router://example.router.aymtools.com/test1")
 class TestPage extends StatelessWidget {
@@ -95,7 +94,6 @@ class Test3Page extends StatelessWidget {
     title = "title form xml";
   }
 
-  @MConstructorFor2Params()
   Test3Page.form2Params(dynamic mapEntity, Map<String, dynamic> mapQuery) {
     title = "title form xml";
   }

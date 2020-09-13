@@ -1,4 +1,4 @@
-///定义查找Bean的根据的键 返回结果为uri
+///定义查找class的键的生成策略 返回结果必定为为uri
 abstract class KeyGen {
   static const int KEY_GEN_TYPE_BY_DEF = 0;
   static const int KEY_GEN_TYPE_BY_URI = 1;
@@ -26,11 +26,11 @@ abstract class KeyGen {
         return _GEN_TYPE_BY_CLASS_NAME;
     }
   }
-
+  ///由一些信息来生成uri的class key
   String gen(String key, String tag, int ext, String className, String libUri);
 }
 
-///直接使用传入的uri来生成
+///直接使用传入的key来生成对应的uri
 class _KeyGenByUri implements KeyGen {
   const _KeyGenByUri();
 
