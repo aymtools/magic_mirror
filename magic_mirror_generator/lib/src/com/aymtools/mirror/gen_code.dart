@@ -4,7 +4,7 @@ import 'package:source_gen/source_gen.dart';
 // ignore: library_prefixes
 import 'dart:math' as Math;
 
-import 'constants.dart';
+import 'builder.dart';
 import 'entities.dart';
 
 class _GenImports {

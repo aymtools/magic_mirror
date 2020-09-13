@@ -2,15 +2,16 @@ import 'dart:async';
 
 import 'package:analyzer/dart/element/element.dart';
 import 'package:build/build.dart';
-import 'constants.dart';
+import 'package:dart_style/dart_style.dart';
+import 'package:glob/glob.dart';
+import 'package:magic_mirror/mirror.dart';
+import 'package:path/path.dart' as p;
+import 'package:source_gen/source_gen.dart';
+
 import 'entities.dart';
 import 'gen_code.dart';
 import 'scan.dart';
 import 'tools.dart';
-import 'package:source_gen/source_gen.dart';
-import 'package:magic_mirror/mirror.dart';
-import 'package:glob/glob.dart';
-import 'package:path/path.dart' as p;
 
 Builder mirror(BuilderOptions options) => MirrorBuilder();
 
@@ -42,7 +43,22 @@ Future<List<GLibrary>> _importLibs(BuildStep buildStep) async {
   return list;
 }
 
+
+final Map<String, GLibrary> libraries = {};
+
+
+
+MirrorConfig _config;
+
+MirrorConfig get config => _config;
+
+void setMirrorConfig(    MirrorConfig config) {
+  if (config == null) return;
+  _config = config;
+}
+
 class MirrorBuilder implements Builder {
+  final writeDartFileFormatter = DartFormatter();
   String implementationTemp, registerTemp;
 
   @override
@@ -96,7 +112,7 @@ class MirrorBuilder implements Builder {
       if (conf == null) {
         throw 'can not find lib/mirror_config.dart';
       }
-      setMirrorConfig(conf, 'lib/mirror_config.dart', package);
+      setMirrorConfig(conf);
       Log.log(
           'config info isGenInvoker:${config.isGenInvoker} isGenLibExport:${config.isGenLibExport} importLibsNames:${config.importLibsNames}');
 
@@ -122,16 +138,18 @@ class MirrorBuilder implements Builder {
         libs: libraryInfo.where((element) => element.isNotEmpty).toList());
 
     if (config.isGenInvoker) {
-      implementationTemp ??= genMirrorImplementation(libraries.values.toList());
+      implementationTemp ??= writeDartFileFormatter
+          .format(genMirrorImplementation(libraries.values.toList()));
       await buildStep.writeAsString(
           _implementationFileOutput(buildStep), implementationTemp);
-      await buildStep.writeAsString(
-          _projectFileOutput(buildStep), genCodeMirrorInfo(lib));
+      await buildStep.writeAsString(_projectFileOutput(buildStep),
+          writeDartFileFormatter.format(genCodeMirrorInfo(lib)));
 
-      registerTemp ??= genMirrorRegister(package, [
+      registerTemp ??= writeDartFileFormatter.format(genMirrorRegister(
+          package, [
         'project.mirror.aymtools.dart',
         'implementation.mirror.aymtools.dart'
-      ]);
+      ]));
       await buildStep.writeAsString(
           _registerFileOutput(buildStep), registerTemp);
     }
