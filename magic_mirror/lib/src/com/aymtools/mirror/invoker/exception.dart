@@ -1,5 +1,3 @@
-
-
 import '../tools.dart';
 
 class ClassNotFoundException implements Exception {
@@ -61,7 +59,7 @@ class IllegalArgumentException implements Exception {
   @override
   String toString() {
     final def =
-        'IllegalArgumentException:\n${type} : $name illegal argument ! \n need params : ${paramsTypes} \n values params ${valuesTypes}';
+        'IllegalArgumentException:\n${type} : $name illegal argument ! \n need params : ${paramsTypes.map((e) => '${e.key}:${e.value}')} \n values params ${valuesTypes.map((e) => '${e.key}:${e.value}')}';
     if (message == null) return def;
     return '$def\n$message';
   }

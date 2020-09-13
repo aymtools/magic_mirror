@@ -97,9 +97,9 @@ class MagicMirror implements IMirrorRegister {
   static final Map<String, dynamic> _singleInstances = {};
 
   static T newInstanceS<T>(String uri,
-      {dynamic params, bool canThrowException = false}) {
+      {dynamic param, bool canThrowException = false}) {
     return instance.newInstanceByUri(uri,
-        params: params, canThrowException: canThrowException);
+        param: param, canThrowException: canThrowException);
   }
 
   static dynamic invokeMethodS<T>(T bean, String methodName,
@@ -180,7 +180,7 @@ class MagicMirror implements IMirrorRegister {
   ClassUriInfo parseUriInfo(Uri u) {
     var pathSegments = u.pathSegments;
 
-    Map<String, dynamic> queryParameters = Map.from(u.queryParameters);
+    var queryParameters = u.queryParameters;
 //    Map<String, List<String>> queryParametersAll = u.queryParametersAll;
     var namedConstructorInUri = '';
     if (pathSegments.isNotEmpty) {
@@ -264,31 +264,25 @@ class MagicMirror implements IMirrorRegister {
   }
 
   T newInstanceByUri<T>(String uri,
-      {dynamic params, bool canThrowException = false}) {
+      {dynamic param, bool canThrowException = false}) {
     var info = parseUriInfoByUriStr(uri);
     return newInstance(info.key, info.namedConstructorInUri, info.uriParams,
-        params: params, canThrowException: canThrowException);
+        param: param, canThrowException: canThrowException);
   }
 
   T newInstance<T>(
-      String classKey, String namedConstructor, Map<String, dynamic> uriParams,
-      {dynamic params, bool canThrowException = false}) {
+      String classKey, String namedConstructor, Map<String, String> uriParams,
+      {dynamic param, bool canThrowException = false}) {
     try {
+      var params = <String, dynamic>{};
       MirrorClass<T> clazz = load<T>(classKey);
       MirrorConstructor constructor;
       if (clazz != null &&
           (constructor = clazz.getConstructor(namedConstructor)) != null) {
         if (constructor.params.isNotEmpty) {
-          if (params != null) {
-            if (params is Map<String, dynamic>) {
-              uriParams.addAll(params);
-            } else {
-              uriParams =
-                  genParams(params, uriParams, constructor.params.first.key);
-            }
-          }
+          params = genParams(param, uriParams, constructor.params.first.key);
         }
-        return constructor.newInstanceForMap(uriParams);
+        return constructor.newInstanceForMap(params);
       }
       if (canThrowException) {
         throw ClassNotFoundException(classKey);
@@ -439,7 +433,7 @@ class MagicMirror implements IMirrorRegister {
 class ClassUriInfo {
   final String key;
   final String namedConstructorInUri;
-  final Map<String, dynamic> uriParams;
+  final Map<String, String> uriParams;
 
   ClassUriInfo(this.key, this.namedConstructorInUri, this.uriParams);
 }
