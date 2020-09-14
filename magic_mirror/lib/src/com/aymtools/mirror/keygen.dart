@@ -5,12 +5,14 @@ abstract class KeyGen {
   static const int KEY_GEN_TYPE_BY_CLASS_NAME = 2;
   static const int KEY_GEN_TYPE_BY_CLASS_SIMPLE_NAME = 3;
   static const int KEY_GEN_TYPE_BY_SEQUENCE = 4;
+  static const int KEY_GEN_TYPE_BY_SEQUENCE_URI = 5;
 
   static const KeyGen _GEN_TYPE_BY_URI = _KeyGenByUri();
   static const KeyGen _GEN_TYPE_BY_CLASS_NAME = _KeyGenByClassName();
   static const KeyGen _GEN_TYPE_BY_CLASS_SIMPLE_NAME =
       _KeyGenByClassSimpleName();
   static const KeyGen _GEN_TYPE_BY_SEQUENCE = _KeyGenBySequence();
+  static const KeyGen _GEN_TYPE_BY_SEQUENCE_URI = _KeyGenBySequenceAndUri();
 
   factory KeyGen(int type) {
     switch (type) {
@@ -22,10 +24,13 @@ abstract class KeyGen {
         return _GEN_TYPE_BY_CLASS_SIMPLE_NAME;
       case KEY_GEN_TYPE_BY_SEQUENCE:
         return _GEN_TYPE_BY_SEQUENCE;
+      case KEY_GEN_TYPE_BY_SEQUENCE_URI:
+        return _GEN_TYPE_BY_SEQUENCE_URI;
       default:
         return _GEN_TYPE_BY_CLASS_NAME;
     }
   }
+
   ///由一些信息来生成uri的class key
   String gen(String key, String tag, int ext, String className, String libUri);
 }
@@ -92,4 +97,19 @@ class _KeyGenBySequence implements KeyGen {
   String gen(
           String key, String tag, int ext, String className, String libUri) =>
       '/class/classSequence${++next}';
+}
+
+///自动生成 ${key}/class/classSequence$num  num自动增长
+class _KeyGenBySequenceAndUri implements KeyGen {
+  const _KeyGenBySequenceAndUri();
+
+  @override
+  String gen(String key, String tag, int ext, String className, String libUri) {
+    String keyUri = Uri.parse(key)
+        .replace(fragment: '', query: '', path: '')
+        .toString()
+        .replaceAll('?', '')
+        .replaceAll('#', '');
+    return '${keyUri}/class/classSequence${++_KeyGenBySequence.next}';
+  }
 }

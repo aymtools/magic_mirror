@@ -250,12 +250,12 @@ String _genCodeMClass(MClass mClass) {
       needAssignableFrom: ${mClass.needAssignableFrom},
       anyOneAssignableFrom: ${mClass.anyOneAssignableFrom},
       scanConstructors: ${mClass.scanConstructors},
-      scanConstructorsUsedBlackList: ${mClass.scanConstructorsUsedBlockList},
-      scanMethods: ${mClass.scanFunctions},
-      scanMethodsUsedBlackList: ${mClass.scanFunctionsUsedBlockList},
-      scanSuperMethods: ${mClass.scanSuperFunctions},
+      scanConstructorsUsedBlockList: ${mClass.scanConstructorsUsedBlockList},
+      scanFunctions: ${mClass.scanFunctions},
+      scanFunctionsUsedBlockList: ${mClass.scanFunctionsUsedBlockList},
+      scanSuperFunctions: ${mClass.scanSuperFunctions},
       scanFields: ${mClass.scanFields},
-      scanFieldsUsedBlackList: ${mClass.scanFieldsUsedBlockList},
+      scanFieldsUsedBlockList: ${mClass.scanFieldsUsedBlockList},
       scanSuperFields: ${mClass.scanSuperFields},
     )
   '''

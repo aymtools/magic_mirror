@@ -86,6 +86,7 @@ class MClass extends AnnBase {
   static const int KEY_GEN_TYPE_BY_CLASS_SIMPLE_NAME =
       KeyGen.KEY_GEN_TYPE_BY_CLASS_SIMPLE_NAME;
   static const int KEY_GEN_TYPE_BY_SEQUENCE = KeyGen.KEY_GEN_TYPE_BY_SEQUENCE;
+  static const int KEY_GEN_TYPE_BY_SEQUENCE_URI = KeyGen.KEY_GEN_TYPE_BY_SEQUENCE_URI;
 
   ///生成主键时的策略
   final int keyGenType;

@@ -43,7 +43,7 @@ class MagicMirror implements IMirrorRegister {
       });
       loadInitializer()
           .map((e) => newSingleInstance(e))
-          .whereType<MirrorInitializer>()
+          .whereType<Initializer>()
           .forEach((element) => element.onInit(instance));
       // _register
       //     .loadInitializer()
@@ -253,7 +253,7 @@ class MagicMirror implements IMirrorRegister {
 
   ///获取所有的自动扫描到的初始化触发器
   List<String> loadInitializer() =>
-      findKeys<OnMirrorInitializer, MirrorInitializer>();
+      findKeys<OnInitializer, Initializer>();
 
   ///根据注解类型 CLass的类型来获取对应的类信息
   List<String> findKeys<AnnotationType, ExtendsType>() => mirrorClassesK.values
