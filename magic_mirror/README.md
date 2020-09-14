@@ -1,4 +1,5 @@
-A simple command-line application.
+[![Pub Package](https://img.shields.io/pub/v/magic_mirror.svg)](https://pub.dev/packages/magic_mirror)
 
-Created from templates made available by Stagehand under a BSD-style
-[license](https://github.com/dart-lang/stagehand/blob/master/LICENSE).
+Provides [Dart Build System](https://github.com/dart-lang/build) builders for handling Class-Information.
+
+

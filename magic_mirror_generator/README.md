@@ -1,4 +1,15 @@
-A simple command-line application.
+[![Pub Package](https://img.shields.io/pub/v/magic_mirror_generator.svg)](https://pub.dev/packages/magic_mirror_generator)
 
-Created from templates made available by Stagehand under a BSD-style
-[license](https://github.com/dart-lang/stagehand/blob/master/LICENSE).
+Provides [Dart Build System](https://github.com/dart-lang/build) builders for handling Class-Information.
+
+The builders generate code when they find members annotated with classes defined
+in [package:magic_mirror](https://pub.dev/packages/magic_mirror).
+
+- To generate to/from Class-Information code for a class, annotate it with
+  `@MClass`. You can provide arguments to `MClass` to
+  configure the generated code.
+  [annotation values](https://pub.dev/packages/magic_mirror).
+
+
+## Setup and Example
+Please go [package:magic_mirror](https://pub.dev/packages/magic_mirror).
