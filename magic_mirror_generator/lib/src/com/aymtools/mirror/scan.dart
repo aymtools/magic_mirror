@@ -5,6 +5,7 @@ import 'entities.dart';
 import 'tools.dart';
 import 'package:source_gen/source_gen.dart';
 
+///扫描类库信息
 Future<GLibrary> scanLibrary(
     BuildStep buildStep, String libPackageName, String libDartFileName) async {
   GLibrary library;
@@ -22,6 +23,7 @@ Future<GLibrary> scanLibrary(
   return library;
 }
 
+///扫描类库中的具体类包信息
 Future<List<GLibraryInfo>> _scanExportedLibrary(LibraryElement lib) async {
   var result = await lib.exportedLibraries
       .where((element) => !element.isInSdk)
@@ -32,8 +34,10 @@ Future<List<GLibraryInfo>> _scanExportedLibrary(LibraryElement lib) async {
   return result;
 }
 
+///判断是否时MClass注解的类
 const TypeChecker _classChecker = TypeChecker.fromRuntime(MClass);
 
+///扫描所有的类包信息
 GLibraryInfo scanLibraryInfo(LibraryReader libraryReader) {
   var classes = libraryReader
       .annotatedWith(_classChecker)
@@ -45,19 +49,31 @@ GLibraryInfo scanLibraryInfo(LibraryReader libraryReader) {
   return info;
 }
 
+///构造函数的注解判定器
 const TypeChecker _classConstructorAnnotation =
     TypeChecker.fromRuntime(MConstructor);
+
+///构造函数的注解判定器 禁止模式时使用
 const TypeChecker _classConstructorNotAnnotation =
     TypeChecker.fromRuntime(MConstructorNot);
+
+///参数的注解判定器
 const TypeChecker _classParamAnnotation = TypeChecker.fromRuntime(MParam);
 
+///函数的注解判定器
 const TypeChecker _classMethodAnnotation = TypeChecker.fromRuntime(MFunction);
+
+///函数的注解判定器 禁止模式时使用
 const TypeChecker _classMethodNotAnnotation =
     TypeChecker.fromRuntime(MMethodNot);
 
+///属性的注解判定器
 const TypeChecker _classFieldAnnotation = TypeChecker.fromRuntime(MField);
+
+///属性的注解判定器 禁止模式时使用
 const TypeChecker _classFieldNotAnnotation = TypeChecker.fromRuntime(MFieldNot);
 
+///扫描类信息
 GClass _scanClass(Element element, ConstantReader annotation) {
   if (element.kind != ElementKind.CLASS) return null;
   var from = annotation.peek('needAssignableFrom');
@@ -115,6 +131,7 @@ GClass _scanClass(Element element, ConstantReader annotation) {
   return gClass;
 }
 
+///扫描类所有的构造函数信息
 List<GConstructor> _scanConstructors(
     ClassElement element, bool scanUsedAllowList) {
   return element.constructors
@@ -129,6 +146,7 @@ List<GConstructor> _scanConstructors(
       .toList(growable: true);
 }
 
+///扫描类构造函数信息 具体信息
 GConstructor _scanConstructor(ConstructorElement element) {
   return GConstructor(
       element,
@@ -136,6 +154,7 @@ GConstructor _scanConstructor(ConstructorElement element) {
       element.parameters.map((e) => _scanParam(e)).toList(growable: true));
 }
 
+///扫描类所有的属性信息
 List<GField> _scanFields(
     ClassElement element, bool scanSuper, bool scanUsedAllowList) {
   var fields = element.fields
@@ -160,11 +179,13 @@ List<GField> _scanFields(
   return fields;
 }
 
+///扫描类属性信息 具体信息
 GField _scanField(FieldElement element) {
   return GField(element,
       ConstantReader(_classFieldAnnotation.firstAnnotationOf(element)));
 }
 
+///扫描类所有的函数信息
 List<GFunction> _scanFunctions(
     ClassElement element, bool scanSuper, bool scanUsedAllowList) {
   var functions = element.methods
@@ -183,6 +204,7 @@ List<GFunction> _scanFunctions(
   return functions;
 }
 
+///扫描类的函数信息 具体信息
 GFunction _scanFunction(MethodElement element) {
   return GFunction(
       element,
@@ -190,6 +212,7 @@ GFunction _scanFunction(MethodElement element) {
       element.parameters.map((e) => _scanParam(e)).toList(growable: true));
 }
 
+//扫描函数所需的参数信息
 GParam _scanParam(ParameterElement element) {
   return GParam(element,
       ConstantReader(_classParamAnnotation.firstAnnotationOf(element)));

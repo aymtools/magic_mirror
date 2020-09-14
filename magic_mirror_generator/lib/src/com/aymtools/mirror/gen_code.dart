@@ -7,29 +7,36 @@ import 'dart:math' as Math;
 import 'builder.dart';
 import 'entities.dart';
 
+///生成导入包的缓冲器
 class _GenImports {
   final GImports imports;
 
   _GenImports(this.imports);
 
+  ///类的类型转换为包含As的String
   String classTypeStrMaker(GClass clazz) =>
       imports.getTypeNameAsStr(clazz.type.value);
 
+  ///类的类型转换为包含As的String
   String paramTypeStrMaker(GParam param) =>
       imports.getTypeNameAsStr(param.type.value);
 
+  ///field的类型转换为包含As的String
   String fieldTypeStrMaker(GField field) =>
       imports.getTypeNameAsStr(field.type.value);
 
+  ///returnType的类型转换为包含As的String
   String returnTypeStrMaker(GFunction function) {
     var r = imports.getTypeNameAsStr(function.returnType.value);
     return 'void' == r ? 'Void' : r;
   }
 
+  ///注解的具体类型的类型转换为包含As的String
   String annTypeStrMaker(ConstantReader ann) => ann == null || ann.isNull
       ? 'null'
       : imports.getTypeNameAsStr(ann.objectValue.type);
 
+  ///获取转换后的需要的所有的导入包信息
   String get importsValue => imports
       .getImports()
       .entries
@@ -39,6 +46,7 @@ class _GenImports {
       .fold('', (p, e) => '$p$e');
 }
 
+///生成魔镜的注册器
 String genMirrorRegister(String defPackage, List<String> other) {
   var imports = GImports();
   var otherStr = other
@@ -52,6 +60,7 @@ ${_genCodeLibInfoMirrorRegisterTemplate([], true, otherStr)}
   ''';
 }
 
+///根据类包信息生成的注册器
 String genMirrorLibInfoMirror(GLibraryInfo libraryInfo,
     {bool importOtherLib = false, GImports defImports}) {
   var imports = defImports ?? GImports();
@@ -72,6 +81,7 @@ String genMirrorLibInfoMirror(GLibraryInfo libraryInfo,
   return importsValue + content + register;
 }
 
+///生成project所有的引用类库的注册信息
 String genMirrorImplementation(List<GLibrary> implementations) {
   var imports = GImports(otherImportLibrary: implementations);
   var genImport = _GenImports(imports);
@@ -97,6 +107,7 @@ String genMirrorImplementation(List<GLibrary> implementations) {
   return importsValue + content.join('') + register;
 }
 
+///生成类库的注册器
 String genCodeMirrorInfo(GLibrary library) {
   var imports = GImports(otherImportLibrary: libraries.values.toList());
   var genImport = _GenImports(imports);
@@ -125,6 +136,7 @@ String genCodeMirrorInfo(GLibrary library) {
           genImport.classTypeStrMaker);
 }
 
+///根据所有的类信息生成注册器
 String _genCodeLibInfoMirrorRegister(
   List<GClass> libraryClass,
   String libAsNameStr,
@@ -138,6 +150,7 @@ String _genCodeLibInfoMirrorRegister(
   return _genCodeLibInfoMirrorRegisterTemplate(classes, false, []);
 }
 
+///根据所有的类信息生成注册器
 String _genCodeLibInfoMirrorRegisterTemplate(
     List<String> classes, bool isFinal, List<String> otherRegister) {
   return '''  
@@ -165,6 +178,7 @@ class Register implements IMirrorRegister {
   // List<String> loadTypeAdapter() =>${typeAdapters.isEmpty ? '[]' : typeAdapters.map((e) => "'$e'").toList()};
 }
 
+///根据类包信息信息生成注册器 的类信息内容
 String genCodeLibInfoMirrorInfo(
     GLibraryInfo library,
     String Function(ConstantReader param) annTypeStrMaker,
@@ -179,6 +193,7 @@ String genCodeLibInfoMirrorInfo(
       .fold('', (previousValue, element) => '$previousValue$element');
 }
 
+///生成具体的类信息
 String _genCodeClassMirrorInfo(
     GClass clazz,
     String Function(ConstantReader param) annTypeStrMaker,
@@ -210,6 +225,7 @@ String _genCodeClassMirrorInfo(
   ''';
 }
 
+///生成具体的注解的base信息
 String _genCodeAnnBase(AnnBase ann) {
   return ''' 
       key: '${ann.key}',
@@ -224,6 +240,7 @@ String _genCodeAnnBase(AnnBase ann) {
   ''';
 }
 
+///生成具体的类注解信息
 String _genCodeMClass(MClass mClass) {
   if (mClass == null) return 'null';
   return '''
@@ -245,6 +262,7 @@ String _genCodeMClass(MClass mClass) {
       .trim();
 }
 
+///生成函数信息
 String _genCodeConstructor(
     String classTypeName,
     GConstructor constructor,
@@ -271,6 +289,7 @@ String _genCodeConstructor(
       .trim();
 }
 
+///生成函数的注解信息
 String _genCodeMConstructor(MConstructor constructor) {
   if (constructor == null) return 'null';
   return '''
@@ -280,6 +299,7 @@ String _genCodeMConstructor(MConstructor constructor) {
   ''';
 }
 
+///生成属性信息
 String _genCodeField(
     String classTypeName,
     GField field,
@@ -305,6 +325,7 @@ String _genCodeField(
       .trim();
 }
 
+///生成属性的注解信息
 String _genCodeMField(MField field) {
   if (field == null) return 'null';
   return '''
@@ -314,6 +335,7 @@ String _genCodeMField(MField field) {
   ''';
 }
 
+///生成函数信息
 String _genCodeFunction(
     String classTypeName,
     GFunction function,
@@ -343,6 +365,7 @@ String _genCodeFunction(
       .trim();
 }
 
+///生成函数的注解信息
 String _genCodeMFunction(MFunction function) {
   if (function == null) return 'null';
   return '''
@@ -352,6 +375,7 @@ String _genCodeMFunction(MFunction function) {
   ''';
 }
 
+///生成函数的参数信息
 String _genCodeParam(
     GParam param,
     String Function(ConstantReader param) annTypeStrMaker,
@@ -373,6 +397,7 @@ String _genCodeParam(
       .trim();
 }
 
+///生成函数的参数注解信息
 String _genCodeMParam(MParam param) {
   if (param == null) return 'null';
   return '''
@@ -382,6 +407,7 @@ String _genCodeMParam(MParam param) {
   ''';
 }
 
+///生成构造函数的代理执行器
 String _genCodeConstructorInvoker(
     String classTypeName,
     GConstructor constructor,
@@ -404,6 +430,7 @@ String _genCodeConstructorInvoker(
   ''';
 }
 
+///生成属性的getter的代理执行器
 String _genCodeFieldGetInvoker(
     String classTypeName, GField field, String fieldTypeStr) {
   if (field == null) return '';
@@ -412,6 +439,7 @@ String _genCodeFieldGetInvoker(
   ''';
 }
 
+///生成属性的setter的代理执行器
 String _genCodeFieldSetInvoker(
     String classTypeName, GField field, String fieldTypeStr) {
   if (field == null) return '';
@@ -429,6 +457,7 @@ String _genCodeFieldSetInvoker(
   ''';
 }
 
+///生成函数的代理执行器
 String _genCodeFunctionInvoker(String classTypeName, GFunction function,
     String Function(GParam param) maker, String returnTypeStr) {
   if (function == null) return '';
@@ -456,6 +485,7 @@ String _genCodeFunctionInvoker(String classTypeName, GFunction function,
   ''';
 }
 
+///生成直接获取函数对象函数的代理执行器
 String _genCodeFunctionInstance(String classTypeName, GFunction function) {
   if (function == null) return '';
   return '''
@@ -463,6 +493,7 @@ String _genCodeFunctionInstance(String classTypeName, GFunction function) {
   ''';
 }
 
+///生成函数的调用判断逻辑
 String _genCodeFunctionInvokerForMapParamsSwitch(
     String CMD,
     List<GParam> params,
@@ -498,6 +529,7 @@ String _genCodeFunctionInvokerForMapParamsSwitch(
   return (ifsStr);
 }
 
+///生成函数的调用判断逻辑
 String _genCodeFunctionInvokerForMapNamedParamsSwitch(
     String CMD, List<_IFGenerator> params,
     {List<String> cmdAfter = const []}) {
@@ -512,6 +544,7 @@ String _genCodeFunctionInvokerForMapNamedParamsSwitch(
   ''';
 }
 
+///生成函数的调用判断逻辑
 String _genCodeFunctionInvokerBody(
     String CMD, List<GParam> params, List<String> values,
     {List<String> cmdAfter = const []}) {
@@ -559,16 +592,24 @@ List<List<_IFGenerator>> _combination(List<GParam> source, String paramsMapName,
   return result;
 }
 
+///生成函数的调用判断逻辑  判断是否包含 以及后续处理
 class _IFGenerator {
+  ///判断的参数类型
   final GParam param;
+
+  ///在map中的name
   final String paramsMapName;
+
+  ///是否是已选模式
   bool isSelect;
 
+  ///设定参数转换为string时的转换器
   final String Function(GParam param) makeParamTypeStr;
 
   _IFGenerator(this.param, this.paramsMapName, this.makeParamTypeStr,
       {this.isSelect = false});
 
+  ///生成的where内容
   String get whereStr {
     if (!isSelect) return "!$paramsMapName.containsKey('${param.paramKey}')";
     var w =
@@ -576,6 +617,7 @@ class _IFGenerator {
     return w;
   }
 
+  ///生成的具体执行内容
   String get contentStr {
     if (!isSelect) return '';
     var c = '';
@@ -583,6 +625,7 @@ class _IFGenerator {
     return c;
   }
 
+  ///深clone
   _IFGenerator clone() {
     var r = _IFGenerator(param, paramsMapName, makeParamTypeStr,
         isSelect: isSelect);

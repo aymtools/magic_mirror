@@ -2,6 +2,7 @@ import 'package:magic_mirror/mirror.dart';
 
 import 'type_adapter.dart';
 
+///类信息注册器
 abstract class IMirrorRegister {
   List<MirrorClass> classInfos();
 
@@ -10,6 +11,7 @@ abstract class IMirrorRegister {
 // List<String> loadTypeAdapter();
 }
 
+///所有的工具入口 利用预生成的策略生成可能用到的类的类似反射的使用模式
 class MagicMirror implements IMirrorRegister {
   MagicMirror._();
 
@@ -29,6 +31,7 @@ class MagicMirror implements IMirrorRegister {
 
   final Map<Type, MirrorClass> mirrorClassesT = {};
 
+  ///绑定注册器，只可以调用一次
   void bindRegister(IMirrorRegister register) {
     if (_register == null) {
       _register = _registers == null
@@ -53,10 +56,12 @@ class MagicMirror implements IMirrorRegister {
     }
   }
 
+  ///绑定注册器，只可以调用一次
   static void register(IMirrorRegister register) {
     instance.bindRegister(register);
   }
 
+  ///绑定注册器列表，可以的多次调用 当调用register后不可再次调用
   static void registers(IMirrorRegister register) {
     if (instance._register == null) {
       instance._registers = instance._registers == null
@@ -68,10 +73,12 @@ class MagicMirror implements IMirrorRegister {
     }
   }
 
+  ///注册类型转换器，根据已有的类信息生成
   void registerTypeAdapter2(String typeAdapterClassUri) {
     registerTypeAdapter(newSingleInstance(typeAdapterClassUri));
   }
 
+  ///注册类型转换器
   void registerTypeAdapter(TypeConvert convert) {
     if (convert != null) {
       if (_typeAdapter[convert.from] == null) {
@@ -81,53 +88,65 @@ class MagicMirror implements IMirrorRegister {
     }
   }
 
+  ///分析从uri中可提取的类信息 包括key 构造函数 uri参数
   static ClassUriInfo parseClassUriInfoByUriStr(String uri) =>
       parseClassUriInfo(Uri.parse(uri));
 
+  ///分析从uri中可提取的类信息 包括key 构造函数 uri参数
   static ClassUriInfo parseClassUriInfo(Uri u) => instance.parseUriInfo(u);
 
+  ///分析从uri中可提取的类的key信息
   static String getClassKey(Uri u) {
     return instance.parseUriInfo(u).key;
   }
 
+  ///分析从uri中可提取的类的命名构造函数
   static String getNamedConstructorInUri(Uri u) {
     return instance.parseUriInfo(u).namedConstructorInUri;
   }
 
   static final Map<String, dynamic> _singleInstances = {};
 
+  ///根据uri 和传入的参数信息实例化对象
   static T newInstanceS<T>(String uri,
       {dynamic param, bool canThrowException = false}) {
     return instance.newInstanceByUri(uri,
         param: param, canThrowException: canThrowException);
   }
 
+  ///调用该对象的指定方法
   static dynamic invokeMethodS<T>(T bean, String methodName,
           {Map<String, dynamic> params, bool canThrowException = true}) =>
       instance.invokeMethod(bean, methodName,
           params: params, canThrowException: canThrowException);
 
+  ///获取对象中的属性值
   static dynamic getFieldValueS<T>(T bean, String fieldName,
           {bool canThrowException = true}) =>
       instance.getFieldValue(bean, fieldName,
           canThrowException: canThrowException);
 
+  ///设定对象中的属性值
   static void setFieldValueS<T>(T bean, String fieldName, dynamic value,
           {bool canThrowException = true}) =>
       instance.setFieldValue(bean, fieldName, value,
           canThrowException: canThrowException);
 
+  ///将所有的可获取的属性全部获取 为map
   static Map<String, dynamic> getAllFieldValue<T>(T bean,
           {bool canThrowException = true}) =>
       instance.getFieldValues(bean, canThrowException: canThrowException);
 
+  ///将map中的值自动赋值到对应是属性上
   static void setFieldValueByMap<T>(T bean, Map<String, dynamic> values,
           {bool canThrowException = true}) =>
       instance.setFieldValues(bean, values,
           canThrowException: canThrowException);
 
+  ///尝试将form转换为目标类型
   static To convertTypeS<To>(dynamic from) => instance.convertType(from);
 
+  ///尝试将form转换为目标类型
   To convertType<To>(dynamic from) {
     if (from == null) return null;
     if (from is To) return from;
@@ -141,42 +160,53 @@ class MagicMirror implements IMirrorRegister {
     return from as To;
   }
 
+  //判断是否包含 from到to的类型转换器
   static bool hasTypeAdapterS(Type from, Type to) =>
       instance.hasTypeAdapter(from, to);
 
+  //判断是否包含 from到to的类型转换器
   static bool hasTypeAdapterS1<From>(Type to) =>
       instance.hasTypeAdapter(From, to);
 
+  //判断是否包含 from到to的类型转换器
   static bool hasTypeAdapterS2<To>(Type from) =>
       instance.hasTypeAdapter(from, To);
 
+  //判断是否包含 from对象转换为to的类型转换器
   static bool hasTypeAdapterS2Value<To>(dynamic fromValue) => fromValue == null
       ? true
       : (fromValue is To) || hasTypeAdapterS2<To>(fromValue.runtimeType);
 
+  //判断是否包含 from对象转换为to的类型转换器
   static bool hasTypeAdapterSValue(dynamic fromValue, Type to) =>
       fromValue == null
           ? true
           : (fromValue.runtimeType == to) ||
               hasTypeAdapterS(fromValue.runtimeType, to);
 
+  //判断是否包含 from到to的类型转换器
   static bool hasTypeAdapterS3<From, To>() => instance.hasTypeAdapter(From, To);
 
+  ///获取泛型类型的具体类型
   static Type genType<T>() => T;
 
+  //判断是否包含 from对象转换为to的类型转换器
   bool hasTypeAdapter(Type from, Type to) =>
       from == to ||
       Object == to ||
       (_typeAdapter.containsKey(from) && _typeAdapter[from].containsKey(to));
 
+  ///判断form是否可以转换为目标类型
   bool canCovertTo<To>(dynamic fromValue) => fromValue == null
       ? true
       : (fromValue is To) || hasTypeAdapterS2<To>(fromValue.runtimeType);
 
+  ///分析从uri中可提取的类信息 包括key 构造函数 uri参数
   ClassUriInfo parseUriInfoByUriStr(String uri) {
     return parseUriInfo(Uri.parse(uri));
   }
 
+  ///分析从uri中可提取的类信息 包括key 构造函数 uri参数
   ClassUriInfo parseUriInfo(Uri u) {
     var pathSegments = u.pathSegments;
 
@@ -218,51 +248,53 @@ class MagicMirror implements IMirrorRegister {
     return ClassUriInfo(uri, namedConstructorInUri, queryParameters);
   }
 
+  ///获取所有的自动扫描到的类型转换器
   List<String> loadTypeAdapter() => findKeys<TypeAdapter, TypeConvert>();
 
+  ///获取所有的自动扫描到的初始化触发器
   List<String> loadInitializer() =>
       findKeys<OnMirrorInitializer, MirrorInitializer>();
 
-  // List<String> find<T>({Type annotationType}) => mirrorClassesK.values
-  //     .where((element) => element.type is TypeToken<T>)
-  //     .where((element) =>
-  //         annotationType == null ||
-  //         element.annotationType.typeValue == annotationType)
-  //     .map((e) => e.key)
-  //     .toList();
-
+  ///根据注解类型 CLass的类型来获取对应的类信息
   List<String> findKeys<AnnotationType, ExtendsType>() => mirrorClassesK.values
       .where((element) => element.type is TypeToken<ExtendsType>)
       .where((element) => element.annotationType is TypeToken<AnnotationType>)
       .map((e) => e.key)
       .toList();
 
+  ///根据注解类型来获取对应的类信息
   List<String> findKeysByAnnotation<AnnotationType>() => mirrorClassesK.values
       .where((element) => element.annotationType is TypeToken<AnnotationType>)
       .map((e) => e.key)
       .toList();
 
+  ///根据CLass的类型来获取对应的类信息
   List<String> findKeysExtends<ExtendsType>() => mirrorClassesK.values
       .where((element) => element.type is TypeToken<ExtendsType>)
       .map((e) => e.key)
       .toList();
 
+  ///获取所有的注册的类信息列表
   @override
   List<MirrorClass> classInfos() => _register?.classInfos() ?? [];
 
+  ///根据key信息自动加载对应的类信息
   MirrorClass<T> load<T>(String classKey) =>
       mirrorClassesK.containsKey(classKey) ? mirrorClassesK[classKey] : null;
 
+  ///根据具体类型 加载对应的类信息 ，可能会找不到 未注册
   MirrorClass<T> mirror<T>() {
     Type type = genType<T>();
     return mirrorClassesT.containsKey(type) ? mirrorClassesT[type] : null;
   }
 
+  ///判断根据key和命名构造函数 是否可以构造该类的实例
   bool canNewInstance(String classKey, String namedConstructor) {
     MirrorClass clazz = load(classKey);
     return clazz != null && clazz.getConstructor(namedConstructor) != null;
   }
 
+  ///根据uri 和传入的参数信息实例化对象
   T newInstanceByUri<T>(String uri,
       {dynamic param, bool canThrowException = false}) {
     var info = parseUriInfoByUriStr(uri);
@@ -270,6 +302,7 @@ class MagicMirror implements IMirrorRegister {
         param: param, canThrowException: canThrowException);
   }
 
+  ///根据key 命名构造函数 uri参数 和传入的参数信息实例化对象
   T newInstance<T>(
       String classKey, String namedConstructor, Map<String, String> uriParams,
       {dynamic param, bool canThrowException = false}) {
@@ -295,6 +328,7 @@ class MagicMirror implements IMirrorRegister {
     return null;
   }
 
+  ///根据uri实例化单例模式的类实例
   T newSingleInstance<T>(String uri, {bool canThrowException = false}) {
     var info = parseUriInfoByUriStr(uri);
     if (_singleInstances.containsKey(info.key)) {
@@ -306,6 +340,7 @@ class MagicMirror implements IMirrorRegister {
     return result;
   }
 
+  ///执行类中的指定方法
   R invokeMethod<T, R>(T bean, String methodName,
       {Map<String, dynamic> params, bool canThrowException = true}) {
     try {
@@ -332,6 +367,7 @@ class MagicMirror implements IMirrorRegister {
     return null;
   }
 
+  ///执行为类对象的属性赋值
   void setFieldValue<T, V>(T bean, String fieldName, V value,
       {bool canThrowException = true}) {
     try {
@@ -357,6 +393,7 @@ class MagicMirror implements IMirrorRegister {
     }
   }
 
+  ///获取为类对象的属性的具体值
   V getFieldValue<T, V>(T bean, String fieldName,
       {bool canThrowException = true}) {
     try {
@@ -383,6 +420,7 @@ class MagicMirror implements IMirrorRegister {
     return null;
   }
 
+  ///将map中的值自动赋值到对应是属性上
   void setFieldValues<T>(T bean, Map<String, dynamic> values,
       {bool canThrowException = true}) {
     try {
@@ -407,6 +445,7 @@ class MagicMirror implements IMirrorRegister {
     }
   }
 
+  ///将所有的可获取的属性全部获取 为map
   Map<String, dynamic> getFieldValues<T>(T bean,
       {bool canThrowException = true}) {
     var result = <String, dynamic>{};
@@ -430,14 +469,21 @@ class MagicMirror implements IMirrorRegister {
   }
 }
 
+///从uri中解析到的类信息
 class ClassUriInfo {
+  ///类的ky
   final String key;
+
+  ///命名构造函数的名字
   final String namedConstructorInUri;
+
+  ///uir中包含的参数信息
   final Map<String, String> uriParams;
 
   ClassUriInfo(this.key, this.namedConstructorInUri, this.uriParams);
 }
 
+///具体的代理执行器 自动实现多个嵌套等操作
 class _MirrorRegister implements IMirrorRegister {
   final IMirrorRegister _primaryInvoker;
 
@@ -445,6 +491,7 @@ class _MirrorRegister implements IMirrorRegister {
 
   _MirrorRegister(this._primaryInvoker);
 
+  ///嵌套第二个执行器
   void bindSecRegister(IMirrorRegister secInvoker) {
     if (_secInvoker == null) {
       _secInvoker = secInvoker;
@@ -456,26 +503,7 @@ class _MirrorRegister implements IMirrorRegister {
     }
   }
 
-  // @override
-  // List<String> loadInitializer() {
-  //   var result = List.from(_primaryInvoker.loadInitializer())
-  //       .whereType<String>()
-  //       .toList(growable: true);
-  //   if (_secInvoker != null) {
-  //     result.addAll(_secInvoker.loadInitializer());
-  //   }
-  //   return result;
-  // }
-
-  // @override
-  // List<String> loadTypeAdapter() {
-  //   var result = List.from(_primaryInvoker.loadTypeAdapter())
-  //       .whereType<String>()
-  //       .toList(growable: true);
-  //   if (_secInvoker != null) result.addAll(_secInvoker.loadTypeAdapter());
-  //   return result;
-  // }
-
+  ///获取所有的嵌套的执行器中注册的类信息
   @override
   List<MirrorClass> classInfos() {
     var result = List.from(_primaryInvoker.classInfos())

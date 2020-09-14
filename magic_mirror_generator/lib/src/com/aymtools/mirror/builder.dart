@@ -63,7 +63,7 @@ class MirrorBuilder implements Builder {
   final _writeDartFileFormatter = DartFormatter();
   ///缓存已经生成的信息不在二次扫描生成
   String _implementationTemp, _registerTemp;
-
+  ///输入和输出定义
   @override
   Map<String, List<String>> get buildExtensions {
     return const {
@@ -75,7 +75,7 @@ class MirrorBuilder implements Builder {
       ]
     };
   }
-
+  ///register的输出文件
   static AssetId _registerFileOutput(BuildStep buildStep) {
     return AssetId(
       buildStep.inputId.package,
@@ -84,6 +84,7 @@ class MirrorBuilder implements Builder {
     );
   }
 
+  ///project的输出文件
   static AssetId _projectFileOutput(BuildStep buildStep) {
     return AssetId(
       buildStep.inputId.package,
@@ -92,6 +93,7 @@ class MirrorBuilder implements Builder {
     );
   }
 
+  ///implementation的输出文件
   static AssetId _implementationFileOutput(BuildStep buildStep) {
     return AssetId(
       buildStep.inputId.package,
@@ -100,13 +102,14 @@ class MirrorBuilder implements Builder {
     );
   }
 
+  ///export 类库的输出文件
   static AssetId _exportFileOutput(BuildStep buildStep) {
     return AssetId(
       buildStep.inputId.package,
       p.join('lib', 'mirror_export.dart'),
     );
   }
-
+  ///构建过程
   @override
   FutureOr<void> build(BuildStep buildStep) async {
     var package = buildStep.inputId.package;

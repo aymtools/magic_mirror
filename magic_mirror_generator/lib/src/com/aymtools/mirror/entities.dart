@@ -5,17 +5,20 @@ import 'package:source_gen/source_gen.dart';
 
 import 'tools.dart';
 
+///用来生成执行类时自动计入的需要的导入包
 class GImports {
   final Set<GLibrary> _otherImportLibrary = {};
 
   final Map<String, String> _imports = {};
 
+  ///默认加入的lib库
   GImports({List<GLibrary> otherImportLibrary}) {
     if (otherImportLibrary != null && otherImportLibrary.isNotEmpty) {
       addLibs(otherImportLibrary);
     }
   }
 
+  ///添加默认加入的lib库
   void addLibs(List<GLibrary> otherImportLibrary) {
     _otherImportLibrary.addAll(otherImportLibrary);
 
@@ -83,10 +86,12 @@ class GImports {
     });
   }
 
+  ///获取扫描到的结果
   Map<String, String> getImports({bool usedCache = true}) {
     return _imports;
   }
 
+  ///解析并加入结果
   String _parseTypeAndInnerType(DartType type) {
     if (type.isDynamic) {
       return 'dynamic';
@@ -112,6 +117,7 @@ class GImports {
     return libAs.isEmpty ? name : '$libAs.${name}';
   }
 
+  ///加入的结果的格式化
   String _formatAsStr(String uri) {
     if ('' == uri || !uri.endsWith('.dart')) return uri;
     var asStr = uri
@@ -139,6 +145,7 @@ class GImports {
     return asStrTemp;
   }
 
+  ///解析并加入结果
   MapEntry<String, String> _parseAddImportLib(LibraryElement lib) {
     if (lib == null) return MapEntry('', '');
     MapEntry<String, String> r;
@@ -157,6 +164,7 @@ class GImports {
     return r ?? _parseAddImports(lib.librarySource.uri.toString());
   }
 
+  ///解析并加入结果
   MapEntry<String, String> _parseAddImports(String librarySourceUriStr) {
     if ('dart.core' == librarySourceUriStr ||
         librarySourceUriStr.startsWith('dart:')) {
@@ -175,28 +183,38 @@ class GImports {
     return MapEntry(librarySourceUriStr, _imports[librarySourceUriStr]);
   }
 
+  ///解析并加入结果 根据DartType
   String getTypeNameAsStr(DartType type) {
     return _parseTypeAndInnerType(type);
   }
 
+  ///解析并加入结果 根据GLibrary
   String getLibAsNameStr(GLibrary library) => _formatAsStr(
       '${library.asName.isEmpty ? library.name : library.asName}.dart');
 
+  ///解析并加入结果 根据GLibraryInfo
   String getLibInfoAsNameStr(GLibraryInfo library) =>
       _formatAsStr(library.lib.source.uri.toString());
 
+  ///解析并加入结果 根据类的library uri信息
   String getUriAsNameStr(String uriStr) => _formatAsStr(uriStr);
 }
 
+///扫描到的类库
 class GLibrary {
+  ///类库的package
   final String package;
+
+  ///类库的name dartFileName
   final String name;
 
-//  final Map<String, List<GBean>> beans = {};
-//  final Map<String, List<GBeanCreator>> creators = {};
+  ///类库的name library name
   final String asName;
 
+  ///类库的类信息 dartFileName转换的来
   final LibraryElement lib;
+
+  ///类库中所有的类包信息
   final List<GLibraryInfo> _libs = [];
 
   GLibrary(this.package, this.name, this.asName,
@@ -204,6 +222,7 @@ class GLibrary {
     if (libs != null) _libs.addAll(libs);
   }
 
+  ///添加类包信息
   void addGLibraryInfo(GLibraryInfo info) {
     removeLib(info.uriStr);
     if (info.isNotEmpty) {
@@ -211,6 +230,7 @@ class GLibrary {
     }
   }
 
+  //移除类包信息
   bool removeLib(String libUriStr) {
     var infoOld =
         findFistWhere<GLibraryInfo>(_libs, (e) => libUriStr == e.uriStr);
@@ -221,53 +241,80 @@ class GLibrary {
     return false;
   }
 
+  ///判断是否在当前库中
   bool isInLib(Element element) {
     return lib == null
         ? false
         : lib.exportedLibraries.contains(element.library);
   }
 
+  ///是否时魔镜自身的库
   bool get isMirrorLib => 'magic_mirror' == package;
 
+  ///判断是否时当前执行环境的paoject库
   bool get isProjectLib => (null == asName || asName.isEmpty) && lib == null;
 
+  ///获取所有的类库信息
   List<GLibraryInfo> get libs => _libs;
 }
 
+///类库信息
 class GLibraryInfo {
+  ///类库信息的扫描对象
   final LibraryElement lib;
 
-//  Uri libSourceUri;
+  ///所有扫描到的类信息
   final List<GClass> classes;
+
+  ///所有扫描到的函数信息
   final List<GFunction> functions;
 
   GLibraryInfo(this.lib, List<GClass> classes, List<GFunction> functions)
       : classes = classes ?? [],
         functions = functions ?? [];
 
+  ///获取类库对应的uri信息
   String get uriStr => lib.librarySource.uri.toString();
 
+  ///判断当前类库中是否含有扫描到的内容
   bool get isNotEmpty => classes.isNotEmpty;
 }
 
+///扫描到的类型
 class GType {
+  ///类型的具体对象
   final Element element;
+
+  ///对应的类型的dartType
   final DartType value;
 
   GType(this.element, this.value);
 }
 
+///扫描到的类信息
 class GClass {
+  ///依据的key uri类型
   final String key;
+
+  ///扫描到的类对象的具体对象
   final ClassElement element;
+
+  ///扫描时的注解信息
   final MClass annotation;
+
+  ///扫描时的注解信息 原始信息
   final ConstantReader annotationValue;
 
+  ///类的具体type
   final GType type;
 
+  ///所有的扫描到的构造函数
   final List<GFunction> functions;
+
+  ///所有的扫描到的属性
   final List<GField> fields;
 
+  ///所有的扫描到的构造函数
   final List<GConstructor> constructors;
 
   GClass(
@@ -283,44 +330,58 @@ class GClass {
         functions = functions ?? [],
         fields = fields ?? [];
 
+  ///判断注解信息是否为空
   bool get annotationIsNull =>
       annotationValue == null || annotationValue.isNull;
 }
 
+///扫描到的类的构造函数信息
 class GConstructor {
+  ///扫描到的类的构造函数的具体信息
   final ConstructorElement element;
+
+  ///扫描时的注解信息
   final MConstructor annotation;
+
+  ///扫描时的注解信息 原始信息
   final ConstantReader annotationValue;
 
+  ///函数所需要的参数信息
   final List<GParam> params;
 
   GConstructor(this.element, this.annotationValue, List<GParam> params)
       : annotation = genAnnotation(annotationValue),
         params = params ?? [];
 
+  ///获取构造函数的具体key 依据注解和name生成
   String get namedConstructorInKey =>
       annotation == null || annotation.key == null || annotation.key.isEmpty
           ? element.name
           : annotation.key;
 
+  ///是否时默认构造函数
   bool get isDefConstructor => element.name.isEmpty;
 
-  bool get isConstructorCase2 =>
-      element.name.isEmpty &&
-      annotation != null &&
-      annotation.key != null &&
-      annotation.key.isNotEmpty;
-
+  ///判断注解信息是否为空
   bool get annotationIsNull =>
       annotationValue == null || annotationValue.isNull;
 }
 
+///扫描到的函数信息
 class GFunction {
+  ///扫描到的类的函数的具体信息
   final MethodElement element;
+
+  ///扫描时的注解信息
   final MFunction annotation;
+
+  ///扫描时的注解信息 原始信息
   final ConstantReader annotationValue;
+
+  ///函数所需要的参数信息
   final List<GParam> params;
 
+  ///函数的返回类型
   final GType returnType;
 
   GFunction(this.element, this.annotationValue, List<GParam> params)
@@ -328,49 +389,71 @@ class GFunction {
         returnType = GType(element.returnType.element, element.returnType),
         params = params ?? [];
 
+  ///获取函数的具体key 依据注解和name生成
   String get functionName =>
       annotation == null || annotation.key == null || annotation.key.isEmpty
           ? element.name
           : annotation.key;
 
+  ///判断注解信息是否为空
   bool get annotationIsNull =>
       annotationValue == null || annotationValue.isNull;
 }
 
+///扫描到的属性信息
 class GField {
+  ///扫描到的类的属性的具体信息
   final FieldElement element;
+
+  ///扫描时的注解信息
   final MField annotation;
+
+  ///扫描时的注解信息 原始信息
   final ConstantReader annotationValue;
+
+  ///属性的类型
   final GType type;
 
   GField(this.element, this.annotationValue)
       : annotation = genAnnotation(annotationValue),
         type = GType(element, element.type);
 
+  ///获取属性的具体key 依据注解和name生成
   String get fieldName =>
       annotation == null || annotation.key == null || annotation.key.isEmpty
           ? element.name
           : annotation.key;
 
+  ///判断注解信息是否为空
   bool get annotationIsNull =>
       annotationValue == null || annotationValue.isNull;
 }
 
+///扫描到的参数信息
 class GParam {
+  ///扫描到的参数具体信息
   final ParameterElement element;
+
+  ///扫描时的注解信息
   final MParam annotation;
+
+  ///扫描时的注解信息 原始信息
   final ConstantReader annotationValue;
+
+  ///参数的type
   final GType type;
 
   GParam(this.element, this.annotationValue)
       : annotation = genAnnotation(annotationValue),
         type = GType(element, element.type);
 
+  ///获取参数的具体key 依据注解和name生成
   String get paramKey =>
       annotation == null || annotation.key == null || annotation.key.isEmpty
           ? element.name
           : annotation.key;
 
+  ///判断注解信息是否为空
   bool get annotationIsNull =>
       annotationValue == null || annotationValue.isNull;
 }
