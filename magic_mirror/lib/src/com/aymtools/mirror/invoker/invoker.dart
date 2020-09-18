@@ -252,8 +252,7 @@ class MagicMirror implements IMirrorRegister {
   List<String> loadTypeAdapter() => findKeys<TypeAdapter, TypeConvert>();
 
   ///获取所有的自动扫描到的初始化触发器
-  List<String> loadInitializer() =>
-      findKeys<OnInitializer, Initializer>();
+  List<String> loadInitializer() => findKeys<OnInitializer, Initializer>();
 
   ///根据注解类型 CLass的类型来获取对应的类信息
   List<String> findKeys<AnnotationType, ExtendsType>() => mirrorClassesK.values
@@ -313,7 +312,11 @@ class MagicMirror implements IMirrorRegister {
       if (clazz != null &&
           (constructor = clazz.getConstructor(namedConstructor)) != null) {
         if (constructor.params.isNotEmpty) {
-          params = genParams(param, uriParams, constructor.params.first.key);
+          if (constructor.isConstructorMapArg) {
+            params = genParams(param, uriParams, null);
+          } else {
+            params = genParams(param, uriParams, constructor.params.first.key);
+          }
         }
         return constructor.newInstanceForMap(params);
       }

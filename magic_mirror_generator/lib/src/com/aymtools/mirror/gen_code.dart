@@ -391,7 +391,8 @@ String _genCodeParam(
     ${param.annotationIsNull ? '$annotationClass()' : _genCodeMParam(param.annotation)},
     TypeToken<${annotationClass}>(), 
     '${param.element.name}', 
-    TypeToken<${paramTypeStrMaker.call(param)}>()
+    TypeToken<${paramTypeStrMaker.call(param)}>(),
+    ${param.element.isNamed ? 'true' : 'false'}
   )
   '''
       .trim();
@@ -418,8 +419,25 @@ String _genCodeConstructorInvoker(
   var CMD = named.isEmpty
       ? 'return $classTypeName'
       : 'return $classTypeName.${named}';
+  if (constructor.isConstructorArgMap) {
+    return '''
+   (Map<String, dynamic> params) {
+     ${_genCodeFunctionInvokerBody(CMD, constructor.params, [
+      'params'
+    ], cmdAfter: [])}
+   }
+  ''';
+  }
+
   return '''
    (Map<String, dynamic> params) {
+   
+   //${constructor.isConstructorArgMap}
+   //${constructor.annotationIsNull}
+   //${constructor.params.length != 1 ? '略过' : constructor.params[0].element.isNamed || constructor.params[0].annotationIsNull || constructor.params[0].annotation.key.isNotEmpty}
+   //${constructor.params.length != 1 ? '略过' : constructor.params[0].type.value.isDartCoreMap}
+   
+   
      ${_genCodeFunctionInvokerForMapParamsSwitch(CMD, constructor.params, 'params', '''
         throw new IllegalArgumentException(${classTypeName},
             '${constructor.element.name}',

@@ -86,7 +86,8 @@ class MClass extends AnnBase {
   static const int KEY_GEN_TYPE_BY_CLASS_SIMPLE_NAME =
       KeyGen.KEY_GEN_TYPE_BY_CLASS_SIMPLE_NAME;
   static const int KEY_GEN_TYPE_BY_SEQUENCE = KeyGen.KEY_GEN_TYPE_BY_SEQUENCE;
-  static const int KEY_GEN_TYPE_BY_SEQUENCE_URI = KeyGen.KEY_GEN_TYPE_BY_SEQUENCE_URI;
+  static const int KEY_GEN_TYPE_BY_SEQUENCE_URI =
+      KeyGen.KEY_GEN_TYPE_BY_SEQUENCE_URI;
 
   ///生成主键时的策略
   final int keyGenType;
@@ -152,7 +153,6 @@ class MClass extends AnnBase {
             flag1: flag1,
             tagList: tagList,
             extList: extList);
-
 }
 
 /// 指定Class的构造函数
@@ -179,6 +179,11 @@ class MConstructor extends AnnBase {
             flag1: flag1,
             tagList: tagList,
             extList: extList);
+}
+
+///构造函数必须时必须的map参数 且只有一个参数Map<String,dynamic>类型的参数 默认是uri的参数叠加传入的Map参数 若传入的arg非map则以null的key的值存在
+class MConstructorMapArg extends MConstructor {
+  const MConstructorMapArg({String key = ''}) : super(key: key);
 }
 
 ///禁止模式模式时有效 不扫描的构造函数
@@ -238,6 +243,7 @@ class MFunction extends AnnBase {
 class MMethodNot {
   const MMethodNot();
 }
+
 ///指定Class的属性
 class MField extends AnnBase {
   const MField({

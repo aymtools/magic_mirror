@@ -12,7 +12,7 @@ class TypeToken<T> {
 
   @override
   bool operator ==(Object other) {
-    return super == other ||
+    return this == other ||
         (other is TypeToken && other.typeValue == typeValue);
   }
 }
@@ -94,6 +94,9 @@ class MirrorConstructor<T> {
   ///具体的执行器
   final MirrorConstructorInvoker<T> invoker;
 
+  static final _checkMapArgAnnotation = TypeToken<MConstructorMapArg>();
+  static final _checkMapType = TypeToken<Map<String, dynamic>>();
+
   const MirrorConstructor(this.annotation, this.annotationType, this.name,
       this.params, this.invoker);
 
@@ -102,6 +105,14 @@ class MirrorConstructor<T> {
 
   ///获取key信息 优先从注解中获取 当注解为空时返回扫描时的name
   String get key => annotation.key.isEmpty ? name : annotation.key;
+
+  //判断构造函数的参数是map的 特殊的构造函数
+  bool get isConstructorMapArg =>
+      params.length == 1 &&
+      !params[0].isNamed &&
+      params[0].annotation.key.isEmpty &&
+      annotationType == _checkMapArgAnnotation &&
+      params[0].paramType == _checkMapType;
 }
 
 ///扫描到的函数信息
@@ -144,14 +155,19 @@ class MirrorFunction<T, R> {
 class MirrorField<T, V> {
   ///扫描时的注解信息
   final MField annotation;
+
   ///扫描时的注解类型
   final TypeToken annotationType;
+
   ///扫描时的属性名
   final String name;
+
   ///属性的类型
   final TypeToken<V> fieldType;
+
   ///属性get代理执行器
   final MirrorFieldGetInvoker<T, V> getInvoker;
+
   ///属性set代理执行器
   final MirrorFieldSetInvoker<T, V> setInvoker;
 
@@ -163,10 +179,13 @@ class MirrorField<T, V> {
     this.getInvoker,
     this.setInvoker,
   );
+
   ///获取对象中的具体属性值
   dynamic get(T bean) => getInvoker.call(bean);
+
   ///对象中的属性赋值
   void set(T bean, dynamic value) => setInvoker.call(bean, value);
+
   ///是否可以set
   bool get hasSetter => setInvoker != null;
 
@@ -181,15 +200,21 @@ class MirrorField<T, V> {
 class MirrorParam {
   ///扫描时的注解信息
   final MParam annotation;
+
   ///扫描时的注解类型
   final TypeToken annotationType;
+
   ///扫描时的参数名
   final String name;
+
   ///参数的type
   final TypeToken paramType;
 
-  const MirrorParam(
-      this.annotation, this.annotationType, this.name, this.paramType);
+  ///参数是否是命名参数 也就是命名函数是非必须参数 不是命名参数就是必须参数
+  final bool isNamed;
+
+  const MirrorParam(this.annotation, this.annotationType, this.name,
+      this.paramType, this.isNamed);
 
   ///获取key信息 优先从注解中获取 当注解为空时返回扫描时的name
   String get key => annotation.key.isEmpty ? name : annotation.key;
