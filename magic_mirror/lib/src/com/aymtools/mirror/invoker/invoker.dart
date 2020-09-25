@@ -490,7 +490,7 @@ class ClassUriInfo {
 
   ClassUriInfo(this.key, this.namedConstructorInUri, this.uriParams);
 }
-
+///用来支持反转类型转换器
 class _TypeReverse<From, To> extends TypeConvert<To, From> {
   _TypeReverse(this._reverse);
 
