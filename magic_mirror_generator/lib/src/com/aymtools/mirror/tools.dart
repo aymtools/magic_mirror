@@ -125,37 +125,6 @@ dynamic _type(TypeMirror typeMirror, ConstantReader reader) {
     return _gen(typeMirror, ConstantReader(reader.objectValue));
   }
 
-//  switch (typeMirror.reflectedType) {
-//    case String:
-//      return reader == null || reader.isNull ? '' : reader.toString();
-//    case double:
-//      return reader == null || reader.isNull
-//          ? -1
-//          : reader.doubleValue; //reader.toDoubleValue();
-//    case int:
-//      return reader == null || reader.isNull
-//          ? -1
-//          : reader.intValue; // reader.toIntValue();
-//    case bool:
-//      return reader == null || reader.isNull
-//          ? false
-//          : reader.boolValue; // reader.toBoolValue();
-//    case Type:
-//      return reader == null || reader.isNull
-//          ? null
-//          : reader.typeValue; // reader.toTypeValue();
-//    case Map:
-//      return reader == null || reader.isNull
-//          ? {}
-//          : Map.fromIterable(reader.mapValue.entries.map((e) => MapEntry(
-//              _type(typeMirror.typeArguments[0], ConstantReader(e.key)),
-//              _type(typeMirror.typeArguments[1], ConstantReader(e.value)))));
-//    case List:
-//      return reader == null || reader.isNull
-//          ? []
-//          : List.from(reader.listValue.map(
-//              (e) => _type(typeMirror.typeArguments[0], ConstantReader(e))));
-//  }
   return null;
 }
 
@@ -183,6 +152,6 @@ bool isDartCoreType(DartType type) =>
 class Log {
   ///记录日志
   static void log(String msg) {
-    print(msg);
+    // print(msg);
   }
 }

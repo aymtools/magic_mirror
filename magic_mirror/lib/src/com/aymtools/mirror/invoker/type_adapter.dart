@@ -12,6 +12,12 @@ abstract class TypeConvert<From, To> {
   To convert(From value);
 }
 
+///类型转换器 当调用属性 函数 时类型不匹配时来完成转换动作 支持正向转换与反向转换
+abstract class TypeConvertAdapter<From, To> extends TypeConvert<From, To> {
+  //反转
+  From reverse(To value);
+}
+
 ///定义自定义的转换器
 class TypeAdapter extends MClass {
   const TypeAdapter({String adapterName})
@@ -38,108 +44,86 @@ class LoadTypeAdapter implements Initializer {
 
 ///默认的类型转换器 int to String
 @TypeAdapter(adapterName: 'Int2String')
-class Int2String extends TypeConvert<int, String> {
+class Int2String extends TypeConvertAdapter<int, String> {
   @override
   String convert(int value) {
     return value.toString();
+  }
+
+  @override
+  int reverse(String value) {
+    if (value == null || value.isEmpty) return 0;
+    return int.tryParse(value);
   }
 }
 
 ///默认的类型转换器 bool to String
 @TypeAdapter(adapterName: 'Boolean2String')
-class Boolean2String extends TypeConvert<bool, String> {
+class Boolean2String extends TypeConvertAdapter<bool, String> {
   @override
   String convert(bool value) {
     return value.toString();
+  }
+
+  @override
+  bool reverse(String value) {
+    return ('true' == value);
   }
 }
 
 ///默认的类型转换器 double to String
 @TypeAdapter(adapterName: 'Double2String')
-class Double2String extends TypeConvert<double, String> {
+class Double2String extends TypeConvertAdapter<double, String> {
   @override
   String convert(double value) {
     return value.toString();
   }
-}
 
-///默认的类型转换器 String to int
-@TypeAdapter(adapterName: 'String2Int')
-class String2Int extends TypeConvert<String, int> {
   @override
-  int convert(String value) {
-    return int.tryParse(value);
-  }
-}
-
-///默认的类型转换器 String to bool
-@TypeAdapter(adapterName: 'String2Boolean')
-class String2Boolean extends TypeConvert<String, bool> {
-  @override
-  bool convert(String value) {
-    return value == 'true';
-  }
-}
-
-///默认的类型转换器 String to double
-@TypeAdapter(adapterName: 'String2Double')
-class String2Double extends TypeConvert<String, double> {
-  @override
-  double convert(String value) {
+  double reverse(String value) {
+    if (value == null || value.isEmpty) return 0;
     return double.tryParse(value);
   }
 }
 
 ///默认的类型转换器 int to double
 @TypeAdapter(adapterName: 'Int2Double')
-class Int2Double extends TypeConvert<int, double> {
+class Int2Double extends TypeConvertAdapter<int, double> {
   @override
   double convert(int value) {
     return value.toDouble();
   }
-}
 
-///默认的类型转换器 double to int
-@TypeAdapter(adapterName: 'Double2Int')
-class Double2Int extends TypeConvert<double, int> {
   @override
-  int convert(double value) {
+  int reverse(double value) {
     return value.toInt();
   }
 }
 
 ///默认的类型转换器 double to bool
 @TypeAdapter(adapterName: 'Double2Bool')
-class Double2Bool extends TypeConvert<double, bool> {
+class Double2Bool extends TypeConvertAdapter<double, bool> {
   @override
   bool convert(double value) {
     return value == 1;
+  }
+
+  @override
+  double reverse(bool value) {
+    return value ? 1 : 0;
   }
 }
 
 ///默认的类型转换器 int to bool
 @TypeAdapter(adapterName: 'Int2Bool')
-class Int2Bool extends TypeConvert<int, bool> {
+class Int2Bool extends TypeConvertAdapter<int, bool> {
   @override
   bool convert(int value) {
     return value == 1;
   }
-}
 
-///默认的类型转换器 bool to double
-@TypeAdapter(adapterName: 'Double2Bool')
-class Bool2Double extends TypeConvert<bool, double> {
   @override
-  double convert(bool value) {
-    return value ? 1 : 0;
-  }
-}
-
-///默认的类型转换器 bool to int
-@TypeAdapter(adapterName: 'Bool2Int')
-class Bool2Int extends TypeConvert<bool, int> {
-  @override
-  int convert(bool value) {
+  int reverse(bool value) {
     return value ? 1 : 0;
   }
 }

@@ -79,12 +79,17 @@ class MagicMirror implements IMirrorRegister {
   }
 
   ///注册类型转换器
-  void registerTypeAdapter(TypeConvert convert) {
+  void registerTypeAdapter<From, To>(TypeConvert<From, To> convert) {
     if (convert != null) {
       if (_typeAdapter[convert.from] == null) {
         _typeAdapter[convert.from] = <Type, TypeConvert>{};
       }
       _typeAdapter[convert.from][convert.to] = convert;
+
+      if (convert is TypeConvertAdapter<From, To>) {
+        _typeAdapter[convert.to][convert.from] =
+            _TypeReverse<From, To>(convert);
+      }
     }
   }
 
@@ -484,6 +489,19 @@ class ClassUriInfo {
   final Map<String, String> uriParams;
 
   ClassUriInfo(this.key, this.namedConstructorInUri, this.uriParams);
+}
+
+class _TypeReverse<From, To> extends TypeConvert<To, From> {
+  _TypeReverse(this._reverse);
+
+  Type get from => _reverse.to;
+
+  Type get to => _reverse.from;
+
+  final TypeConvertAdapter<From, To> _reverse;
+
+  @override
+  From convert(To value) => _reverse.reverse(value);
 }
 
 ///具体的代理执行器 自动实现多个嵌套等操作
