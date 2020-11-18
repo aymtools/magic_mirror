@@ -36,7 +36,7 @@ class RouterInterceptor extends MClass {
           ext: priority,
           keyGenType: MClass.KEY_GEN_TYPE_BY_CLASS_NAME,
           needAssignableFrom: const [RouterInterceptorBase],
-          scanConstructors: true,
+          scanConstructors: false,
           scanFunctions: true,
           scanFields: true,
         );

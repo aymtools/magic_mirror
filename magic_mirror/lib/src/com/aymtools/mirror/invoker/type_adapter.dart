@@ -32,7 +32,7 @@ class TypeAdapter extends MClass {
 }
 
 ///自动加载所有的转换器的初始化触发器
-@OnInitializer()
+// @OnInitializer()
 class LoadTypeAdapter implements Initializer {
   @override
   void onInit(MagicMirror factory) {

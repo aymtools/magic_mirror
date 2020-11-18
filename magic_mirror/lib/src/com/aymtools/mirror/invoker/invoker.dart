@@ -41,6 +41,7 @@ class MagicMirror implements IMirrorRegister {
         mirrorClassesK[element.key] = element;
         mirrorClassesT[element.type.typeValue] = element;
       });
+      LoadTypeAdapter().onInit(this);
       loadInitializer()
           .map((e) => newSingleInstance(e))
           .whereType<Initializer>()

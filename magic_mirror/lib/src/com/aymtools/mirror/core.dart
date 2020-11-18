@@ -98,8 +98,8 @@ class MClass extends AnnBase {
   ///继承任意一个目标或实现目标的类
   final List<Type> anyOneAssignableFrom;
 
-  ///必须扫描构造函数，不可更改
-  final bool scanConstructors = true;
+  ///是否允许扫描构造函数
+  final bool scanConstructors;
 
   ///扫描构造函数时使用禁止模式 也就是默认加入
   final bool scanConstructorsUsedBlockList;
@@ -135,7 +135,7 @@ class MClass extends AnnBase {
     this.keyGenType = KEY_GEN_TYPE_BY_DEF,
     this.needAssignableFrom = const [],
     this.anyOneAssignableFrom = const [],
-    bool scanConstructors,
+    this.scanConstructors = true,
     this.scanConstructorsUsedBlockList = false,
     this.scanFunctions = false,
     this.scanFunctionsUsedBlockList = false,
