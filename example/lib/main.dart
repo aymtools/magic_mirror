@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:magic_mirror/mirror.dart';
 
-import '_generated/com/aymtools/mirror/register.mirror.aymtools.dart';
+import 'generated/aymtools/mirror/register.mirror.aymtools.dart';
 
 void main() {
   Register.register();
@@ -25,8 +25,15 @@ class MyApp extends StatelessWidget {
         var key = setting.name;
         var arg = setting.arguments;
         ClassUriInfo uriInfo = MagicMirror.parseClassUriInfoByUriStr(key);
-        Widget page =
-            MagicMirror.newInstanceS(key, param: arg, canThrowException: true);
+        Widget page;
+        try {
+          page = MagicMirror.newInstanceSI(uriInfo, param: arg);
+        } on MMirrorException catch(e){
+          print('MMirrorException details:\n $e');
+        } catch (e,st) {
+          print('Exception details:\n $e');
+          print('Stack trace:\n $st');
+        }
         setting = RouteSettings(
             name: uriInfo.key,
             arguments: RouteArguments(uriInfo.uriParams, arg));

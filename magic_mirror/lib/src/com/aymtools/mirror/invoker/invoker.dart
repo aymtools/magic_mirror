@@ -114,40 +114,34 @@ class MagicMirror implements IMirrorRegister {
   static final Map<String, dynamic> _singleInstances = {};
 
   ///根据uri 和传入的参数信息实例化对象
-  static T newInstanceS<T>(String uri,
-      {dynamic param, bool canThrowException = false}) {
-    return instance.newInstanceByUri(uri,
-        param: param, canThrowException: canThrowException);
+  static T newInstanceS<T>(String uri, {dynamic param}) {
+    return instance.newInstanceByUri(uri, param: param);
+  }
+  ///根据uri 和传入的参数信息实例化对象
+  static T newInstanceSI<T>(ClassUriInfo uriInfo, {dynamic param}) {
+    return instance.newInstanceByClassUriInfo(uriInfo, param: param);
   }
 
   ///调用该对象的指定方法
   static dynamic invokeMethodS<T>(T bean, String methodName,
-          {Map<String, dynamic> params, bool canThrowException = true}) =>
-      instance.invokeMethod(bean, methodName,
-          params: params, canThrowException: canThrowException);
+          {Map<String, dynamic> params}) =>
+      instance.invokeMethod(bean, methodName, params: params);
 
   ///获取对象中的属性值
-  static dynamic getFieldValueS<T>(T bean, String fieldName,
-          {bool canThrowException = true}) =>
-      instance.getFieldValue(bean, fieldName,
-          canThrowException: canThrowException);
+  static dynamic getFieldValueS<T>(T bean, String fieldName) =>
+      instance.getFieldValue(bean, fieldName);
 
   ///设定对象中的属性值
-  static void setFieldValueS<T>(T bean, String fieldName, dynamic value,
-          {bool canThrowException = true}) =>
-      instance.setFieldValue(bean, fieldName, value,
-          canThrowException: canThrowException);
+  static void setFieldValueS<T>(T bean, String fieldName, dynamic value) =>
+      instance.setFieldValue(bean, fieldName, value);
 
   ///将所有的可获取的属性全部获取 为map
-  static Map<String, dynamic> getAllFieldValue<T>(T bean,
-          {bool canThrowException = true}) =>
-      instance.getFieldValues(bean, canThrowException: canThrowException);
+  static Map<String, dynamic> getAllFieldValue<T>(T bean) =>
+      instance.getFieldValues(bean);
 
   ///将map中的值自动赋值到对应是属性上
-  static void setFieldValueByMap<T>(T bean, Map<String, dynamic> values,
-          {bool canThrowException = true}) =>
-      instance.setFieldValues(bean, values,
-          canThrowException: canThrowException);
+  static void setFieldValueByMap<T>(T bean, Map<String, dynamic> values) =>
+      instance.setFieldValues(bean, values);
 
   ///尝试将form转换为目标类型
   static To convertTypeS<To>(dynamic from) => instance.convertType(from);
@@ -300,180 +294,125 @@ class MagicMirror implements IMirrorRegister {
   }
 
   ///根据uri 和传入的参数信息实例化对象
-  T newInstanceByUri<T>(String uri,
-      {dynamic param, bool canThrowException = false}) {
+  T newInstanceByUri<T>(String uri, {dynamic param}) {
     var info = parseUriInfoByUriStr(uri);
-    return newInstance(info.key, info.namedConstructorInUri, info.uriParams,
-        param: param, canThrowException: canThrowException);
+    return newInstanceByClassUriInfo(info, param: param);
+  }
+
+  ///根据uri 和传入的参数信息实例化对象
+  T newInstanceByClassUriInfo<T>(ClassUriInfo uriInfo, {dynamic param}) {
+    return newInstance(
+        uriInfo.key, uriInfo.namedConstructorInUri, uriInfo.uriParams,
+        param: param);
   }
 
   ///根据key 命名构造函数 uri参数 和传入的参数信息实例化对象
   T newInstance<T>(
       String classKey, String namedConstructor, Map<String, String> uriParams,
-      {dynamic param, bool canThrowException = false}) {
-    try {
-      var params = <String, dynamic>{};
-      MirrorClass<T> clazz = load<T>(classKey);
-      MirrorConstructor constructor;
-      if (clazz != null &&
-          (constructor = clazz.getConstructor(namedConstructor)) != null) {
-        if (constructor.params.isNotEmpty) {
-          if (constructor.isConstructorMapArg) {
-            params = genParams(param, uriParams, null);
-          } else {
-            params = genParams(param, uriParams, constructor.params.first.key);
-          }
+      {dynamic param}) {
+    var params = <String, dynamic>{};
+    MirrorClass<T> clazz = load<T>(classKey);
+    MirrorConstructor constructor;
+    if (clazz != null &&
+        (constructor = clazz.getConstructor(namedConstructor)) != null) {
+      if (constructor.params.isNotEmpty) {
+        if (constructor.isConstructorMapArg) {
+          params = genParams(param, uriParams, null);
+        } else {
+          params = genParams(param, uriParams, constructor.params.first.key);
         }
-        return constructor.newInstanceForMap(params);
       }
-      if (canThrowException) {
-        throw ClassNotFoundException(classKey);
-      }
-    } catch (e) {
-      if (canThrowException) {
-        throw e;
-      }
+      return constructor.newInstanceForMap(params);
     }
-    return null;
+    throw ClassNotFoundException(classKey);
   }
 
   ///根据uri实例化单例模式的类实例
-  T newSingleInstance<T>(String uri, {bool canThrowException = false}) {
+  T newSingleInstance<T>(String uri) {
     var info = parseUriInfoByUriStr(uri);
     if (_singleInstances.containsKey(info.key)) {
       return _singleInstances[info.key] as T;
     }
-    T result = newInstance(info.key, info.namedConstructorInUri, info.uriParams,
-        canThrowException: canThrowException);
+    T result =
+        newInstance(info.key, info.namedConstructorInUri, info.uriParams);
     if (result != null) _singleInstances[info.key] = result;
     return result;
   }
 
   ///执行类中的指定方法
   R invokeMethod<T, R>(T bean, String methodName,
-      {Map<String, dynamic> params, bool canThrowException = true}) {
-    try {
-      MirrorClass<T> clazz = mirror<T>();
-      if (clazz != null) {
-        MirrorFunction<T, R> function;
-        if ((function = clazz.getFunction(methodName)) != null) {
-          return function.invoke(bean, params);
-        } else {
-          if (canThrowException) {
-            throw NoSuchFunctionException(bean.runtimeType, methodName);
-          }
-        }
+      {Map<String, dynamic> params}) {
+    MirrorClass<T> clazz = mirror<T>();
+    if (clazz != null) {
+      MirrorFunction<T, R> function;
+      if ((function = clazz.getFunction(methodName)) != null) {
+        return function.invoke(bean, params);
       } else {
-        if (canThrowException) {
-          throw ClassNotFoundException(bean.runtimeType.toString());
-        }
+        throw NoSuchFunctionException(bean.runtimeType, methodName);
       }
-    } catch (e) {
-      if (canThrowException) {
-        throw e;
-      }
+    } else {
+      throw ClassNotFoundException(bean.runtimeType.toString());
     }
-    return null;
   }
 
   ///执行为类对象的属性赋值
-  void setFieldValue<T, V>(T bean, String fieldName, V value,
-      {bool canThrowException = true}) {
-    try {
-      MirrorClass<T> clazz = mirror<T>();
-      if (clazz != null) {
-        MirrorField<T, dynamic> field;
-        if ((field = clazz.getField(fieldName)) != null && field.hasSetter) {
-          field.set(bean, value);
-        } else {
-          if (canThrowException) {
-            throw NoSuchFieldException(bean.runtimeType, fieldName);
-          }
-        }
+  void setFieldValue<T, V>(T bean, String fieldName, V value) {
+    MirrorClass<T> clazz = mirror<T>();
+    if (clazz != null) {
+      MirrorField<T, dynamic> field;
+      if ((field = clazz.getField(fieldName)) != null && field.hasSetter) {
+        field.set(bean, value);
       } else {
-        if (canThrowException) {
-          throw ClassNotFoundException(bean.runtimeType.toString());
-        }
+        throw NoSuchFieldException(bean.runtimeType, fieldName);
       }
-    } catch (e) {
-      if (canThrowException) {
-        throw e;
-      }
+    } else {
+      throw ClassNotFoundException(bean.runtimeType.toString());
     }
   }
 
   ///获取为类对象的属性的具体值
-  V getFieldValue<T, V>(T bean, String fieldName,
-      {bool canThrowException = true}) {
-    try {
-      MirrorClass<T> clazz = mirror<T>();
-      if (clazz != null) {
-        MirrorField<T, dynamic> field;
-        if ((field = clazz.getField(fieldName)) != null && field.hasGetter) {
-          return field.get(bean);
-        } else {
-          if (canThrowException) {
-            throw NoSuchFieldException(bean.runtimeType, fieldName);
-          }
-        }
+  V getFieldValue<T, V>(T bean, String fieldName) {
+    MirrorClass<T> clazz = mirror<T>();
+    if (clazz != null) {
+      MirrorField<T, dynamic> field;
+      if ((field = clazz.getField(fieldName)) != null && field.hasGetter) {
+        return field.get(bean);
       } else {
-        if (canThrowException) {
-          throw ClassNotFoundException(bean.runtimeType.toString());
-        }
+        throw NoSuchFieldException(bean.runtimeType, fieldName);
       }
-    } catch (e) {
-      if (canThrowException) {
-        throw e;
-      }
+    } else {
+      throw ClassNotFoundException(bean.runtimeType.toString());
     }
-    return null;
   }
 
   ///将map中的值自动赋值到对应是属性上
-  void setFieldValues<T>(T bean, Map<String, dynamic> values,
-      {bool canThrowException = true}) {
-    try {
-      MirrorClass<T> clazz = mirror<T>();
-      if (clazz != null) {
-        clazz.fields.where((element) => element.hasSetter).forEach((element) {
-          if (values.containsKey(element.key)) {
-            try {
-              setFieldValue(bean, element.key, values[element.key]);
-            } on IllegalArgumentException {}
-          }
-        });
-      } else {
-        if (canThrowException) {
-          throw ClassNotFoundException(bean.runtimeType.toString());
+  void setFieldValues<T>(T bean, Map<String, dynamic> values) {
+    MirrorClass<T> clazz = mirror<T>();
+    if (clazz != null) {
+      clazz.fields.where((element) => element.hasSetter).forEach((element) {
+        if (values.containsKey(element.key)) {
+          try {
+            setFieldValue(bean, element.key, values[element.key]);
+          } on IllegalArgumentException {}
         }
-      }
-    } catch (e) {
-      if (canThrowException) {
-        throw e;
-      }
+      });
+    } else {
+      throw ClassNotFoundException(bean.runtimeType.toString());
     }
   }
 
   ///将所有的可获取的属性全部获取 为map
-  Map<String, dynamic> getFieldValues<T>(T bean,
-      {bool canThrowException = true}) {
+  Map<String, dynamic> getFieldValues<T>(T bean) {
     var result = <String, dynamic>{};
-    try {
-      MirrorClass<T> clazz = mirror<T>();
-      if (clazz != null) {
-        clazz.fields.where((element) => element.hasGetter).forEach((element) {
-          result[element.key] = element.get(bean);
-        });
-      } else {
-        if (canThrowException) {
-          throw ClassNotFoundException(bean.runtimeType.toString());
-        }
-      }
-    } catch (e) {
-      if (canThrowException) {
-        throw e;
-      }
+    MirrorClass<T> clazz = mirror<T>();
+    if (clazz != null) {
+      clazz.fields.where((element) => element.hasGetter).forEach((element) {
+        result[element.key] = element.get(bean);
+      });
+    } else {
+      throw ClassNotFoundException(bean.runtimeType.toString());
     }
+
     return result;
   }
 }
@@ -491,6 +430,7 @@ class ClassUriInfo {
 
   ClassUriInfo(this.key, this.namedConstructorInUri, this.uriParams);
 }
+
 ///用来支持反转类型转换器
 class _TypeReverse<From, To> extends TypeConvert<To, From> {
   _TypeReverse(this._reverse);

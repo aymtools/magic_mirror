@@ -17,15 +17,44 @@ class MirrorConfig {
   ///自动根据不同策略生成调用器的顺序，有可能增加调用器的执行效率 暂未实现
   final int genGroupBy;
 
+  final List<MImport> imports;
+  final Function function;
+
   const MirrorConfig({
     bool isGenInvoker,
     bool isGenLibExport,
     Map<String, String> importLibsNames,
+    List<MImport> imports,
     int genGroupBy = GEN_GROUP_BY_NONE,
+    this.function,
   })  : isGenInvoker = isGenInvoker ?? true,
         isGenLibExport = isGenLibExport ?? false,
         genGroupBy = GEN_GROUP_BY_NONE,
-        importLibsNames = importLibsNames ?? const {};
+        importLibsNames = importLibsNames ?? const {},
+        this.imports = imports ?? const [];
+}
+
+class MImport {
+  final String packageName;
+  final String libName;
+  final bool onlyImport;
+  final bool useExport;
+  final List<String> show;
+  final List<String> hide;
+
+  const MImport(
+      {String packageName,
+      String libName,
+      bool onlyImport,
+      bool useExport,
+      List<String> show,
+      List<String> hide})
+      : this.packageName = packageName,
+        this.libName = libName == null || libName == '' ? packageName : libName,
+        this.onlyImport = onlyImport ?? false,
+        this.useExport = useExport ?? false,
+        this.show = show ?? const [],
+        this.hide = hide ?? const [];
 }
 
 ///基本注解需要的内容

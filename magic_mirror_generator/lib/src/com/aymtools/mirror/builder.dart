@@ -68,9 +68,9 @@ class MirrorBuilder implements Builder {
   Map<String, List<String>> get buildExtensions {
     return const {
       r'$lib$': [
-        '_generated/com/aymtools/mirror/register.mirror.aymtools.dart',
-        '_generated/com/aymtools/mirror/project.mirror.aymtools.dart',
-        '_generated/com/aymtools/mirror/implementation.mirror.aymtools.dart',
+        'generated/aymtools/mirror/register.mirror.aymtools.dart',
+        'generated/aymtools/mirror/project.mirror.aymtools.dart',
+        'generated/aymtools/mirror/implementation.mirror.aymtools.dart',
         'mirror_export.dart'
       ]
     };
@@ -79,7 +79,7 @@ class MirrorBuilder implements Builder {
   static AssetId _registerFileOutput(BuildStep buildStep) {
     return AssetId(
       buildStep.inputId.package,
-      p.join('lib', '_generated', 'com', 'aymtools', 'mirror',
+      p.join('lib', 'generated', 'aymtools', 'mirror',
           'register.mirror.aymtools.dart'),
     );
   }
@@ -88,7 +88,7 @@ class MirrorBuilder implements Builder {
   static AssetId _projectFileOutput(BuildStep buildStep) {
     return AssetId(
       buildStep.inputId.package,
-      p.join('lib', '_generated', 'com', 'aymtools', 'mirror',
+      p.join('lib', 'generated', 'aymtools', 'mirror',
           'project.mirror.aymtools.dart'),
     );
   }
@@ -97,7 +97,7 @@ class MirrorBuilder implements Builder {
   static AssetId _implementationFileOutput(BuildStep buildStep) {
     return AssetId(
       buildStep.inputId.package,
-      p.join('lib', '_generated', 'com', 'aymtools', 'mirror',
+      p.join('lib', 'generated', 'aymtools', 'mirror',
           'implementation.mirror.aymtools.dart'),
     );
   }
@@ -134,7 +134,7 @@ class MirrorBuilder implements Builder {
 
     final libraryInfo = <GLibraryInfo>[];
     await for (final input in buildStep.findAssets(Glob(r'lib/**'))) {
-      if (!input.path.startsWith('lib/_generated')) {
+      if (!input.path.startsWith('lib/generated')) {
         final library = await buildStep.resolver.libraryFor(input);
         libraryInfo.add(scanLibraryInfo(LibraryReader(library)));
       }
