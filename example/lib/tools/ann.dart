@@ -28,8 +28,13 @@ class RoutePageConstructorNot extends MConstructorNot {
 
 /// 定义路由的拦截器
 class RouterInterceptor extends MClass {
+  final Type type;
+
+  final Function function;
+
   ///uri 正则表达式所匹配的url priority等级 默认100 从到到底排序 等级越高约优先执行
-  const RouterInterceptor(String uri, {int priority = 100})
+  const RouterInterceptor(String uri,
+      {int priority = 100, this.type, this.function})
       : super(
           key: "",
           tag: uri,

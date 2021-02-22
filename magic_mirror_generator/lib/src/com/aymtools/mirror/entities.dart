@@ -105,7 +105,7 @@ class GImports {
 
     var t = type;
     var ts = <String>[];
-    var name = type.element.name;
+    var name = type.element?.name ?? '';
     if (t is ParameterizedType) {
       ts = t.typeArguments.map((e) => _parseTypeAndInnerType(e)).toList();
       if (ts.isNotEmpty) {

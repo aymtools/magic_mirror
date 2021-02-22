@@ -13,6 +13,13 @@ T genAnnotation<T>(ConstantReader annotation) {
 ///根据类型的反射来生成
 dynamic _gen(ClassMirror classMirror, ConstantReader annotation) {
   try {
+    // var revive = annotation.revive();
+    // var pArgs = revive.positionalArguments;
+    // var namedArgs = revive.namedArguments;
+    // revive.accessor;
+    //
+    // Log.log('${classMirror.reflectedType}  : ${revive.toString()} ${revive.accessor}   ${pArgs}  ${namedArgs}');
+
     var methodMirror = classMirror.declarations.values
         .whereType<MethodMirror>()
         .where((element) => element.isConstructor)
@@ -79,7 +86,9 @@ String _getName(Symbol symbol) {
 //  Log.log('dd    '+i.type.toString());
 //
 //  return reflect(symbol).getField(Symbol('_name')).reflectee;
+  return MirrorSystem.getName(symbol);
   return symbol.toString().substring(8, symbol.toString().length - 2);
+
 }
 
 ///自动转换过程
@@ -123,6 +132,8 @@ dynamic _type(TypeMirror typeMirror, ConstantReader reader) {
     return list;
   } else if (typeMirror is ClassMirror) {
     return _gen(typeMirror, ConstantReader(reader.objectValue));
+  } else if (typeMirror is FunctionTypeMirror) {
+    return _gen(typeMirror, ConstantReader(reader.objectValue));
   }
 
   return null;
@@ -152,6 +163,6 @@ bool isDartCoreType(DartType type) =>
 class Log {
   ///记录日志
   static void log(String msg) {
-    // print(msg);
+    print(msg);
   }
 }

@@ -27,33 +27,33 @@ class Void {
 }
 
 ///扫描到的类信息
-class MirrorClass<T> {
+class MirrorClass<T, A extends MClass> {
   ///依据的key uri类型
   final String key;
 
   ///扫描时的注解信息
-  final MClass annotation;
+  final A annotation;
 
   ///扫描时的注解类型
-  final TypeToken annotationType;
+  TypeToken<A> get annotationType => TypeToken<A>();
 
   ///类名 不包含所在的lib路径
   final String name;
 
   ///类的具体type
-  final TypeToken<T> type;
+  TypeToken<T> get type => TypeToken<T>();
 
   ///所有的扫描到的构造函数
-  final List<MirrorConstructor<T>> constructors;
+  final List<MirrorConstructor<T, dynamic>> constructors;
 
   ///所有的扫描到的属性
-  final List<MirrorField<T, dynamic>> fields;
+  final List<MirrorField<T, dynamic, dynamic>> fields;
 
   ///所有的扫描到的函数 不包含构造函数 和 get set
-  final List<MirrorFunction<T, dynamic>> functions;
+  final List<MirrorFunction<T, dynamic, dynamic>> functions;
 
-  const MirrorClass(this.key, this.annotation, this.annotationType, this.type,
-      this.name, this.constructors, this.fields, this.functions);
+  const MirrorClass(this.key, this.annotation, this.name, this.constructors,
+      this.fields, this.functions);
 
   ///根据map内的参数来生成一个类的实例
   T newInstanceForMap(String constructorName, Map<String, dynamic> params) {
@@ -65,25 +65,25 @@ class MirrorClass<T> {
   }
 
   ///根据命名构造函数的key来查找可用的构造函数
-  MirrorConstructor<T> getConstructor(String constructorName) =>
+  MirrorConstructor<T, dynamic> getConstructor(String constructorName) =>
       findFistWhere(constructors, (e) => e.key == constructorName);
 
   ///根据函数的key 来查找可用的函数
-  MirrorFunction<T, dynamic> getFunction(String functionName) =>
+  MirrorFunction<T, dynamic, dynamic> getFunction(String functionName) =>
       findFistWhere(functions, (e) => e.key == functionName);
 
   ///根据属性的key 来查找可用的属性
-  MirrorField<T, dynamic> getField(String fieldName) =>
+  MirrorField<T, dynamic, dynamic> getField(String fieldName) =>
       findFistWhere(fields, (e) => e.key == fieldName);
 }
 
 ///扫描到的类的构造函数信息
-class MirrorConstructor<T> {
+class MirrorConstructor<T, A extends MConstructor> {
   ///扫描时的注解信息
-  final MConstructor annotation;
+  final A annotation;
 
   ///扫描时的注解类型
-  final TypeToken annotationType;
+  TypeToken get annotationType => TypeToken<A>();
 
   ///扫描时的函数名
   final String name;
@@ -97,8 +97,8 @@ class MirrorConstructor<T> {
   static final _checkMapArgAnnotation = TypeToken<MConstructorMapArg>();
   static final _checkMapType = TypeToken<Map<String, dynamic>>();
 
-  const MirrorConstructor(this.annotation, this.annotationType, this.name,
-      this.params, this.invoker);
+  const MirrorConstructor(
+      this.annotation, this.name, this.params, this.invoker);
 
   ///根据map内的参数来生成一个类的实例
   T newInstanceForMap(Map<String, dynamic> params) => invoker.call(params);
@@ -116,12 +116,12 @@ class MirrorConstructor<T> {
 }
 
 ///扫描到的函数信息
-class MirrorFunction<T, R> {
+class MirrorFunction<T, A extends MFunction, R> {
   ///扫描时的注解信息
-  final MFunction annotation;
+  final A annotation;
 
   ///扫描时的注解类型
-  final TypeToken annotationType;
+  TypeToken<A> get annotationType => TypeToken<A>();
 
   ///扫描时的函数名
   final String name;
@@ -130,7 +130,7 @@ class MirrorFunction<T, R> {
   final List<MirrorParam> params;
 
   ///函数的返回类型
-  final TypeToken returnType;
+  TypeToken<R> get returnType => TypeToken<R>();
 
   ///函数的代理执行器
   final MirrorFunctionInvoker<T, R> invoker;
@@ -138,8 +138,8 @@ class MirrorFunction<T, R> {
   ///函数对象的获取器
   final MirrorFunctionInstance<T> function;
 
-  const MirrorFunction(this.annotation, this.annotationType, this.name,
-      this.params, this.returnType, this.invoker, this.function);
+  const MirrorFunction(
+      this.annotation, this.name, this.params, this.invoker, this.function);
 
   ///执行函数
   R invoke(T bean, Map<String, dynamic> params) => invoker.call(bean, params);
@@ -152,18 +152,18 @@ class MirrorFunction<T, R> {
 }
 
 ///扫描到的属性信息
-class MirrorField<T, V> {
+class MirrorField<T, A extends MField, V> {
   ///扫描时的注解信息
-  final MField annotation;
+  final A annotation;
 
   ///扫描时的注解类型
-  final TypeToken annotationType;
+  TypeToken<A> get annotationType => TypeToken<A>();
 
   ///扫描时的属性名
   final String name;
 
   ///属性的类型
-  final TypeToken<V> fieldType;
+  TypeToken<V> get fieldType => TypeToken<V>();
 
   ///属性get代理执行器
   final MirrorFieldGetInvoker<T, V> getInvoker;
@@ -173,9 +173,7 @@ class MirrorField<T, V> {
 
   const MirrorField(
     this.annotation,
-    this.annotationType,
     this.name,
-    this.fieldType,
     this.getInvoker,
     this.setInvoker,
   );
@@ -197,24 +195,23 @@ class MirrorField<T, V> {
 }
 
 ///扫描到的参数信息
-class MirrorParam {
+class MirrorParam<A extends MParam, PT> {
   ///扫描时的注解信息
-  final MParam annotation;
+  final A annotation;
 
   ///扫描时的注解类型
-  final TypeToken annotationType;
+  TypeToken<A> get annotationType => TypeToken<A>();
 
   ///扫描时的参数名
   final String name;
 
   ///参数的type
-  final TypeToken paramType;
+  TypeToken<PT> get paramType => TypeToken<PT>();
 
   ///参数是否是命名参数 也就是命名函数是非必须参数 不是命名参数就是必须参数
   final bool isNamed;
 
-  const MirrorParam(this.annotation, this.annotationType, this.name,
-      this.paramType, this.isNamed);
+  const MirrorParam(this.annotation, this.name, this.isNamed);
 
   ///获取key信息 优先从注解中获取 当注解为空时返回扫描时的name
   String get key => annotation.key.isEmpty ? name : annotation.key;

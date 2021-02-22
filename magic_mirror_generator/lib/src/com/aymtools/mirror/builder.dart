@@ -12,12 +12,22 @@ import 'entities.dart';
 import 'gen_code.dart';
 import 'scan.dart';
 import 'tools.dart';
+
 ///builder的入口
 Builder mirror(BuilderOptions options) => MirrorBuilder();
+
 ///查找配置信息
 final TypeChecker _configChecker = TypeChecker.fromRuntime(MirrorConfig);
+
 ///从lib/mirror_config.dart中加载配置信息
 Future<MirrorConfig> _initConfig(BuildStep buildStep) async {
+  // var pks=Set<String>();
+  // currentMirrorSystem().libraries.forEach((key, value) {
+  //   pks.add(value.uri?.pathSegments[0]);
+  // });
+  //
+  // Log.log('MirrorSystem :   $pks  ');
+
   MirrorConfig config;
   var package = buildStep.inputId.package;
   var assetId = AssetId(package, 'lib/mirror_config.dart');
@@ -25,6 +35,8 @@ Future<MirrorConfig> _initConfig(BuildStep buildStep) async {
   LibraryElement lib;
   if (await buildStep.canRead(assetId) && await resolver.isLibrary(assetId)) {
     lib = await resolver.libraryFor(assetId);
+    // lib.topLevelElements.where((element) => element.metadata.where((e) => e.constantValue));
+
     var annotation =
         LibraryReader(lib).annotatedWith(_configChecker).first?.annotation;
     config = genAnnotation(annotation);
@@ -33,6 +45,7 @@ Future<MirrorConfig> _initConfig(BuildStep buildStep) async {
   config.importLibsNames['magic_mirror'] = 'mirror';
   return config;
 }
+
 ///将所有医用的库扫描库中的类信息
 Future<List<GLibrary>> _importLibs(BuildStep buildStep) async {
   var list = <GLibrary>[];
@@ -45,6 +58,7 @@ Future<List<GLibrary>> _importLibs(BuildStep buildStep) async {
 
 ///所有已扫描到的库
 final Map<String, GLibrary> libraries = {};
+
 ///记录配置信息
 MirrorConfig _config;
 
@@ -52,17 +66,21 @@ MirrorConfig _config;
 MirrorConfig get config => _config;
 
 ///设定配置信息
-void setMirrorConfig(    MirrorConfig config) {
+void setMirrorConfig(MirrorConfig config) {
   if (config == null) return;
   _config = config;
 }
+
+Map<String, LibraryElement> _assetsLibCache = {};
 
 ///扫描器
 class MirrorBuilder implements Builder {
   ///输出文件自动格式化
   final _writeDartFileFormatter = DartFormatter();
+
   ///缓存已经生成的信息不在二次扫描生成
   String _implementationTemp, _registerTemp;
+
   ///输入和输出定义
   @override
   Map<String, List<String>> get buildExtensions {
@@ -75,6 +93,7 @@ class MirrorBuilder implements Builder {
       ]
     };
   }
+
   ///register的输出文件
   static AssetId _registerFileOutput(BuildStep buildStep) {
     return AssetId(
@@ -109,6 +128,7 @@ class MirrorBuilder implements Builder {
       p.join('lib', 'mirror_export.dart'),
     );
   }
+
   ///构建过程
   @override
   FutureOr<void> build(BuildStep buildStep) async {
@@ -142,14 +162,26 @@ class MirrorBuilder implements Builder {
 
     var lib = GLibrary(package, package, '',
         libs: libraryInfo.where((element) => element.isNotEmpty).toList());
-
+    AssetsTypeParser parser = (uri) async {
+      final libUri = uri.removeFragment().toString();
+      LibraryElement library;
+      if (_assetsLibCache.containsKey(libUri)) {
+        library = _assetsLibCache[libUri];
+      } else {
+        library = await buildStep.resolver
+            .libraryFor(AssetId.resolve(libUri));
+      }
+      return library.getType(uri.fragment).thisType;
+    };
     if (config.isGenInvoker) {
-      _implementationTemp ??= _writeDartFileFormatter
-          .format(genMirrorImplementation(libraries.values.toList()));
+      _implementationTemp ??= _writeDartFileFormatter.format(
+          await genMirrorImplementation(libraries.values.toList(), parser));
       await buildStep.writeAsString(
           _implementationFileOutput(buildStep), _implementationTemp);
       await buildStep.writeAsString(_projectFileOutput(buildStep),
-          _writeDartFileFormatter.format(genCodeMirrorInfo(lib)));
+          _writeDartFileFormatter.format(await genCodeMirrorInfo(lib, parser)));
+      // await buildStep.writeAsString(_projectFileOutput(buildStep),
+      //     await genCodeMirrorInfo(lib, parser));
 
       _registerTemp ??= _writeDartFileFormatter.format(genMirrorRegister(
           package, [

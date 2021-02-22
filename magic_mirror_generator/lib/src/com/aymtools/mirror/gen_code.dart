@@ -1,11 +1,17 @@
+import 'dart:async';
+
 import 'package:magic_mirror/mirror.dart';
 import 'package:source_gen/source_gen.dart';
+import 'package:analyzer/dart/element/type.dart';
 
 // ignore: library_prefixes
 import 'dart:math' as Math;
 
 import 'builder.dart';
 import 'entities.dart';
+import 'tools.dart';
+
+typedef AssetsTypeParser = Future<DartType> Function(Uri assetsUri);
 
 ///生成导入包的缓冲器
 class _GenImports {
@@ -14,27 +20,25 @@ class _GenImports {
   _GenImports(this.imports);
 
   ///类的类型转换为包含As的String
-  String classTypeStrMaker(GClass clazz) =>
-      imports.getTypeNameAsStr(clazz.type.value);
+  String classTypeStrMaker(GClass clazz) => typeStrMaker(clazz.type.value);
+
+  String typeStrMaker(DartType type) => imports.getTypeNameAsStr(type);
 
   ///类的类型转换为包含As的String
-  String paramTypeStrMaker(GParam param) =>
-      imports.getTypeNameAsStr(param.type.value);
+  String paramTypeStrMaker(GParam param) => typeStrMaker(param.type.value);
 
   ///field的类型转换为包含As的String
-  String fieldTypeStrMaker(GField field) =>
-      imports.getTypeNameAsStr(field.type.value);
+  String fieldTypeStrMaker(GField field) => typeStrMaker(field.type.value);
 
   ///returnType的类型转换为包含As的String
   String returnTypeStrMaker(GFunction function) {
-    var r = imports.getTypeNameAsStr(function.returnType.value);
+    var r = typeStrMaker(function.returnType.value);
     return 'void' == r ? 'Void' : r;
   }
 
   ///注解的具体类型的类型转换为包含As的String
-  String annTypeStrMaker(ConstantReader ann) => ann == null || ann.isNull
-      ? 'null'
-      : imports.getTypeNameAsStr(ann.objectValue.type);
+  String annTypeStrMaker(ConstantReader ann) =>
+      ann == null || ann.isNull ? 'null' : typeStrMaker(ann.objectValue.type);
 
   ///获取转换后的需要的所有的导入包信息
   String get importsValue => imports
@@ -61,20 +65,24 @@ ${_genCodeLibInfoMirrorRegisterTemplate([], true, otherStr)}
 }
 
 ///根据类包信息生成的注册器
-String genMirrorLibInfoMirror(GLibraryInfo libraryInfo,
-    {bool importOtherLib = false, GImports defImports}) {
+Future<String> genMirrorLibInfoMirror(
+    GLibraryInfo libraryInfo, AssetsTypeParser parser,
+    {bool importOtherLib = false, GImports defImports}) async {
   var imports = defImports ?? GImports();
   if (importOtherLib) {
     imports.addLibs(libraries.values.toList());
   }
   var genImport = _GenImports(imports);
-  var content = genCodeLibInfoMirrorInfo(
-      libraryInfo,
-      genImport.annTypeStrMaker,
-      genImport.classTypeStrMaker,
-      genImport.paramTypeStrMaker,
-      genImport.fieldTypeStrMaker,
-      genImport.returnTypeStrMaker);
+  var content = await genCodeLibInfoMirrorInfo(
+    libraryInfo,
+    genImport.annTypeStrMaker,
+    genImport.classTypeStrMaker,
+    genImport.paramTypeStrMaker,
+    genImport.fieldTypeStrMaker,
+    genImport.returnTypeStrMaker,
+    genImport.typeStrMaker,
+    parser,
+  );
   var importsValue = genImport.importsValue;
   var register = _genCodeLibInfoMirrorRegister(libraryInfo.classes,
       imports.getLibInfoAsNameStr(libraryInfo), genImport.classTypeStrMaker);
@@ -82,19 +90,22 @@ String genMirrorLibInfoMirror(GLibraryInfo libraryInfo,
 }
 
 ///生成project所有的引用类库的注册信息
-String genMirrorImplementation(List<GLibrary> implementations) {
+Future<String> genMirrorImplementation(
+    List<GLibrary> implementations, AssetsTypeParser parser) async {
   var imports = GImports(otherImportLibrary: implementations);
   var genImport = _GenImports(imports);
-  var content = implementations
+  var content = await Stream.fromFutures(implementations
       .expand((element) => element.libs)
       .map((e) => genCodeLibInfoMirrorInfo(
-          e,
-          genImport.annTypeStrMaker,
-          genImport.classTypeStrMaker,
-          genImport.paramTypeStrMaker,
-          genImport.fieldTypeStrMaker,
-          genImport.returnTypeStrMaker))
-      .toList();
+            e,
+            genImport.annTypeStrMaker,
+            genImport.classTypeStrMaker,
+            genImport.paramTypeStrMaker,
+            genImport.fieldTypeStrMaker,
+            genImport.returnTypeStrMaker,
+            genImport.typeStrMaker,
+            parser,
+          ))).toList();
   var importsValue = genImport.importsValue;
   var classes = <String>[];
   implementations
@@ -108,17 +119,28 @@ String genMirrorImplementation(List<GLibrary> implementations) {
 }
 
 ///生成类库的注册器
-String genCodeMirrorInfo(GLibrary library) {
+Future<String> genCodeMirrorInfo(
+    GLibrary library, AssetsTypeParser parser) async {
   var imports = GImports(otherImportLibrary: libraries.values.toList());
   var genImport = _GenImports(imports);
-  var content = library.libs
-      .map((e) => genCodeLibInfoMirrorInfo(
-          e,
-          genImport.annTypeStrMaker,
-          genImport.classTypeStrMaker,
-          genImport.paramTypeStrMaker,
-          genImport.fieldTypeStrMaker,
-          genImport.returnTypeStrMaker))
+
+  var steam = Stream.fromFutures(
+    library.libs.map<Future<String>>(
+      (e) => genCodeLibInfoMirrorInfo(
+        e,
+        genImport.annTypeStrMaker,
+        genImport.classTypeStrMaker,
+        genImport.paramTypeStrMaker,
+        genImport.fieldTypeStrMaker,
+        genImport.returnTypeStrMaker,
+        genImport.typeStrMaker,
+        parser,
+      ),
+    ),
+  );
+  var list = await steam.toList();
+
+  var content = list
       .where((element) => element.isNotEmpty)
       .fold('', (previousValue, element) => '$previousValue$element');
   var importsValue = imports
@@ -140,11 +162,11 @@ String genCodeMirrorInfo(GLibrary library) {
 String _genCodeLibInfoMirrorRegister(
   List<GClass> libraryClass,
   String libAsNameStr,
-  String Function(GClass param) classTypeStrMaker,
+  String Function(GClass clazz) typeStrMaker,
 ) {
   var classes = <String>[];
   libraryClass.forEach((clazz) {
-    classes.add(classTypeStrMaker.call(clazz).replaceAll('.', ''));
+    classes.add(typeStrMaker.call(clazz).replaceAll('.', ''));
   });
 
   return _genCodeLibInfoMirrorRegisterTemplate(classes, false, []);
@@ -179,109 +201,194 @@ class Register implements IMirrorRegister {
 }
 
 ///根据类包信息信息生成注册器 的类信息内容
-String genCodeLibInfoMirrorInfo(
-    GLibraryInfo library,
-    String Function(ConstantReader param) annTypeStrMaker,
-    String Function(GClass param) classTypeStrMaker,
-    String Function(GParam param) paramTypeStrMaker,
-    String Function(GField param) fieldTypeStrMaker,
-    String Function(GFunction param) returnTypeStrMaker) {
-  return library.classes
-      .map((e) => _genCodeClassMirrorInfo(e, annTypeStrMaker, classTypeStrMaker,
-          paramTypeStrMaker, fieldTypeStrMaker, returnTypeStrMaker))
+Future<String> genCodeLibInfoMirrorInfo(
+  GLibraryInfo library,
+  String Function(ConstantReader param) annTypeStrMaker,
+  String Function(GClass param) classTypeStrMaker,
+  String Function(GParam param) paramTypeStrMaker,
+  String Function(GField param) fieldTypeStrMaker,
+  String Function(GFunction param) returnTypeStrMaker,
+  String Function(DartType type) typeStrMaker,
+  AssetsTypeParser parser,
+) async {
+  return (await Stream.fromFutures(
+    library.classes.map<Future<String>>(
+      (e) => _genCodeClassMirrorInfo(
+          e,
+          annTypeStrMaker,
+          classTypeStrMaker,
+          paramTypeStrMaker,
+          fieldTypeStrMaker,
+          returnTypeStrMaker,
+          typeStrMaker,
+          parser),
+    ),
+  ).toList())
       .where((element) => element.isNotEmpty)
       .fold('', (previousValue, element) => '$previousValue$element');
 }
 
 ///生成具体的类信息
-String _genCodeClassMirrorInfo(
-    GClass clazz,
-    String Function(ConstantReader param) annTypeStrMaker,
-    String Function(GClass param) classTypeStrMaker,
-    String Function(GParam param) paramTypeStrMaker,
-    String Function(GField param) fieldTypeStrMaker,
-    String Function(GFunction param) returnTypeStrMaker) {
+FutureOr<String> _genCodeClassMirrorInfo(
+  GClass clazz,
+  String Function(ConstantReader param) annTypeStrMaker,
+  String Function(GClass param) classTypeStrMaker,
+  String Function(GParam param) paramTypeStrMaker,
+  String Function(GField param) fieldTypeStrMaker,
+  String Function(GFunction param) returnTypeStrMaker,
+  String Function(DartType type) typeStrMaker,
+  AssetsTypeParser parser,
+) async {
   var classTypeName = classTypeStrMaker.call(clazz);
   var className = classTypeName.replaceAll('.', '');
-  var annotationClass = annTypeStrMaker.call(clazz.annotationValue);
+  var annotation = clazz.annotationValue;
+  var annotationClass = annTypeStrMaker.call(annotation);
 
   return '''
- final mirror$className = MirrorClass<$classTypeName>(
+ final mirror$className = MirrorClass<$classTypeName,$annotationClass>(
     '${clazz.key}',
-    ${_genCodeMClass(clazz.annotation)},
-    TypeToken<${annotationClass}>(),
-    TypeToken<$classTypeName>(),
+    ${await _genCodeAnnotation(clazz.annotationValue, typeStrMaker, parser)},
     '${clazz.element.displayName}',
-    <MirrorConstructor<$classTypeName>>[
-        ${clazz.constructors.isEmpty ? '' : clazz.constructors.map((e) => _genCodeConstructor(classTypeName, e, annTypeStrMaker, paramTypeStrMaker)).where((e) => e.isNotEmpty).reduce((v, e) => '$v,$e')}
+    <MirrorConstructor<$classTypeName,MConstructor>>[
+        ${clazz.constructors.isEmpty ? '' : await (await Stream.fromFutures(clazz.constructors.map((e) async => await _genCodeConstructor(classTypeName, e, annTypeStrMaker, paramTypeStrMaker, typeStrMaker, parser)).toList())).where((e) => e.isNotEmpty).reduce((v, e) => '$v,$e')}
     ],
-    <MirrorField<$classTypeName,dynamic>>[
-        ${clazz.fields.isEmpty ? '' : clazz.fields.map((e) => _genCodeField(classTypeName, e, annTypeStrMaker, fieldTypeStrMaker)).where((e) => e.isNotEmpty).reduce((v, e) => '$v,$e')}
+    <MirrorField<$classTypeName,MField,dynamic>>[
+        ${clazz.fields.isEmpty ? '' : await (await Stream.fromFutures(clazz.fields.map((e) async => await _genCodeField(classTypeName, e, annTypeStrMaker, fieldTypeStrMaker, typeStrMaker, parser)).toList())).where((e) => e.isNotEmpty).reduce((v, e) => '$v,$e')}
     ],
-    <MirrorFunction<$classTypeName,dynamic>>[
-        ${clazz.functions.isEmpty ? '' : clazz.functions.map((e) => _genCodeFunction(classTypeName, e, annTypeStrMaker, paramTypeStrMaker, returnTypeStrMaker)).where((e) => e.isNotEmpty).reduce((v, e) => '$v,$e')}
+    <MirrorFunction<$classTypeName,MFunction,dynamic>>[
+        ${clazz.functions.isEmpty ? '' : await (await Stream.fromFutures(clazz.functions.map((e) async => await _genCodeFunction(classTypeName, e, annTypeStrMaker, paramTypeStrMaker, returnTypeStrMaker, typeStrMaker, parser)).toList())).where((e) => e.isNotEmpty).reduce((v, e) => '$v,$e')}
     ],
   );
   ''';
 }
 
-///生成具体的注解的base信息
-String _genCodeAnnBase(AnnBase ann) {
-  return ''' 
-      key: '${ann.key}',
-      tag: '${ann.tag}',
-      ext: ${ann.ext},
-      flag: ${ann.flag},
-      tag1: '${ann.tag1}',
-      ext1: ${ann.ext1},
-      flag1: ${ann.flag1},
-      tagList: const [${ann.tagList.isEmpty ? '' : ann.tagList.map((e) => "'e'").reduce((v, e) => '$v,$e')}],
-      extList: const [${ann.extList.isEmpty ? '' : ann.extList.map((e) => e.toString()).reduce((v, e) => '$v,$e')}],
-  ''';
-}
+///生成具体的注解
+Future<String> _genCodeAnnotation(
+  ConstantReader annotationValue,
+  String Function(DartType type) typeStrMaker,
+  AssetsTypeParser parser,
+) =>
+    _genAnnotation(annotationValue, typeStrMaker, parser);
 
-///生成具体的类注解信息
-String _genCodeMClass(MClass mClass) {
-  if (mClass == null) return 'null';
-  return '''
-      MClass(
-      ${_genCodeAnnBase(mClass)}
-      keyGenType: ${mClass.keyGenType},
-      needAssignableFrom: ${mClass.needAssignableFrom},
-      anyOneAssignableFrom: ${mClass.anyOneAssignableFrom},
-      scanConstructors: ${mClass.scanConstructors},
-      scanConstructorsUsedBlockList: ${mClass.scanConstructorsUsedBlockList},
-      scanFunctions: ${mClass.scanFunctions},
-      scanFunctionsUsedBlockList: ${mClass.scanFunctionsUsedBlockList},
-      scanSuperFunctions: ${mClass.scanSuperFunctions},
-      scanFields: ${mClass.scanFields},
-      scanFieldsUsedBlockList: ${mClass.scanFieldsUsedBlockList},
-      scanSuperFields: ${mClass.scanSuperFields},
-    )
-  '''
-      .trim();
+///生成具体的注解信息
+Future<String> _genAnnotation(
+  ConstantReader reader,
+  String Function(DartType type) typeStrMaker,
+  AssetsTypeParser parser,
+) async {
+  if (reader == null || reader.isNull) return 'null';
+  if (reader.isString) {
+    return "'${reader.stringValue}'";
+  } else if (reader.isDouble) {
+    return '${reader.doubleValue}';
+  } else if (reader.isInt) {
+    return '${reader.intValue}';
+  } else if (reader.isBool) {
+    return '${reader.boolValue}';
+  } else if (reader.isMap) {
+    var map = '{';
+    if (reader != null && !reader.isNull) {
+      await reader.mapValue.entries.forEach((e) async {
+        map +=
+            '${await _genAnnotation(ConstantReader(e.key), typeStrMaker, parser)}:${await _genAnnotation(ConstantReader(e.value), typeStrMaker, parser)},';
+      });
+    }
+    map += '}';
+    return map;
+  } else if (reader.isList) {
+    var list = '[';
+    await reader.listValue.forEach((e) async {
+      list +=
+          '${await _genAnnotation(ConstantReader(e), typeStrMaker, parser)},';
+    });
+    list += ']';
+    return list;
+  } else if (reader.isSet) {
+    var list = '{';
+    await reader.listValue.forEach((e) async {
+      list +=
+          '${await _genAnnotation(ConstantReader(e), typeStrMaker, parser)},';
+    });
+    list += '}';
+    return list;
+  } else if (reader.isType) {
+    return typeStrMaker.call(reader.typeValue);
+  } else {
+    Log.log('_genAnnotation ${reader.objectValue.type}');
+    var fun = reader.objectValue.toFunctionValue();
+    if (fun != null) {
+      final element = fun;
+      var as = typeStrMaker.call(element.type);
+      // var revive = reader.revive();
+      return '$as';
+    } else {
+      var result = '';
+      var revive = reader.revive();
+      var pArgs = revive?.positionalArguments ?? [];
+      var namedArgs = revive?.namedArguments ?? {};
+      var accessor = revive?.accessor ?? '';
+      if (revive == null) return result;
+      if (accessor.isNotEmpty) {
+        result += '.$accessor';
+      }
+      var type = await parser.call(revive.source);
+      result += typeStrMaker.call(type);
+      // Log.log('_genAnnotation $result $namedArgs');
+      result += '(';
+      var argsStream = Stream.fromFutures(pArgs.map((e) async =>
+          await _genAnnotation(ConstantReader(e), typeStrMaker, parser)));
+      var argsS = await argsStream.toList();
+      argsS.forEach((element) {
+        result += element;
+        result += ',';
+      });
+      // await pArgs.forEach((element) async {
+      //   result +=
+      //       '${await _genAnnotation(ConstantReader(element), typeStrMaker, parser)},';
+      // });
+
+      var namedArgsStream = Stream.fromFutures(namedArgs.entries.map((e) async =>
+          '${e.key}:${await _genAnnotation(ConstantReader(e.value), typeStrMaker, parser)}'));
+
+      var namedArgsS = await namedArgsStream.toList();
+      namedArgsS.forEach((element) {
+        result += element;
+        result += ',';
+      });
+      // await namedArgs.forEach((key, value) async {
+      //   result +=
+      //       '$key:${await _genAnnotation(ConstantReader(value), typeStrMaker, parser)},';
+      // });
+      result += ')';
+      return result;
+    }
+  }
 }
 
 ///生成函数信息
-String _genCodeConstructor(
-    String classTypeName,
-    GConstructor constructor,
-    String Function(ConstantReader param) annTypeStrMaker,
-    String Function(GParam param) paramTypeStrMaker) {
+Future<FutureOr<String>> _genCodeConstructor(
+  String classTypeName,
+  GConstructor constructor,
+  String Function(ConstantReader param) annTypeStrMaker,
+  String Function(GParam param) paramTypeStrMaker,
+  String Function(DartType type) typeStrMaker,
+  AssetsTypeParser parser,
+) async {
   if (constructor == null) {
     return '';
   }
 
+  var annotation = constructor.annotationValue;
   var annotationClass = constructor.annotationIsNull
       ? 'MConstructor'
       : annTypeStrMaker.call(constructor.annotationValue);
+
   return '''
-  MirrorConstructor<$classTypeName>(
-    ${constructor.annotationIsNull ? '$annotationClass()' : _genCodeMConstructor(constructor.annotation)},
-    TypeToken<${annotationClass}>(),
+  MirrorConstructor<$classTypeName,$annotationClass>(
+    ${constructor.annotationIsNull ? '$annotationClass()' : await _genCodeAnnotation(annotation, typeStrMaker, parser)},
     '${constructor.element.name}',
     <MirrorParam>[
-      ${constructor.params.isEmpty ? '' : constructor.params.map((e) => _genCodeParam(e, annTypeStrMaker, paramTypeStrMaker)).where((e) => e.isNotEmpty).reduce((v, e) => '$v,$e')}
+      ${constructor.params.isEmpty ? '' : await (await Stream.fromFutures(constructor.params.map((e) async => await _genCodeParam(e, annTypeStrMaker, paramTypeStrMaker, typeStrMaker, parser)).toList())).where((e) => e.isNotEmpty).reduce((v, e) => '$v,$e')}
     ],
     ${_genCodeConstructorInvoker(classTypeName, constructor, paramTypeStrMaker, classTypeName)},
   )
@@ -289,22 +396,15 @@ String _genCodeConstructor(
       .trim();
 }
 
-///生成函数的注解信息
-String _genCodeMConstructor(MConstructor constructor) {
-  if (constructor == null) return 'null';
-  return '''
-      MConstructor(
-      ${_genCodeAnnBase(constructor)}
-    )
-  ''';
-}
-
 ///生成属性信息
-String _genCodeField(
-    String classTypeName,
-    GField field,
-    String Function(ConstantReader param) annTypeStrMaker,
-    String Function(GField param) fieldTypeStrMaker) {
+FutureOr<String> _genCodeField(
+  String classTypeName,
+  GField field,
+  String Function(ConstantReader param) annTypeStrMaker,
+  String Function(GField param) fieldTypeStrMaker,
+  String Function(DartType type) typeStrMaker,
+  AssetsTypeParser parser,
+) async {
   if (field == null) {
     return '';
   }
@@ -313,11 +413,9 @@ String _genCodeField(
       : annTypeStrMaker.call(field.annotationValue);
   var fieldTypeStr = fieldTypeStrMaker.call(field);
   return '''
-    MirrorField<$classTypeName,${fieldTypeStr}>(
-    ${field.annotationIsNull ? '$annotationClass()' : _genCodeMField(field.annotation)},
-    TypeToken<${annotationClass}>(),
+    MirrorField<$classTypeName,${annotationClass},${fieldTypeStr}>(
+    ${field.annotationIsNull ? '$annotationClass()' : await _genCodeAnnotation(field.annotationValue, typeStrMaker, parser)},
     '${field.element.name}',
-    TypeToken<${fieldTypeStr}>(),
     ${field.element.getter == null ? 'null' : _genCodeFieldGetInvoker(classTypeName, field, fieldTypeStr)},
     ${field.element.setter == null ? 'null' : _genCodeFieldSetInvoker(classTypeName, field, fieldTypeStr)},
   )
@@ -325,39 +423,34 @@ String _genCodeField(
       .trim();
 }
 
-///生成属性的注解信息
-String _genCodeMField(MField field) {
-  if (field == null) return 'null';
-  return '''
-      MField(
-      ${_genCodeAnnBase(field)}
-    )
-  ''';
-}
-
 ///生成函数信息
-String _genCodeFunction(
-    String classTypeName,
-    GFunction function,
-    String Function(ConstantReader param) annTypeStrMaker,
-    String Function(GParam param) paramTypeStrMaker,
-    String Function(GFunction param) returnTypeStrMaker) {
+Future<FutureOr<String>> _genCodeFunction(
+  String classTypeName,
+  GFunction function,
+  String Function(ConstantReader param) annTypeStrMaker,
+  String Function(GParam param) paramTypeStrMaker,
+  String Function(GFunction param) returnTypeStrMaker,
+  String Function(DartType type) typeStrMaker,
+  AssetsTypeParser parser,
+) async {
   if (function == null) {
     return '';
   }
-  var annotationClass = function.annotationIsNull
-      ? 'MFunction'
-      : annTypeStrMaker.call(function.annotationValue);
+
   var returnTypeStr = returnTypeStrMaker.call(function);
+
+  var annotation = function.annotationValue;
+  var annotationClass = function.annotationIsNull
+      ? 'MConstructor'
+      : annTypeStrMaker.call(function.annotationValue);
+
   return '''
-    MirrorFunction<$classTypeName,${returnTypeStr}>(
-    ${function.annotationIsNull ? '$annotationClass()' : _genCodeMFunction(function.annotation)},
-    TypeToken<${annotationClass}>(),
+    MirrorFunction<$classTypeName,$annotationClass,${returnTypeStr}>(
+    ${function.annotationIsNull ? '$annotationClass()' : await _genCodeAnnotation(annotation, typeStrMaker, parser)},
     '${function.element.name}',
     <MirrorParam>[
-      ${function.params.isEmpty ? '' : function.params.map((e) => _genCodeParam(e, annTypeStrMaker, paramTypeStrMaker)).where((e) => e.isNotEmpty).reduce((v, e) => '$v,$e')}
+      ${function.params.isEmpty ? '' : await (await Stream.fromFutures(function.params.map((e) async => await _genCodeParam(e, annTypeStrMaker, paramTypeStrMaker, typeStrMaker, parser)).toList())).where((e) => e.isNotEmpty).reduce((v, e) => '$v,$e')}
     ],
-    TypeToken<${returnTypeStr}>(),
     ${_genCodeFunctionInvoker(classTypeName, function, paramTypeStrMaker, returnTypeStr)},
     ${_genCodeFunctionInstance(classTypeName, function)},
   )
@@ -365,21 +458,14 @@ String _genCodeFunction(
       .trim();
 }
 
-///生成函数的注解信息
-String _genCodeMFunction(MFunction function) {
-  if (function == null) return 'null';
-  return '''
-      MFunction(
-      ${_genCodeAnnBase(function)}
-    )
-  ''';
-}
-
 ///生成函数的参数信息
-String _genCodeParam(
-    GParam param,
-    String Function(ConstantReader param) annTypeStrMaker,
-    String Function(GParam param) paramTypeStrMaker) {
+FutureOr<String> _genCodeParam(
+  GParam param,
+  String Function(ConstantReader param) annTypeStrMaker,
+  String Function(GParam param) paramTypeStrMaker,
+  String Function(DartType type) typeStrMaker,
+  AssetsTypeParser parser,
+) async {
   if (param == null) {
     return '';
   }
@@ -387,25 +473,13 @@ String _genCodeParam(
       ? 'MParam'
       : annTypeStrMaker.call(param.annotationValue);
   return '''
-  MirrorParam(
-    ${param.annotationIsNull ? '$annotationClass()' : _genCodeMParam(param.annotation)},
-    TypeToken<${annotationClass}>(), 
+  MirrorParam<$annotationClass,${paramTypeStrMaker.call(param)}>(
+    ${param.annotationIsNull ? '$annotationClass()' : await _genCodeAnnotation(param.annotationValue, typeStrMaker, parser)},
     '${param.element.name}', 
-    TypeToken<${paramTypeStrMaker.call(param)}>(),
     ${param.element.isNamed ? 'true' : 'false'}
   )
   '''
       .trim();
-}
-
-///生成函数的参数注解信息
-String _genCodeMParam(MParam param) {
-  if (param == null) return 'null';
-  return '''
-      MParam(
-      ${_genCodeAnnBase(param)}
-    )
-  ''';
 }
 
 ///生成构造函数的代理执行器
@@ -431,13 +505,6 @@ String _genCodeConstructorInvoker(
 
   return '''
    (Map<String, dynamic> params) {
-   
-   //${constructor.isConstructorArgMap}
-   //${constructor.annotationIsNull}
-   //${constructor.params.length != 1 ? '略过' : constructor.params[0].element.isNamed || constructor.params[0].annotationIsNull || constructor.params[0].annotation.key.isNotEmpty}
-   //${constructor.params.length != 1 ? '略过' : constructor.params[0].type.value.isDartCoreMap}
-   
-   
      ${_genCodeFunctionInvokerForMapParamsSwitch(CMD, constructor.params, 'params', '''
         throw new IllegalArgumentException(${classTypeName},
             '${constructor.element.name}',

@@ -266,11 +266,19 @@ class MFunction extends AnnBase {
             flag1: flag1,
             tagList: tagList,
             extList: extList);
+
+  const MFunction.a({
+    String key = '',
+  });
 }
 
 ///禁止模式模式时有效 不扫描的方法
 class MMethodNot {
   const MMethodNot();
+
+  const MMethodNot.a({
+    String key = '',
+  });
 }
 
 ///指定Class的属性
@@ -300,4 +308,6 @@ class MField extends AnnBase {
 ///禁止模式时有效 不扫描的属性
 class MFieldNot {
   const MFieldNot();
+
+  const MFieldNot.a();
 }

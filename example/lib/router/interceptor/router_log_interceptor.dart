@@ -20,12 +20,15 @@
 //  }
 //}
 //
+import 'package:example/page/page_home.dart';
 import 'package:magic_mirror/mirror.dart';
 
 import '../../entity/user.dart';
 import '../../tools/ann.dart';
 
-@RouterInterceptor("^/test", priority: 101)
+void init() {}
+
+@RouterInterceptor("^/test", priority: 101, type: HomePage,function: init)
 class RouterLog3Interceptor extends RouterInterceptorBase {
   @MField()
   String testSearch;
@@ -45,7 +48,7 @@ class RouterLog3Interceptor extends RouterInterceptorBase {
   @MFunction()
   bool init3(String msg, {bool flag, User user}) => flag;
 
-  @MFunction()
+  // @MFunction.a(key: 'aaaaaaaa')
   bool init4({String msg, bool flag, User user}) => flag;
 
   @override
