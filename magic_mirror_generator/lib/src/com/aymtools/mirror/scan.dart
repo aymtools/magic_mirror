@@ -65,7 +65,7 @@ const TypeChecker _classMethodAnnotation = TypeChecker.fromRuntime(MFunction);
 
 ///函数的注解判定器 禁止模式时使用
 const TypeChecker _classMethodNotAnnotation =
-    TypeChecker.fromRuntime(MMethodNot);
+    TypeChecker.fromRuntime(MFunctionNot);
 
 ///属性的注解判定器
 const TypeChecker _classFieldAnnotation = TypeChecker.fromRuntime(MField);

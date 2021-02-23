@@ -117,6 +117,7 @@ class MagicMirror implements IMirrorRegister {
   static T newInstanceS<T>(String uri, {dynamic param}) {
     return instance.newInstanceByUri(uri, param: param);
   }
+
   ///根据uri 和传入的参数信息实例化对象
   static T newInstanceSI<T>(ClassUriInfo uriInfo, {dynamic param}) {
     return instance.newInstanceByClassUriInfo(uriInfo, param: param);
@@ -278,13 +279,17 @@ class MagicMirror implements IMirrorRegister {
   List<MirrorClass> classInfos() => _register?.classInfos() ?? [];
 
   ///根据key信息自动加载对应的类信息
-  MirrorClass<T,dynamic> load<T>(String classKey) =>
-      mirrorClassesK.containsKey(classKey) ? mirrorClassesK[classKey] as MirrorClass<T,dynamic> : null;
+  MirrorClass<T, MClass> load<T>(String classKey) =>
+      mirrorClassesK.containsKey(classKey)
+          ? mirrorClassesK[classKey] as MirrorClass<T, MClass>
+          : null;
 
   ///根据具体类型 加载对应的类信息 ，可能会找不到 未注册
-  MirrorClass<T,dynamic> mirror<T>() {
+  MirrorClass<T, dynamic> mirror<T>() {
     Type type = genType<T>();
-    return mirrorClassesT.containsKey(type) ? mirrorClassesT[type] as MirrorClass<T,dynamic> : null;
+    return mirrorClassesT.containsKey(type)
+        ? mirrorClassesT[type] as MirrorClass<T, dynamic>
+        : null;
   }
 
   ///判断根据key和命名构造函数 是否可以构造该类的实例
@@ -311,8 +316,8 @@ class MagicMirror implements IMirrorRegister {
       String classKey, String namedConstructor, Map<String, String> uriParams,
       {dynamic param}) {
     var params = <String, dynamic>{};
-    MirrorClass<T,dynamic> clazz = load<T>(classKey);
-    MirrorConstructor<T,dynamic> constructor;
+    MirrorClass<T, MClass> clazz = load<T>(classKey);
+    MirrorConstructor<T, MConstructor> constructor;
     if (clazz != null &&
         (constructor = clazz.getConstructor(namedConstructor)) != null) {
       if (constructor.params.isNotEmpty) {
@@ -342,9 +347,9 @@ class MagicMirror implements IMirrorRegister {
   ///执行类中的指定方法
   R invokeMethod<T, R>(T bean, String methodName,
       {Map<String, dynamic> params}) {
-    MirrorClass<T,dynamic> clazz = mirror<T>();
+    MirrorClass<T, dynamic> clazz = mirror<T>();
     if (clazz != null) {
-      MirrorFunction<T, dynamic, R> function;
+      MirrorFunction<T, MFunction, R> function;
       if ((function = clazz.getFunction(methodName)) != null) {
         return function.invoke(bean, params);
       } else {
@@ -357,9 +362,9 @@ class MagicMirror implements IMirrorRegister {
 
   ///执行为类对象的属性赋值
   void setFieldValue<T, V>(T bean, String fieldName, V value) {
-    MirrorClass<T,dynamic> clazz = mirror<T>();
+    MirrorClass<T, dynamic> clazz = mirror<T>();
     if (clazz != null) {
-      MirrorField<T,dynamic, dynamic> field;
+      MirrorField<T, dynamic, dynamic> field;
       if ((field = clazz.getField(fieldName)) != null && field.hasSetter) {
         field.set(bean, value);
       } else {
@@ -372,9 +377,9 @@ class MagicMirror implements IMirrorRegister {
 
   ///获取为类对象的属性的具体值
   V getFieldValue<T, V>(T bean, String fieldName) {
-    MirrorClass<T,dynamic> clazz = mirror<T>();
+    MirrorClass<T, dynamic> clazz = mirror<T>();
     if (clazz != null) {
-      MirrorField<T,dynamic, dynamic> field;
+      MirrorField<T, dynamic, dynamic> field;
       if ((field = clazz.getField(fieldName)) != null && field.hasGetter) {
         return field.get(bean);
       } else {
@@ -387,7 +392,7 @@ class MagicMirror implements IMirrorRegister {
 
   ///将map中的值自动赋值到对应是属性上
   void setFieldValues<T>(T bean, Map<String, dynamic> values) {
-    MirrorClass<T,dynamic> clazz = mirror<T>();
+    MirrorClass<T, dynamic> clazz = mirror<T>();
     if (clazz != null) {
       clazz.fields.where((element) => element.hasSetter).forEach((element) {
         if (values.containsKey(element.key)) {
@@ -404,7 +409,7 @@ class MagicMirror implements IMirrorRegister {
   ///将所有的可获取的属性全部获取 为map
   Map<String, dynamic> getFieldValues<T>(T bean) {
     var result = <String, dynamic>{};
-    MirrorClass<T,dynamic> clazz = mirror<T>();
+    MirrorClass<T, dynamic> clazz = mirror<T>();
     if (clazz != null) {
       clazz.fields.where((element) => element.hasGetter).forEach((element) {
         result[element.key] = element.get(bean);

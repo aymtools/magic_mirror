@@ -44,13 +44,13 @@ class MirrorClass<T, A extends MClass> {
   TypeToken<T> get type => TypeToken<T>();
 
   ///所有的扫描到的构造函数
-  final List<MirrorConstructor<T, dynamic>> constructors;
+  final List<MirrorConstructor<T, MConstructor>> constructors;
 
   ///所有的扫描到的属性
-  final List<MirrorField<T, dynamic, dynamic>> fields;
+  final List<MirrorField<T, MField, dynamic>> fields;
 
   ///所有的扫描到的函数 不包含构造函数 和 get set
-  final List<MirrorFunction<T, dynamic, dynamic>> functions;
+  final List<MirrorFunction<T, MFunction, dynamic>> functions;
 
   const MirrorClass(this.key, this.annotation, this.name, this.constructors,
       this.fields, this.functions);
@@ -65,15 +65,15 @@ class MirrorClass<T, A extends MClass> {
   }
 
   ///根据命名构造函数的key来查找可用的构造函数
-  MirrorConstructor<T, dynamic> getConstructor(String constructorName) =>
+  MirrorConstructor<T, MConstructor> getConstructor(String constructorName) =>
       findFistWhere(constructors, (e) => e.key == constructorName);
 
   ///根据函数的key 来查找可用的函数
-  MirrorFunction<T, dynamic, dynamic> getFunction(String functionName) =>
+  MirrorFunction<T, MFunction, dynamic> getFunction(String functionName) =>
       findFistWhere(functions, (e) => e.key == functionName);
 
   ///根据属性的key 来查找可用的属性
-  MirrorField<T, dynamic, dynamic> getField(String fieldName) =>
+  MirrorField<T, MField, dynamic> getField(String fieldName) =>
       findFistWhere(fields, (e) => e.key == fieldName);
 }
 
@@ -89,7 +89,7 @@ class MirrorConstructor<T, A extends MConstructor> {
   final String name;
 
   ///函数所需要的参数信息
-  final List<MirrorParam> params;
+  final List<MirrorParam<MParam,dynamic>> params;
 
   ///具体的执行器
   final MirrorConstructorInvoker<T> invoker;
@@ -127,7 +127,7 @@ class MirrorFunction<T, A extends MFunction, R> {
   final String name;
 
   ///函数所需要的参数信息
-  final List<MirrorParam> params;
+  final List<MirrorParam<MParam,dynamic>> params;
 
   ///函数的返回类型
   TypeToken<R> get returnType => TypeToken<R>();
