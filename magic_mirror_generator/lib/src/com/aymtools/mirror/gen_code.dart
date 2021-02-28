@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:magic_mirror/mirror.dart';
 import 'package:source_gen/source_gen.dart';
 import 'package:analyzer/dart/element/type.dart';
+import 'package:analyzer/dart/element/element.dart';
 
 // ignore: library_prefixes
 import 'dart:math' as Math;
@@ -286,41 +287,38 @@ Future<String> _genAnnotation(
   } else if (reader.isBool) {
     return '${reader.boolValue}';
   } else if (reader.isMap) {
-    var map = '{';
-    if (reader != null && !reader.isNull) {
-      await reader.mapValue.entries.forEach((e) async {
-        map +=
-            '${await _genAnnotation(ConstantReader(e.key), typeStrMaker, parser)}:${await _genAnnotation(ConstantReader(e.value), typeStrMaker, parser)},';
-      });
-    }
-    map += '}';
-    return map;
+    var mapContent = await Stream.fromFutures(reader.mapValue.entries.map(
+        (e) async => MapEntry(
+            await _genAnnotation(ConstantReader(e.key), typeStrMaker, parser),
+            await _genAnnotation(
+                ConstantReader(e.value), typeStrMaker, parser)))).toList();
+    return '{${mapContent.map((e) => '${e.key}:${e.value}').join(',')}}';
   } else if (reader.isList) {
-    var list = '[';
-    await reader.listValue.forEach((e) async {
-      list +=
-          '${await _genAnnotation(ConstantReader(e), typeStrMaker, parser)},';
-    });
-    list += ']';
-    return list;
+    var listContent = await Stream.fromFutures(reader.listValue.map(
+            (e) => _genAnnotation(ConstantReader(e), typeStrMaker, parser)))
+        .toList();
+    return '[${listContent.join(',')}]';
   } else if (reader.isSet) {
-    var list = '{';
-    await reader.listValue.forEach((e) async {
-      list +=
-          '${await _genAnnotation(ConstantReader(e), typeStrMaker, parser)},';
-    });
-    list += '}';
-    return list;
+    var setContent = await Stream.fromFutures(reader.setValue.map(
+            (e) => _genAnnotation(ConstantReader(e), typeStrMaker, parser)))
+        .toList();
+    return '{${setContent.join(',')}}';
   } else if (reader.isType) {
     return typeStrMaker.call(reader.typeValue);
   } else {
     Log.log('_genAnnotation ${reader.objectValue.type}');
-    var fun = reader.objectValue.toFunctionValue();
-    if (fun != null) {
-      final element = fun;
+    final element =
+        reader.objectValue.type.element ?? reader.objectValue.toFunctionValue();
+
+    if (element is FunctionElement) {
       var as = typeStrMaker.call(element.type);
-      // var revive = reader.revive();
       return '$as';
+    } else if (element is MethodElement && element.isStatic) {
+      var result = '';
+      result += typeStrMaker.call(await parser.call(element.librarySource.uri
+          .replace(fragment: element.enclosingElement.name)));
+      result += '.${element.name}';
+      return result;
     } else {
       var result = '';
       var revive = reader.revive();

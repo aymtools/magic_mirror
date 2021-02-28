@@ -27,22 +27,52 @@ Future<MirrorConfig> _initConfig(BuildStep buildStep) async {
   // });
   //
   // Log.log('MirrorSystem :   $pks  ');
-
+  // Log.log('MirrorSystem :   _initConfig  ');
   MirrorConfig config;
   var package = buildStep.inputId.package;
   var assetId = AssetId(package, 'lib/mirror_config.dart');
   final resolver = buildStep.resolver;
+
   LibraryElement lib;
   if (await buildStep.canRead(assetId) && await resolver.isLibrary(assetId)) {
     lib = await resolver.libraryFor(assetId);
-    // lib.topLevelElements.where((element) => element.metadata.where((e) => e.constantValue));
-
     var annotation =
         LibraryReader(lib).annotatedWith(_configChecker).first?.annotation;
     config = genAnnotation(annotation);
   }
+  if (config == null) {
+    await for (final input in buildStep.findAssets(Glob(r'lib/**'))) {
+      if (!input.path.startsWith('lib/generated')) {
+        final library = await buildStep.resolver.libraryFor(input);
+        var annotation = LibraryReader(library)
+            .annotatedWith(_configChecker)
+            .first
+            ?.annotation;
+        if (annotation != null) {
+          config = genAnnotation(annotation);
+          break;
+        }
+      }
+    }
+  }
   config ??= MirrorConfig();
-  config.importLibsNames['magic_mirror'] = 'mirror';
+
+  var imports = <MImport>[
+    MImport(packageName: 'magic_mirror', libName: 'mirror')
+  ];
+  imports.addAll(config.imports);
+  imports.addAll(config.importLibsNames.entries
+      .map((e) => MImport(packageName: e.key, libName: e.value)));
+
+  config = MirrorConfig(
+    isGenInvoker: config.isGenInvoker,
+    isGenLibExport: config.isGenLibExport,
+    importLibsNames: {'magic_mirror': 'mirror'}..addAll(config.importLibsNames),
+    imports: imports,
+    genGroupBy: config.genGroupBy,
+  );
+
+  // Log.log('MirrorSystem :   _initConfig  end');
   return config;
 }
 
@@ -168,8 +198,7 @@ class MirrorBuilder implements Builder {
       if (_assetsLibCache.containsKey(libUri)) {
         library = _assetsLibCache[libUri];
       } else {
-        library = await buildStep.resolver
-            .libraryFor(AssetId.resolve(libUri));
+        library = await buildStep.resolver.libraryFor(AssetId.resolve(libUri));
       }
       return library.getType(uri.fragment).thisType;
     };
