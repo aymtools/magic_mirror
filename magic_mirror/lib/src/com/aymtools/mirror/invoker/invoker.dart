@@ -321,11 +321,11 @@ class MagicMirror implements IMirrorRegister {
     if (clazz != null &&
         (constructor = clazz.getConstructor(namedConstructor)) != null) {
       if (constructor.params.isNotEmpty) {
-        if (constructor.isConstructorMapArg) {
-          params = genParams(param, uriParams, null);
-        } else {
-          params = genParams(param, uriParams, constructor.params.first.key);
-        }
+        // if (constructor.isConstructorMapArg) {
+        //   params = genParams(param, uriParams, null);
+        // } else {
+        params = genParams(param, uriParams, constructor.params.first.key);
+        // }
       }
       return constructor.newInstanceForMap(params);
     }

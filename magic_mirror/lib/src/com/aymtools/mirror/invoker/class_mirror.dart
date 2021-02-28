@@ -94,8 +94,8 @@ class MirrorConstructor<T, A extends MConstructor> {
   ///具体的执行器
   final MirrorConstructorInvoker<T> invoker;
 
-  static final _checkMapArgAnnotation = TypeToken<MConstructorMapArg>();
-  static final _checkMapType = TypeToken<Map<String, dynamic>>();
+  // static final _checkMapArgAnnotation = TypeToken<MConstructorMapArg>();
+  // static final _checkMapType = TypeToken<Map<String, dynamic>>();
 
   const MirrorConstructor(
       this.annotation, this.name, this.params, this.invoker);
@@ -106,13 +106,13 @@ class MirrorConstructor<T, A extends MConstructor> {
   ///获取key信息 优先从注解中获取 当注解为空时返回扫描时的name
   String get key => annotation.key.isEmpty ? name : annotation.key;
 
-  //判断构造函数的参数是map的 特殊的构造函数
-  bool get isConstructorMapArg =>
-      params.length == 1 &&
-      !params[0].isNamed &&
-      params[0].annotation.key.isEmpty &&
-      annotationType == _checkMapArgAnnotation &&
-      params[0].paramType == _checkMapType;
+  // //判断构造函数的参数是map的 特殊的构造函数
+  // bool get isConstructorMapArg =>
+  //     params.length == 1 &&
+  //     !params[0].isNamed &&
+  //     params[0].annotation.key.isEmpty &&
+  //     annotationType == _checkMapArgAnnotation &&
+  //     params[0].paramType == _checkMapType;
 }
 
 ///扫描到的函数信息

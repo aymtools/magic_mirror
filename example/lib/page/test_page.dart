@@ -95,7 +95,6 @@ class Test3Page extends StatelessWidget {
     title = "title form xml";
   }
 
-  @MConstructorMapArg()
   Test3Page.fromTest(Map<String, dynamic> mapQuery) {
     title = "title form fromTest";
   }

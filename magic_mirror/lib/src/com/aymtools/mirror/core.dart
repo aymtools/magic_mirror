@@ -211,9 +211,9 @@ class MConstructor extends AnnBase {
 }
 
 ///构造函数必须时必须的map参数 且只有一个参数Map<String,dynamic>类型的参数 默认是uri的参数叠加传入的Map参数 若传入的arg非map则以null的key的值存在
-class MConstructorMapArg extends MConstructor {
-  const MConstructorMapArg({String key = ''}) : super(key: key);
-}
+// class MConstructorMapArg extends MConstructor {
+//   const MConstructorMapArg({String key = ''}) : super(key: key);
+// }
 
 ///禁止模式模式时有效 不扫描的构造函数
 class MConstructorNot {
