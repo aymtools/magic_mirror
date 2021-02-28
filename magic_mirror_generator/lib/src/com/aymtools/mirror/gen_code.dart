@@ -188,7 +188,7 @@ class Register implements IMirrorRegister {
   }
 
   @override
-  List<MirrorClass> classInfos() => <MirrorClass>${classes.isEmpty ? '[]' : classes.map((e) => 'mirror$e').toList()};
+  List<MirrorClass> classInfos() => <MirrorClass>${classes.isEmpty ? '[]' : classes.map((e) => '_${e}Mirror.mirror').toList()};
 
 }
   ''';
@@ -229,6 +229,7 @@ Future<String> genCodeLibInfoMirrorInfo(
       .fold('', (previousValue, element) => '$previousValue$element');
 }
 
+
 ///生成具体的类信息
 FutureOr<String> _genCodeClassMirrorInfo(
   GClass clazz,
@@ -245,21 +246,90 @@ FutureOr<String> _genCodeClassMirrorInfo(
   var annotation = clazz.annotationValue;
   var annotationClass = annTypeStrMaker.call(annotation);
 
+  var cs = clazz.constructors.map((e) {
+    var named = e.element?.name ?? '';
+    var CMD = named.isEmpty
+        ? 'return $classTypeName'
+        : 'return $classTypeName.${named}';
+    return '''
+   static ${classTypeName} newInstance${capitalize(e.namedConstructorInKey)}(Map<String, dynamic> params){
+   ${_genCodeFunctionInvokerForMapParamsSwitch(CMD, e.params, 'params', '''
+        throw new IllegalArgumentException(${classTypeName},
+            '${named}',
+            [${e.params.map((e) => "Pair('${e.paramKey}',MagicMirror.genType<${paramTypeStrMaker.call(e)}>())").fold('', (p, e) => p == '' ? e : "$p,$e")}],
+            params.entries.map((e)=>Pair(e.key, e.value.runtimeType)).toList());
+     ''', paramTypeStrMaker)}
+   }
+   ''';
+  }).toList();
+
+  var fs = clazz.fields.map((e) {
+    var fieldTypeStr = fieldTypeStrMaker.call(e);
+    return '''
+   static ${fieldTypeStr} get${capitalize(e.fieldName)}(${classTypeName} bean)=> bean.${e.element.name};
+   
+   static void set${capitalize(e.fieldName)}(${classTypeName} bean , dynamic  value) {
+      if (MagicMirror.hasTypeAdapterS2Value<${fieldTypeStr}>(value)) {
+        bean.${e.element.name} = MagicMirror.convertTypeS<${fieldTypeStr}>(value);
+      } else {
+        throw new IllegalArgumentException(${classTypeName},
+            '${e.element.name}',
+            [Pair('${e.element.name}', MagicMirror.genType<${fieldTypeStr}>())],
+            [Pair('${e.element.name}', value.runtimeType)]);
+      }
+  }
+   ''';
+  }).toList();
+
+  var funs = clazz.functions.map((e) {
+    var returnTypeStr = returnTypeStrMaker.call(e);
+    var CMD =
+        '${'Void' == returnTypeStr ? '' : 'return'} bean.${e.element.name}';
+    var cmdAfter =
+        'Void' == returnTypeStr ? <String>['return Void();'] : <String>[];
+    return '''
+   static ${returnTypeStr} invoke${capitalize(e.functionName)}(${classTypeName} bean, Map<String, dynamic> params){
+    ${_genCodeFunctionInvokerForMapParamsSwitch(
+      CMD,
+      e.params,
+      'params',
+      '''
+        throw new IllegalArgumentException(${classTypeName},
+            '${e.element.name}',
+            [${e.params.map((e) => "Pair('${e.paramKey}',MagicMirror.genType<${paramTypeStrMaker.call(e)}>())").fold('', (p, e) => p == '' ? e : "$p,$e")}],
+            params.entries.map((e)=>Pair(e.key, e.value.runtimeType)).toList());
+     ''',
+      paramTypeStrMaker,
+      cmdAfter: cmdAfter,
+    )}
+   }
+   
+   static Function fun${capitalize(e.functionName)}(${classTypeName} bean) => bean.${e.element.displayName};
+   ''';
+  }).toList();
+
   return '''
- final mirror$className = MirrorClass<$classTypeName,$annotationClass>(
+class _${className}Mirror{
+  ${cs.join(' ')}
+  ${fs.join(' ')}
+  ${funs.join(' ')}
+  
+     
+   static final mirror = const MirrorClass<$classTypeName,$annotationClass>(
     '${clazz.key}',
-    ${await _genCodeAnnotation(clazz.annotationValue, typeStrMaker, parser)},
+    const ${await _genCodeAnnotation(clazz.annotationValue, typeStrMaker, parser)},
     '${clazz.element.displayName}',
-    <MirrorConstructor<$classTypeName,MConstructor>>[
+    const <MirrorConstructor<$classTypeName,MConstructor>>[
         ${clazz.constructors.isEmpty ? '' : await (await Stream.fromFutures(clazz.constructors.map((e) async => await _genCodeConstructor(classTypeName, e, annTypeStrMaker, paramTypeStrMaker, typeStrMaker, parser)).toList())).where((e) => e.isNotEmpty).reduce((v, e) => '$v,$e')}
     ],
-    <MirrorField<$classTypeName,MField,dynamic>>[
+    const <MirrorField<$classTypeName,MField,dynamic>>[
         ${clazz.fields.isEmpty ? '' : await (await Stream.fromFutures(clazz.fields.map((e) async => await _genCodeField(classTypeName, e, annTypeStrMaker, fieldTypeStrMaker, typeStrMaker, parser)).toList())).where((e) => e.isNotEmpty).reduce((v, e) => '$v,$e')}
     ],
-    <MirrorFunction<$classTypeName,MFunction,dynamic>>[
+    const <MirrorFunction<$classTypeName,MFunction,dynamic>>[
         ${clazz.functions.isEmpty ? '' : await (await Stream.fromFutures(clazz.functions.map((e) async => await _genCodeFunction(classTypeName, e, annTypeStrMaker, paramTypeStrMaker, returnTypeStrMaker, typeStrMaker, parser)).toList())).where((e) => e.isNotEmpty).reduce((v, e) => '$v,$e')}
     ],
   );
+}
   ''';
 }
 
@@ -383,15 +453,17 @@ Future<FutureOr<String>> _genCodeConstructor(
 
   return '''
   MirrorConstructor<$classTypeName,$annotationClass>(
-    ${constructor.annotationIsNull ? '$annotationClass()' : await _genCodeAnnotation(annotation, typeStrMaker, parser)},
+   const ${constructor.annotationIsNull ? '$annotationClass()' : await _genCodeAnnotation(annotation, typeStrMaker, parser)},
     '${constructor.element.name}',
-    <MirrorParam>[
+   const <MirrorParam>[
       ${constructor.params.isEmpty ? '' : await (await Stream.fromFutures(constructor.params.map((e) async => await _genCodeParam(e, annTypeStrMaker, paramTypeStrMaker, typeStrMaker, parser)).toList())).where((e) => e.isNotEmpty).reduce((v, e) => '$v,$e')}
     ],
-    ${_genCodeConstructorInvoker(classTypeName, constructor, paramTypeStrMaker, classTypeName)},
+    newInstance${capitalize(constructor.namedConstructorInKey)},
   )
   '''
       .trim();
+
+  // ${_genCodeConstructorInvoker(classTypeName, constructor, paramTypeStrMaker, classTypeName)},
 }
 
 ///生成属性信息
@@ -412,13 +484,15 @@ FutureOr<String> _genCodeField(
   var fieldTypeStr = fieldTypeStrMaker.call(field);
   return '''
     MirrorField<$classTypeName,${annotationClass},${fieldTypeStr}>(
-    ${field.annotationIsNull ? '$annotationClass()' : await _genCodeAnnotation(field.annotationValue, typeStrMaker, parser)},
+   const ${field.annotationIsNull ? '$annotationClass()' : await _genCodeAnnotation(field.annotationValue, typeStrMaker, parser)},
     '${field.element.name}',
-    ${field.element.getter == null ? 'null' : _genCodeFieldGetInvoker(classTypeName, field, fieldTypeStr)},
-    ${field.element.setter == null ? 'null' : _genCodeFieldSetInvoker(classTypeName, field, fieldTypeStr)},
+    ${field.element.getter == null ? 'null' : 'get${capitalize(field.fieldName)}'},
+    ${field.element.setter == null ? 'null' : 'set${capitalize(field.fieldName)}'},
   )
   '''
       .trim();
+  // ${field.element.getter == null ? 'null' : _genCodeFieldGetInvoker(classTypeName, field, fieldTypeStr)},
+  // ${field.element.setter == null ? 'null' : _genCodeFieldSetInvoker(classTypeName, field, fieldTypeStr)},
 }
 
 ///生成函数信息
@@ -444,16 +518,18 @@ Future<FutureOr<String>> _genCodeFunction(
 
   return '''
     MirrorFunction<$classTypeName,$annotationClass,${returnTypeStr}>(
-    ${function.annotationIsNull ? '$annotationClass()' : await _genCodeAnnotation(annotation, typeStrMaker, parser)},
+    const ${function.annotationIsNull ? '$annotationClass()' : await _genCodeAnnotation(annotation, typeStrMaker, parser)},
     '${function.element.name}',
-    <MirrorParam>[
+    const <MirrorParam>[
       ${function.params.isEmpty ? '' : await (await Stream.fromFutures(function.params.map((e) async => await _genCodeParam(e, annTypeStrMaker, paramTypeStrMaker, typeStrMaker, parser)).toList())).where((e) => e.isNotEmpty).reduce((v, e) => '$v,$e')}
     ],
-    ${_genCodeFunctionInvoker(classTypeName, function, paramTypeStrMaker, returnTypeStr)},
-    ${_genCodeFunctionInstance(classTypeName, function)},
+    invoke${capitalize(function.functionName)},
+    fun${capitalize(function.functionName)},
   )
   '''
       .trim();
+  // ${_genCodeFunctionInvoker(classTypeName, function, paramTypeStrMaker, returnTypeStr)},
+  // ${_genCodeFunctionInstance(classTypeName, function)},
 }
 
 ///生成函数的参数信息
@@ -472,108 +548,115 @@ FutureOr<String> _genCodeParam(
       : annTypeStrMaker.call(param.annotationValue);
   return '''
   MirrorParam<$annotationClass,${paramTypeStrMaker.call(param)}>(
-    ${param.annotationIsNull ? '$annotationClass()' : await _genCodeAnnotation(param.annotationValue, typeStrMaker, parser)},
+    const ${param.annotationIsNull ? '$annotationClass()' : await _genCodeAnnotation(param.annotationValue, typeStrMaker, parser)},
     '${param.element.name}', 
     ${param.element.isNamed ? 'true' : 'false'}
   )
   '''
       .trim();
 }
+//
+// ///生成构造函数的代理执行器
+// String _genCodeConstructorInvoker(
+//     String classTypeName,
+//     GConstructor constructor,
+//     String Function(GParam param) maker,
+//     String returnTypeStr) {
+//   if (constructor == null) return '';
+//   var named = constructor.element.name;
+//   var CMD = named.isEmpty
+//       ? 'return $classTypeName'
+//       : 'return $classTypeName.${named}';
+//   if (constructor.isConstructorArgMap) {
+//     return '''
+//    (Map<String, dynamic> params) {
+//      ${_genCodeFunctionInvokerBody(CMD, constructor.params, [
+//       'params'
+//     ], cmdAfter: [])}
+//    }
+//   ''';
+//   }
+//
+//   return '''
+//    (Map<String, dynamic> params) {
+//      ${_genCodeFunctionInvokerForMapParamsSwitch(CMD, constructor.params, 'params', '''
+//         throw new IllegalArgumentException(${classTypeName},
+//             '${constructor.element.name}',
+//             [${constructor.params.map((e) => "Pair('${e.paramKey}',MagicMirror.genType<${maker.call(e)}>())").fold('', (p, e) => p == '' ? e : "$p,$e")}],
+//             params.entries.map((e)=>Pair(e.key, e.value.runtimeType)).toList());
+//      ''', maker)}
+//    }
+//   ''';
+// }
+//
+// ///生成属性的getter的代理执行器
+// String _genCodeFieldGetInvoker(
+//     String classTypeName, GField field, String fieldTypeStr) {
+//   if (field == null) return '';
+//   return '''
+//    (${classTypeName} bean) => bean.${field.element.name}
+//   ''';
+// }
+//
+// ///生成属性的setter的代理执行器
+// String _genCodeFieldSetInvoker(
+//     String classTypeName, GField field, String fieldTypeStr) {
+//   if (field == null) return '';
+//   return '''
+//   (${classTypeName} bean, dynamic  value) {
+//       if (MagicMirror.hasTypeAdapterS2Value<${fieldTypeStr}>(value)) {
+//         bean.${field.element.name} = MagicMirror.convertTypeS<${fieldTypeStr}>(value);
+//       } else {
+//         throw new IllegalArgumentException(${classTypeName},
+//             '${field.element.name}',
+//             [Pair('${field.element.name}', MagicMirror.genType<${fieldTypeStr}>())],
+//             [Pair('${field.element.name}', value.runtimeType)]);
+//       }
+//   }
+//   ''';
+// }
+//
+// ///生成函数的代理执行器
+// String _genCodeFunctionInvoker(String classTypeName, GFunction function,
+//     String Function(GParam param) maker, String returnTypeStr) {
+//   if (function == null) return '';
+//   var CMD =
+//       '${'Void' == returnTypeStr ? '' : 'return'} bean.${function.element.name}';
+//   var cmdAfter =
+//       'Void' == returnTypeStr ? <String>['return Void();'] : <String>[];
+//
+//   return '''
+//    (${classTypeName} bean , Map<String, dynamic> params) {
+//      ${_genCodeFunctionInvokerForMapParamsSwitch(
+//     CMD,
+//     function.params,
+//     'params',
+//     '''
+//         throw new IllegalArgumentException(${classTypeName},
+//             '${function.element.name}',
+//             [${function.params.map((e) => "Pair('${e.paramKey}',MagicMirror.genType<${maker.call(e)}>())").fold('', (p, e) => p == '' ? e : "$p,$e")}],
+//             params.entries.map((e)=>Pair(e.key, e.value.runtimeType)).toList());
+//      ''',
+//     maker,
+//     cmdAfter: cmdAfter,
+//   )}
+//    }
+//   ''';
+// }
+//
+// ///生成直接获取函数对象函数的代理执行器
+// String _genCodeFunctionInstance(String classTypeName, GFunction function) {
+//   if (function == null) return '';
+//   return '''
+//    (${classTypeName} bean ) => bean.${function.element.displayName}
+//   ''';
+// }
 
-///生成构造函数的代理执行器
-String _genCodeConstructorInvoker(
-    String classTypeName,
-    GConstructor constructor,
-    String Function(GParam param) maker,
-    String returnTypeStr) {
-  if (constructor == null) return '';
-  var named = constructor.element.name;
-  var CMD = named.isEmpty
-      ? 'return $classTypeName'
-      : 'return $classTypeName.${named}';
-  if (constructor.isConstructorArgMap) {
-    return '''
-   (Map<String, dynamic> params) {
-     ${_genCodeFunctionInvokerBody(CMD, constructor.params, [
-      'params'
-    ], cmdAfter: [])}
-   }
-  ''';
-  }
-
-  return '''
-   (Map<String, dynamic> params) {
-     ${_genCodeFunctionInvokerForMapParamsSwitch(CMD, constructor.params, 'params', '''
-        throw new IllegalArgumentException(${classTypeName},
-            '${constructor.element.name}',
-            [${constructor.params.map((e) => "Pair('${e.paramKey}',MagicMirror.genType<${maker.call(e)}>())").fold('', (p, e) => p == '' ? e : "$p,$e")}],
-            params.entries.map((e)=>Pair(e.key, e.value.runtimeType)).toList());
-     ''', maker)}
-   }
-  ''';
-}
-
-///生成属性的getter的代理执行器
-String _genCodeFieldGetInvoker(
-    String classTypeName, GField field, String fieldTypeStr) {
-  if (field == null) return '';
-  return '''
-   (${classTypeName} bean) => bean.${field.element.name}
-  ''';
-}
-
-///生成属性的setter的代理执行器
-String _genCodeFieldSetInvoker(
-    String classTypeName, GField field, String fieldTypeStr) {
-  if (field == null) return '';
-  return '''
-  (${classTypeName} bean, dynamic  value) {
-      if (MagicMirror.hasTypeAdapterS2Value<${fieldTypeStr}>(value)) {
-        bean.${field.element.name} = MagicMirror.convertTypeS<${fieldTypeStr}>(value);
-      } else {
-        throw new IllegalArgumentException(${classTypeName},
-            '${field.element.name}',
-            [Pair('${field.element.name}', MagicMirror.genType<${fieldTypeStr}>())],
-            [Pair('${field.element.name}', value.runtimeType)]);
-      }
-  }
-  ''';
-}
-
-///生成函数的代理执行器
-String _genCodeFunctionInvoker(String classTypeName, GFunction function,
-    String Function(GParam param) maker, String returnTypeStr) {
-  if (function == null) return '';
-  var CMD =
-      '${'Void' == returnTypeStr ? '' : 'return'} bean.${function.element.name}';
-  var cmdAfter =
-      'Void' == returnTypeStr ? <String>['return Void();'] : <String>[];
-
-  return '''
-   (${classTypeName} bean , Map<String, dynamic> params) {
-     ${_genCodeFunctionInvokerForMapParamsSwitch(
-    CMD,
-    function.params,
-    'params',
-    '''
-        throw new IllegalArgumentException(${classTypeName},
-            '${function.element.name}',
-            [${function.params.map((e) => "Pair('${e.paramKey}',MagicMirror.genType<${maker.call(e)}>())").fold('', (p, e) => p == '' ? e : "$p,$e")}],
-            params.entries.map((e)=>Pair(e.key, e.value.runtimeType)).toList());
-     ''',
-    maker,
-    cmdAfter: cmdAfter,
-  )}
-   }
-  ''';
-}
-
-///生成直接获取函数对象函数的代理执行器
-String _genCodeFunctionInstance(String classTypeName, GFunction function) {
-  if (function == null) return '';
-  return '''
-   (${classTypeName} bean ) => bean.${function.element.displayName}
-  ''';
+///将函数名 属性名的首字母大写
+String capitalize(String name) {
+  return name == null || name.isEmpty
+      ? ''
+      : '${name[0].toUpperCase()}${name.substring(1)}';
 }
 
 ///生成函数的调用判断逻辑
