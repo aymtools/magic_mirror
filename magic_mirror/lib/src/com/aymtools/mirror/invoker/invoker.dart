@@ -256,31 +256,35 @@ class MagicMirror implements IMirrorRegister {
   List<String> loadInitializer() => findKeys<OnInitializer, Initializer>();
 
   ///根据注解类型 CLass的类型来获取对应的类信息
-  List<MirrorClass> findClasses<AnnotationType, ExtendsType>() =>
-      mirrorClassesK.values
-          .where((element) =>
-              element.type is TypeToken<ExtendsType> &&
-              element.annotationType is TypeToken<AnnotationType>)
-          .toList();
+  List<MirrorClass<ExtendsType, AnnotationType>>
+      findClasses<AnnotationType extends MClass, ExtendsType>() =>
+          mirrorClassesK.values
+              .where((element) =>
+                  element.type is TypeToken<ExtendsType> &&
+                  element.annotationType is TypeToken<AnnotationType>)
+              .toList();
 
   ///根据注解类型 CLass的类型来获取对应的类信息
   List<String> findKeys<AnnotationType, ExtendsType>() =>
       findClasses().map((e) => e.key).toList();
 
   ///根据注解类型 CLass的类型来获取对应的类信息
-  List<MirrorClass> findClassesByAnnotation<AnnotationType>() => mirrorClassesK
-      .values
-      .where((element) => element.annotationType is TypeToken<AnnotationType>)
-      .toList();
+  List<MirrorClass<dynamic, AnnotationType>>
+      findClassesByAnnotation<AnnotationType extends MClass>() => mirrorClassesK
+          .values
+          .where(
+              (element) => element.annotationType is TypeToken<AnnotationType>)
+          .toList();
 
   ///根据注解类型来获取对应的类信息
   List<String> findKeysByAnnotation<AnnotationType>() =>
       findClassesByAnnotation().map((e) => e.key).toList();
 
   ///根据CLass的类型来获取对应的类信息
-  List<MirrorClass> findClassesByExtends<ExtendsType>() => mirrorClassesK.values
-      .where((element) => element.type is TypeToken<ExtendsType>)
-      .toList();
+  List<MirrorClass<ExtendsType, MClass>> findClassesByExtends<ExtendsType>() =>
+      mirrorClassesK.values
+          .where((element) => element.type is TypeToken<ExtendsType>)
+          .toList();
 
   ///根据CLass的类型来获取对应的类信息
   List<String> findKeysByExtends<ExtendsType>() =>
