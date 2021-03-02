@@ -6,13 +6,17 @@ import 'tools.dart';
 import 'package:source_gen/source_gen.dart';
 
 ///扫描类库信息
-Future<GLibrary> scanLibrary(
-    BuildStep buildStep, String libPackageName, String libDartFileName) async {
+Future<GLibrary> scanLibrary(BuildStep buildStep, MImport import) async {
   GLibrary library;
+  var libPackageName = import.packageName;
+  var libDartFileName = import.libName;
   try {
     var assetId = AssetId(libPackageName, 'lib/${libDartFileName}.dart');
     var lib = await buildStep.resolver.libraryFor(assetId);
-    var libInfos = await _scanExportedLibrary(lib);
+    var libInfos = <GLibraryInfo>[];
+    if (import.onlyImport && import.useExport) {
+      await _scanExportedLibrary(lib);
+    }
     library = GLibrary(
         libPackageName, libDartFileName, lib.name ?? libPackageName,
         lib: lib, libs: libInfos);

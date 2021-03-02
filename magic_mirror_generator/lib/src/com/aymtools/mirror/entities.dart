@@ -337,8 +337,6 @@ class GClass {
 
 ///扫描到的类的构造函数信息
 class GConstructor {
-  static const TypeChecker _constructorMapArgCheck =
-      TypeChecker.fromRuntime(MConstructorMapArg);
 
   ///扫描到的类的构造函数的具体信息
   final ConstructorElement element;
@@ -371,31 +369,31 @@ class GConstructor {
 
   bool _isConstructorArgMap;
 
-  //判断构造函数的参数是map的 特殊的构造函数
-  bool get isConstructorArgMap {
-    if (_isConstructorArgMap != null) return _isConstructorArgMap;
-    if (annotationIsNull) {
-      return _isConstructorArgMap = false;
-    }
-    if (params.length != 1) {
-      return _isConstructorArgMap = false;
-    }
-    var p = params[0];
-    if (p.element.isNamed || !p.annotationIsNull) {
-      return _isConstructorArgMap = false;
-    }
-    var type = p.type.value;
-    if (!type.isDartCoreMap) {
-      return _isConstructorArgMap = false;
-    }
-    var pt = type as ParameterizedType;
-    if (pt.typeArguments[0].isDartCoreString &&
-        pt.typeArguments[1].isDynamic &&
-        _constructorMapArgCheck.hasAnnotationOf(element)) {
-      return _isConstructorArgMap = true;
-    }
-    return _isConstructorArgMap = false;
-  }
+  // //判断构造函数的参数是map的 特殊的构造函数
+  // bool get isConstructorArgMap {
+  //   if (_isConstructorArgMap != null) return _isConstructorArgMap;
+  //   if (annotationIsNull) {
+  //     return _isConstructorArgMap = false;
+  //   }
+  //   if (params.length != 1) {
+  //     return _isConstructorArgMap = false;
+  //   }
+  //   var p = params[0];
+  //   if (p.element.isNamed || !p.annotationIsNull) {
+  //     return _isConstructorArgMap = false;
+  //   }
+  //   var type = p.type.value;
+  //   if (!type.isDartCoreMap) {
+  //     return _isConstructorArgMap = false;
+  //   }
+  //   var pt = type as ParameterizedType;
+  //   if (pt.typeArguments[0].isDartCoreString &&
+  //       pt.typeArguments[1].isDynamic &&
+  //       _constructorMapArgCheck.hasAnnotationOf(element)) {
+  //     return _isConstructorArgMap = true;
+  //   }
+  //   return _isConstructorArgMap = false;
+  // }
 }
 
 ///扫描到的函数信息
