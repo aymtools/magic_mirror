@@ -164,16 +164,42 @@ List<GField> _scanFields(
   var fields = element.fields
       .where((ele) => !ele.displayName.startsWith('_'))
       //当前的gen 不支持set get的属性 不知道后续会不会支持
-      // .map((e) {
-      //   Log.log(
-      //       '${element.displayName}  ${e.name} getter ${e.getter} setter ${e.setter}   ann ${e.metadata}');
-      //   return e;
-      // })
-      .where((ele) =>
-          (scanUsedAllowList &&
-              _classFieldAnnotation.firstAnnotationOf(ele) != null) ||
-          (!scanUsedAllowList &&
-              _classFieldNotAnnotation.firstAnnotationOf(ele) == null))
+      .map((e) {
+        Log.log(
+            '${element.displayName}  ${e.name} getter ${e.getter?.metadata} setter ${e.setter?.metadata}   ann ${e.metadata}');
+        return e;
+      })
+      .where((ele) {
+        var getter = ele.getter;
+        var setter = ele.setter;
+
+        if (scanUsedAllowList) {
+          if (_classFieldAnnotation.firstAnnotationOf(ele) != null) {
+            return true;
+          }
+          if (getter != null &&
+              _classFieldAnnotation.firstAnnotationOf(getter) != null) {
+            return true;
+          }
+          if (setter != null &&
+              _classFieldAnnotation.firstAnnotationOf(setter) != null) {
+            return true;
+          }
+        } else {
+          if (_classFieldNotAnnotation.firstAnnotationOf(ele) == null) {
+            return true;
+          }
+          if (getter != null &&
+              _classFieldNotAnnotation.firstAnnotationOf(getter) == null) {
+            return true;
+          }
+          if (setter != null &&
+              _classFieldNotAnnotation.firstAnnotationOf(setter) == null) {
+            return true;
+          }
+        }
+        return false;
+      })
       .map((e) => _scanField(e))
       .toList(growable: true);
   if (scanSuper) {

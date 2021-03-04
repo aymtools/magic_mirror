@@ -28,7 +28,7 @@ import '../../tools/ann.dart';
 
 void init() {}
 
-@RouterInterceptor("^/test", priority: 101, type: HomePage,function: init)
+@RouterInterceptor("^/test", priority: 101, type: HomePage, function: init)
 class RouterLog3Interceptor extends RouterInterceptorBase {
   @MField()
   String testSearch;

@@ -229,7 +229,6 @@ Future<String> genCodeLibInfoMirrorInfo(
       .fold('', (previousValue, element) => '$previousValue$element');
 }
 
-
 ///生成具体的类信息
 FutureOr<String> _genCodeClassMirrorInfo(
   GClass clazz,
@@ -265,9 +264,14 @@ FutureOr<String> _genCodeClassMirrorInfo(
 
   var fs = clazz.fields.map((e) {
     var fieldTypeStr = fieldTypeStrMaker.call(e);
-    return '''
+    String reslut = '';
+    if (e.element.getter != null) {
+      reslut += '''      
    static ${fieldTypeStr} get${capitalize(e.fieldName)}(${classTypeName} bean)=> bean.${e.element.name};
-   
+      ''';
+    }
+    if (e.element.setter != null) {
+      reslut += '''      
    static void set${capitalize(e.fieldName)}(${classTypeName} bean , dynamic  value) {
       if (MagicMirror.hasTypeAdapterS2Value<${fieldTypeStr}>(value)) {
         bean.${e.element.name} = MagicMirror.convertTypeS<${fieldTypeStr}>(value);
@@ -278,7 +282,9 @@ FutureOr<String> _genCodeClassMirrorInfo(
             [Pair('${e.element.name}', value.runtimeType)]);
       }
   }
-   ''';
+      ''';
+    }
+    return reslut;
   }).toList();
 
   var funs = clazz.functions.map((e) {

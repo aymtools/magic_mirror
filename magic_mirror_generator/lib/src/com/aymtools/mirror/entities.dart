@@ -300,7 +300,7 @@ class GClass {
   final ClassElement element;
 
   ///扫描时的注解信息
-  final MClass annotation;
+  // final MClass annotation;
 
   ///扫描时的注解信息 原始信息
   final ConstantReader annotationValue;
@@ -324,8 +324,7 @@ class GClass {
       List<GConstructor> constructors,
       List<GField> fields,
       List<GFunction> functions)
-      : annotation = genAnnotation(annotationValue),
-        type = GType(element, element.thisType),
+      : type = GType(element, element.thisType),
         constructors = constructors ?? [],
         functions = functions ?? [],
         fields = fields ?? [];
@@ -337,12 +336,11 @@ class GClass {
 
 ///扫描到的类的构造函数信息
 class GConstructor {
-
   ///扫描到的类的构造函数的具体信息
   final ConstructorElement element;
 
   ///扫描时的注解信息
-  final MConstructor annotation;
+  // final MConstructor annotation;
 
   ///扫描时的注解信息 原始信息
   final ConstantReader annotationValue;
@@ -351,14 +349,16 @@ class GConstructor {
   final List<GParam> params;
 
   GConstructor(this.element, this.annotationValue, List<GParam> params)
-      : annotation = genAnnotation(annotationValue),
-        params = params ?? [];
+      : params = params ?? [];
 
   ///获取构造函数的具体key 依据注解和name生成
-  String get namedConstructorInKey =>
-      annotation == null || annotation.key == null || annotation.key.isEmpty
-          ? element.name
-          : annotation.key;
+  String get namedConstructorInKey {
+    return annotationIsNull ||
+            annotationValue.peek('key').isNull ||
+            annotationValue.peek('key').stringValue.isEmpty
+        ? element.name
+        : annotationValue.peek('key').stringValue;
+  }
 
   ///是否时默认构造函数
   bool get isDefConstructor => element.name.isEmpty;
@@ -367,33 +367,33 @@ class GConstructor {
   bool get annotationIsNull =>
       annotationValue == null || annotationValue.isNull;
 
-  bool _isConstructorArgMap;
+// bool _isConstructorArgMap;
 
-  // //判断构造函数的参数是map的 特殊的构造函数
-  // bool get isConstructorArgMap {
-  //   if (_isConstructorArgMap != null) return _isConstructorArgMap;
-  //   if (annotationIsNull) {
-  //     return _isConstructorArgMap = false;
-  //   }
-  //   if (params.length != 1) {
-  //     return _isConstructorArgMap = false;
-  //   }
-  //   var p = params[0];
-  //   if (p.element.isNamed || !p.annotationIsNull) {
-  //     return _isConstructorArgMap = false;
-  //   }
-  //   var type = p.type.value;
-  //   if (!type.isDartCoreMap) {
-  //     return _isConstructorArgMap = false;
-  //   }
-  //   var pt = type as ParameterizedType;
-  //   if (pt.typeArguments[0].isDartCoreString &&
-  //       pt.typeArguments[1].isDynamic &&
-  //       _constructorMapArgCheck.hasAnnotationOf(element)) {
-  //     return _isConstructorArgMap = true;
-  //   }
-  //   return _isConstructorArgMap = false;
-  // }
+// //判断构造函数的参数是map的 特殊的构造函数
+// bool get isConstructorArgMap {
+//   if (_isConstructorArgMap != null) return _isConstructorArgMap;
+//   if (annotationIsNull) {
+//     return _isConstructorArgMap = false;
+//   }
+//   if (params.length != 1) {
+//     return _isConstructorArgMap = false;
+//   }
+//   var p = params[0];
+//   if (p.element.isNamed || !p.annotationIsNull) {
+//     return _isConstructorArgMap = false;
+//   }
+//   var type = p.type.value;
+//   if (!type.isDartCoreMap) {
+//     return _isConstructorArgMap = false;
+//   }
+//   var pt = type as ParameterizedType;
+//   if (pt.typeArguments[0].isDartCoreString &&
+//       pt.typeArguments[1].isDynamic &&
+//       _constructorMapArgCheck.hasAnnotationOf(element)) {
+//     return _isConstructorArgMap = true;
+//   }
+//   return _isConstructorArgMap = false;
+// }
 }
 
 ///扫描到的函数信息
@@ -402,7 +402,7 @@ class GFunction {
   final MethodElement element;
 
   ///扫描时的注解信息
-  final MFunction annotation;
+  // final MFunction annotation;
 
   ///扫描时的注解信息 原始信息
   final ConstantReader annotationValue;
@@ -414,15 +414,15 @@ class GFunction {
   final GType returnType;
 
   GFunction(this.element, this.annotationValue, List<GParam> params)
-      : annotation = genAnnotation(annotationValue),
-        returnType = GType(element.returnType.element, element.returnType),
+      : returnType = GType(element.returnType.element, element.returnType),
         params = params ?? [];
 
   ///获取函数的具体key 依据注解和name生成
-  String get functionName =>
-      annotation == null || annotation.key == null || annotation.key.isEmpty
-          ? element.name
-          : annotation.key;
+  String get functionName => annotationIsNull ||
+          annotationValue.peek('key').isNull ||
+          annotationValue.peek('key').stringValue.isEmpty
+      ? element.name
+      : annotationValue.peek('key').stringValue;
 
   ///判断注解信息是否为空
   bool get annotationIsNull =>
@@ -435,23 +435,25 @@ class GField {
   final FieldElement element;
 
   ///扫描时的注解信息
-  final MField annotation;
+  // final MField annotation;
 
   ///扫描时的注解信息 原始信息
   final ConstantReader annotationValue;
+
+  // final PropertyAccessorElement setter;
 
   ///属性的类型
   final GType type;
 
   GField(this.element, this.annotationValue)
-      : annotation = genAnnotation(annotationValue),
-        type = GType(element, element.type);
+      : type = GType(element, element.type);
 
   ///获取属性的具体key 依据注解和name生成
-  String get fieldName =>
-      annotation == null || annotation.key == null || annotation.key.isEmpty
-          ? element.name
-          : annotation.key;
+  String get fieldName => annotationIsNull ||
+          annotationValue.peek('key').isNull ||
+          annotationValue.peek('key').stringValue.isEmpty
+      ? element.name
+      : annotationValue.peek('key').stringValue;
 
   ///判断注解信息是否为空
   bool get annotationIsNull =>
@@ -464,7 +466,7 @@ class GParam {
   final ParameterElement element;
 
   ///扫描时的注解信息
-  final MParam annotation;
+  // final MParam annotation;
 
   ///扫描时的注解信息 原始信息
   final ConstantReader annotationValue;
@@ -473,14 +475,14 @@ class GParam {
   final GType type;
 
   GParam(this.element, this.annotationValue)
-      : annotation = genAnnotation(annotationValue),
-        type = GType(element, element.type);
+      : type = GType(element, element.type);
 
   ///获取参数的具体key 依据注解和name生成
-  String get paramKey =>
-      annotation == null || annotation.key == null || annotation.key.isEmpty
-          ? element.name
-          : annotation.key;
+  String get paramKey => annotationIsNull ||
+          annotationValue.peek('key').isNull ||
+          annotationValue.peek('key').stringValue.isEmpty
+      ? element.name
+      : annotationValue.peek('key').stringValue;
 
   ///判断注解信息是否为空
   bool get annotationIsNull =>
