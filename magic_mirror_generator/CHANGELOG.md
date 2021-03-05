@@ -1,3 +1,4 @@
-## 1.0.0
+## 0.1.0
 
-- Initial version, created by Stagehand
+- 基本工作完成，可正常使用任意属性、函数的反射内容
+

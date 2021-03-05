@@ -33,11 +33,16 @@ class RouterLog3Interceptor extends RouterInterceptorBase {
   @MField()
   String testSearch;
 
-  @MField()
-  String get onlyGet => testSearch;
+  // @MField()
+  // String get onlyGet => testSearch;
+  //
+  // @MField()
+  // set onlySet(String value) => testSearch = value;
 
   @MField()
-  set onlySet(String value) => testSearch = value;
+  set search(String value) => testSearch = value;
+  @MField()
+  get search => testSearch;
 
   @MFunction()
   void init() {}
