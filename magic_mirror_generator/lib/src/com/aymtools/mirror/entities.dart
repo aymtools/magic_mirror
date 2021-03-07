@@ -1,6 +1,6 @@
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
-import 'package:magic_mirror/mirror.dart';
+import 'package:magic_mirror/magic_mirror.dart';
 import 'package:source_gen/source_gen.dart';
 
 import 'tools.dart';
@@ -22,7 +22,7 @@ class GImports {
   void addLibs(List<GLibrary> otherImportLibrary) {
     _otherImportLibrary.addAll(otherImportLibrary);
 
-    _imports['package:magic_mirror/mirror.dart'] = '';
+    _imports['package:magic_mirror/magic_mirror.dart'] = '';
     // if (lib != null && !isMirrorLib) {
     //   _imports['package:$package/$name.dart'] = '$asName';
     // }

@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:magic_mirror/mirror.dart';
+import 'package:magic_mirror/magic_mirror.dart';
 import 'package:source_gen/source_gen.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:analyzer/dart/element/element.dart';
@@ -59,7 +59,7 @@ String genMirrorRegister(String defPackage, List<String> other) {
           "${imports.getUriAsNameStr(e.replaceAll('.mirror.aymtools', ''))}Register.Register.register();")
       .toList();
   return '''
-import 'package:magic_mirror/mirror.dart';
+import 'package:magic_mirror/magic_mirror.dart';
 ${other.map((e) => "import '${e}' as ${imports.getUriAsNameStr(e.replaceAll('.mirror.aymtools', ''))}Register;").fold('', (p, v) => p + v)}
 ${_genCodeLibInfoMirrorRegisterTemplate([], true, otherStr)}
   ''';
