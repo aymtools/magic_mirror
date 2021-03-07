@@ -1,12 +1,34 @@
+import 'package:magic_mirror/mirror.dart';
+
+@MClass(
+    key: '/class/book',
+    keyGenType: KeyGen.KEY_GEN_TYPE_BY_URI,
+    scanFields: true,
+    scanFunctions: true)
 class Book {
-  final String name;
-  final String auth;
-  final double money;
+  @MField()
+  String name;
 
-  Book(this.name, this.auth, this.money);
+  @MField(key: 'auth')
+  String author;
 
-  @override
-  String toString() {
-    return "name:$name  auth:$auth money:$money";
+  @MField()
+  double price;
+
+  @MConstructor()
+  Book(this.name, this.author);
+
+  @MConstructor()
+  Book.price(this.name, this.author, this.price);
+
+  @MConstructor()
+  Book.custom(this.name, {this.author, this.price});
+
+  @MFunction()
+  void printInfo() {
+    print('book info name:$name author:$author price:$price');
   }
+
+  @MFunction()
+  double calculatePrice(double sale) => sale * (price ?? 1);
 }
