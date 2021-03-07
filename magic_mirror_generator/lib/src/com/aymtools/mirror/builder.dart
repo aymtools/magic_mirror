@@ -58,7 +58,7 @@ Future<MirrorConfig> _initConfig(BuildStep buildStep) async {
   config ??= MirrorConfig();
 
   var imports = <MImport>[
-    MImport(packageName: 'magic_mirror', libName: 'mirror')
+    MImport(packageName: 'magic_mirror', libName: 'magic_mirror')
   ];
   imports.addAll(config.imports);
   imports.addAll(config.importLibsNames.entries
@@ -67,7 +67,7 @@ Future<MirrorConfig> _initConfig(BuildStep buildStep) async {
   config = MirrorConfig(
     isGenInvoker: config.isGenInvoker,
     isGenLibExport: config.isGenLibExport,
-    importLibsNames: {'magic_mirror': 'mirror'}..addAll(config.importLibsNames),
+    importLibsNames: {'magic_mirror': 'magic_mirror'}..addAll(config.importLibsNames),
     imports: imports,
     genGroupBy: config.genGroupBy,
   );
