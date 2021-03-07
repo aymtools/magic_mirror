@@ -18,7 +18,7 @@ class MirrorConfig {
   final int genGroupBy;
 
   final List<MImport> imports;
-  final Function function;
+  // final Function function;
 
   const MirrorConfig({
     bool isGenInvoker,
@@ -26,7 +26,7 @@ class MirrorConfig {
     Map<String, String> importLibsNames,
     List<MImport> imports,
     int genGroupBy = GEN_GROUP_BY_NONE,
-    this.function,
+    // this.function,
   })  : isGenInvoker = isGenInvoker ?? true,
         isGenLibExport = isGenLibExport ?? false,
         genGroupBy = GEN_GROUP_BY_NONE,

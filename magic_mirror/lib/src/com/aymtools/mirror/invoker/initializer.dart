@@ -11,7 +11,7 @@ abstract class Initializer {
 class OnInitializer extends MClass {
   const OnInitializer()
       : super(
-          scanConstructors: false,
+          scanConstructors: true,
           key: 'initializer://mirror.aymtools.com/',
           keyGenType: MClass.KEY_GEN_TYPE_BY_SEQUENCE_URI,
           needAssignableFrom: const <Type>[Initializer],

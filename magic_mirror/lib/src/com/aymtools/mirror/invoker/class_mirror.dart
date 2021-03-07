@@ -169,7 +169,7 @@ class MirrorField<T, A extends MField, V> {
   final MirrorFieldGetInvoker<T, V> getInvoker;
 
   ///属性set代理执行器
-  final MirrorFieldSetInvoker<T, V> setInvoker;
+  final MirrorFieldSetInvoker<T, dynamic> setInvoker;
 
   const MirrorField(
     this.annotation,
@@ -179,7 +179,7 @@ class MirrorField<T, A extends MField, V> {
   );
 
   ///获取对象中的具体属性值
-  dynamic get(T bean) => getInvoker.call(bean);
+  V get(T bean) => getInvoker.call(bean);
 
   ///对象中的属性赋值
   void set(T bean, dynamic value) => setInvoker.call(bean, value);

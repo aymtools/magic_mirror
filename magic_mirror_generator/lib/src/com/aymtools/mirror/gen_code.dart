@@ -264,14 +264,14 @@ FutureOr<String> _genCodeClassMirrorInfo(
 
   var fs = clazz.fields.map((e) {
     var fieldTypeStr = fieldTypeStrMaker.call(e);
-    String reslut = '';
+    var result = '';
     if (e.element.getter != null) {
-      reslut += '''      
+      result += '''      
    static ${fieldTypeStr} get${capitalize(e.fieldName)}(${classTypeName} bean)=> bean.${e.element.name};
       ''';
     }
     if (e.element.setter != null) {
-      reslut += '''      
+      result += '''      
    static void set${capitalize(e.fieldName)}(${classTypeName} bean , dynamic  value) {
       if (MagicMirror.hasTypeAdapterS2Value<${fieldTypeStr}>(value)) {
         bean.${e.element.name} = MagicMirror.convertTypeS<${fieldTypeStr}>(value);
@@ -284,7 +284,7 @@ FutureOr<String> _genCodeClassMirrorInfo(
   }
       ''';
     }
-    return reslut;
+    return result;
   }).toList();
 
   var funs = clazz.functions.map((e) {

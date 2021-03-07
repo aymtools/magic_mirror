@@ -42,21 +42,21 @@ void main() {
 
   var clazz = MagicMirror.instance.load('/class/book');
   var book =
-      clazz.newInstanceForMap('', {'name': 'book1', 'author': 'author1'});
+  clazz.newInstanceForMap('', {'name': 'book1', 'author': 'author1'});
 
   var authorField = clazz.getField('auth');
   print(authorField.get(book)); // print  author1
 
   var priceField = clazz.getField('price');
-  priceField.set(book, 2);
-  print(priceField.get(book)); // print  2
+  priceField.set(book, 2.0);
+  print(priceField.get(book)); // print  2.0
 
   var bookPrintFunction = clazz.getFunction('printInfo');
   bookPrintFunction
-      .invoke(book, {}); // print book info name:book1 author:author2 price:2'
+      .invoke(book, {}); // print book info name:book1 author:author1 price:2'
 
   var calculatePriceFunction = clazz.getFunction('calculatePrice');
   double currPrice = calculatePriceFunction.invoke(book, {'sale': 0.5});
 
-  print(currPrice); // print  1
+  print(currPrice); // print  1.0
 }

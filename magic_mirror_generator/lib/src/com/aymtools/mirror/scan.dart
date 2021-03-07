@@ -14,12 +14,12 @@ Future<GLibrary> scanLibrary(BuildStep buildStep, MImport import) async {
     var assetId = AssetId(libPackageName, 'lib/${libDartFileName}.dart');
     var lib = await buildStep.resolver.libraryFor(assetId);
     var libInfos = <GLibraryInfo>[];
-    if (import.onlyImport && import.useExport) {
-      await _scanExportedLibrary(lib);
-    }
+    libInfos.addAll(await _scanExportedLibrary(lib));
     library = GLibrary(
         libPackageName, libDartFileName, lib.name ?? libPackageName,
         lib: lib, libs: libInfos);
+
+    Log.log('scanLibrary $libPackageName $libDartFileName  ${libInfos.length}');
   } catch (e) {
     print(
         'Can not load package:${libPackageName} name:${libDartFileName} library!! \n $e');

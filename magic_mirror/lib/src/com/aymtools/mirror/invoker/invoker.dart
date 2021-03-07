@@ -88,6 +88,9 @@ class MagicMirror implements IMirrorRegister {
       _typeAdapter[convert.from][convert.to] = convert;
 
       if (convert is TypeConvertAdapter<From, To>) {
+        if (_typeAdapter[convert.to] == null) {
+          _typeAdapter[convert.to] = <Type, TypeConvert>{};
+        }
         _typeAdapter[convert.to][convert.from] =
             _TypeReverse<From, To>(convert);
       }
@@ -262,11 +265,12 @@ class MagicMirror implements IMirrorRegister {
               .where((element) =>
                   element.type is TypeToken<ExtendsType> &&
                   element.annotationType is TypeToken<AnnotationType>)
+              .whereType<MirrorClass<ExtendsType, AnnotationType>>()
               .toList();
 
   ///根据注解类型 CLass的类型来获取对应的类信息
-  List<String> findKeys<AnnotationType, ExtendsType>() =>
-      findClasses().map((e) => e.key).toList();
+  List<String> findKeys<AnnotationType extends MClass, ExtendsType>() =>
+      findClasses<AnnotationType, ExtendsType>().map((e) => e.key).toList();
 
   ///根据注解类型 CLass的类型来获取对应的类信息
   List<MirrorClass<dynamic, AnnotationType>>
@@ -277,8 +281,8 @@ class MagicMirror implements IMirrorRegister {
           .toList();
 
   ///根据注解类型来获取对应的类信息
-  List<String> findKeysByAnnotation<AnnotationType>() =>
-      findClassesByAnnotation().map((e) => e.key).toList();
+  List<String> findKeysByAnnotation<AnnotationType extends MClass>() =>
+      findClassesByAnnotation<AnnotationType>().map((e) => e.key).toList();
 
   ///根据CLass的类型来获取对应的类信息
   List<MirrorClass<ExtendsType, MClass>> findClassesByExtends<ExtendsType>() =>
@@ -288,7 +292,7 @@ class MagicMirror implements IMirrorRegister {
 
   ///根据CLass的类型来获取对应的类信息
   List<String> findKeysByExtends<ExtendsType>() =>
-      findClassesByExtends().map((e) => e.key).toList();
+      findClassesByExtends<ExtendsType>().map((e) => e.key).toList();
 
   ///获取所有的注册的类信息列表
   @override

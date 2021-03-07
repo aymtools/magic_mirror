@@ -78,8 +78,9 @@ Future<MirrorConfig> _initConfig(BuildStep buildStep) async {
 
 ///将所有医用的库扫描库中的类信息
 Future<List<GLibrary>> _importLibs(BuildStep buildStep) {
-  return Stream.fromFutures(
-      config.imports.map((e) => scanLibrary(buildStep, e))).toList();
+  return Stream.fromFutures(config.imports
+      .where((element) => !element.onlyImport && !element.useExport)
+      .map((e) =>  scanLibrary(buildStep, e))).toList();
 }
 
 ///所有已扫描到的库
@@ -167,7 +168,7 @@ class MirrorBuilder implements Builder {
       setMirrorConfig(conf);
       Log.log(
           'config info isGenInvoker:${config.isGenInvoker} isGenLibExport:${config.isGenLibExport} '
-              'importLibsNames:${config.imports.map((e) => '${e.packageName}/${e.libName}.dart  onlyImport:${e.onlyImport}  useExport:${e.useExport}')}');
+          'importLibsNames:${config.imports.map((e) => '${e.packageName}/${e.libName}.dart  onlyImport:${e.onlyImport}  useExport:${e.useExport}')}');
 
       var libs = await _importLibs(buildStep);
       libs.forEach((element) {
