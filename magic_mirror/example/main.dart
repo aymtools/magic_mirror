@@ -1,6 +1,6 @@
 import 'package:magic_mirror/mirror.dart';
-
-import 'generated/aymtools/mirror/register.mirror.aymtools.dart';
+// 导入Register
+// import 'generated/aymtools/mirror/register.mirror.aymtools.dart';
 
 @MClass(
     key: '/class/book',
@@ -37,8 +37,8 @@ class Book {
 
 @MirrorConfig()
 void main() {
-
-  Register.register();
+  //注册相关的类信息
+  // Register.register();
 
   var clazz = MagicMirror.instance.load('/class/book');
   var book =
