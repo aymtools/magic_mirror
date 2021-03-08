@@ -13,12 +13,6 @@ T genAnnotation<T>(ConstantReader annotation) {
 ///根据类型的反射来生成
 dynamic _gen(ClassMirror classMirror, ConstantReader annotation) {
   try {
-    // var revive = annotation.revive();
-    // var pArgs = revive.positionalArguments;
-    // var namedArgs = revive.namedArguments;
-    // revive.accessor;
-    //
-    // Log.log('${classMirror.reflectedType}  : ${revive.toString()} ${revive.accessor}   ${pArgs}  ${namedArgs}');
 
     var methodMirror = classMirror.declarations.values
         .whereType<MethodMirror>()
@@ -87,8 +81,6 @@ String _getName(Symbol symbol) {
 //
 //  return reflect(symbol).getField(Symbol('_name')).reflectee;
   return MirrorSystem.getName(symbol);
-  return symbol.toString().substring(8, symbol.toString().length - 2);
-
 }
 
 ///自动转换过程

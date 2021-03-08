@@ -67,7 +67,8 @@ Future<MirrorConfig> _initConfig(BuildStep buildStep) async {
   config = MirrorConfig(
     isGenInvoker: config.isGenInvoker,
     isGenLibExport: config.isGenLibExport,
-    importLibsNames: {'magic_mirror': 'magic_mirror'}..addAll(config.importLibsNames),
+    importLibsNames: {'magic_mirror': 'magic_mirror'}
+      ..addAll(config.importLibsNames),
     imports: imports,
     genGroupBy: config.genGroupBy,
   );
@@ -80,7 +81,7 @@ Future<MirrorConfig> _initConfig(BuildStep buildStep) async {
 Future<List<GLibrary>> _importLibs(BuildStep buildStep) {
   return Stream.fromFutures(config.imports
       .where((element) => !element.onlyImport && !element.useExport)
-      .map((e) =>  scanLibrary(buildStep, e))).toList();
+      .map((e) => scanLibrary(buildStep, e))).toList();
 }
 
 ///所有已扫描到的库
