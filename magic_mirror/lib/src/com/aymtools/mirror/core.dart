@@ -18,6 +18,7 @@ class MirrorConfig {
   final int genGroupBy;
 
   final List<MImport> imports;
+
   // final Function function;
 
   const MirrorConfig({
@@ -304,5 +305,4 @@ class MField extends AnnBase {
 ///禁止模式时有效 不扫描的属性
 class MFieldNot {
   const MFieldNot();
-
 }
