@@ -1,3 +1,3 @@
 ## 0.1.0
 
-- 基本工作完成，可正常使用任意属性、函数的反射内容
+- The basic work is completed, and the reflection content of any attribute and function can be used normally.

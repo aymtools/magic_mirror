@@ -1,13 +1,13 @@
 name: magic_mirror
-description: Contains annotation information and some execution content.
-version: 0.1.0
+description: Contains annotation information and some execution content.Provides reflective actuators, and execution formatting.
+version: 0.1.0+1
 homepage: https://github.com/aymtools/magic_mirror
 
 environment:
-  sdk: '>=2.8.1 <3.0.0'
+  sdk: '>=2.6.0 <3.0.0'
 
 #dependencies:
 #  path: ^1.7.0
 
-dev_dependencies:
+#dev_dependencies:
 #  pedantic: ^1.9.0

@@ -418,7 +418,9 @@ class MagicMirror implements IMirrorRegister {
         if (values.containsKey(element.key)) {
           try {
             setFieldValue(bean, element.key, values[element.key]);
-          } on IllegalArgumentException {}
+          } on IllegalArgumentException {
+              ///忽略赋值异常 继续后续的赋值
+          }
         }
       });
     } else {
