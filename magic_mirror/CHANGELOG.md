@@ -3,3 +3,6 @@
 
 ## 0.1.0+2
 - Format the code and adjust the reference library version.
+
+## 0.2.0-dev.1
+- Support NullSafe.

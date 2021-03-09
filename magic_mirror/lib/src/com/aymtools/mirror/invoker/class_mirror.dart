@@ -15,6 +15,9 @@ class TypeToken<T> {
     return this == other ||
         (other is TypeToken && other.typeValue == typeValue);
   }
+
+  @override
+  int get hashCode => typeValue.hashCode;
 }
 
 ///标注函数的返回值为void
@@ -56,25 +59,41 @@ class MirrorClass<T, A extends MClass> {
       this.fields, this.functions);
 
   ///根据map内的参数来生成一个类的实例
-  T newInstanceForMap(String constructorName, Map<String, dynamic> params) {
+  T newInstance(String? constructorName, Map<String, dynamic> params) {
     var c = getConstructor(constructorName);
-    if (c == null) {
-      throw ClassNotFoundException('$key.$constructorName');
-    }
-    return c.newInstanceForMap(params);
+    return c.newInstance(params);
   }
 
   ///根据命名构造函数的key来查找可用的构造函数
-  MirrorConstructor<T, MConstructor> getConstructor(String constructorName) =>
-      findFistWhere(constructors, (e) => e.key == constructorName);
+  MirrorConstructor<T, MConstructor> getConstructor(String? constructorName) {
+    var constructorNameStr = constructorName ?? '';
+    var constructor = findFistWhere<MirrorConstructor<T, MConstructor>>(
+        constructors, (e) => e.key == constructorNameStr);
+    if (constructor == null) {
+      throw NoSuchFunctionException(T, constructorNameStr);
+    }
+    return constructor;
+  }
 
   ///根据函数的key 来查找可用的函数
-  MirrorFunction<T, MFunction, dynamic> getFunction(String functionName) =>
-      findFistWhere(functions, (e) => e.key == functionName);
+  MirrorFunction<T, MFunction, dynamic> getFunction(String functionName) {
+    var function = findFistWhere<MirrorFunction<T, MFunction, dynamic>>(
+        functions, (e) => e.key == functionName);
+    if (function == null) {
+      throw NoSuchFunctionException(T, functionName);
+    }
+    return function;
+  }
 
   ///根据属性的key 来查找可用的属性
-  MirrorField<T, MField, dynamic> getField(String fieldName) =>
-      findFistWhere(fields, (e) => e.key == fieldName);
+  MirrorField<T, MField, dynamic> getField(String fieldName) {
+    var field = findFistWhere<MirrorField<T, MField, dynamic>>(
+        fields, (e) => e.key == fieldName);
+    if (field == null) {
+      throw NoSuchFunctionException(T, fieldName);
+    }
+    return field;
+  }
 }
 
 ///扫描到的类的构造函数信息
@@ -101,7 +120,7 @@ class MirrorConstructor<T, A extends MConstructor> {
       this.annotation, this.name, this.params, this.invoker);
 
   ///根据map内的参数来生成一个类的实例
-  T newInstanceForMap(Map<String, dynamic> params) => invoker.call(params);
+  T newInstance(Map<String, dynamic> params) => invoker.call(params);
 
   ///获取key信息 优先从注解中获取 当注解为空时返回扫描时的name
   String get key => annotation.key.isEmpty ? name : annotation.key;
@@ -145,7 +164,7 @@ class MirrorFunction<T, A extends MFunction, R> {
   R invoke(T bean, Map<String, dynamic> params) => invoker.call(bean, params);
 
   ///获取具体函数
-  MirrorFunctionInstance<T> getFunction(T bean) => function.call(bean);
+  Function getFunction(T bean) => function.call(bean);
 
   ///获取key信息 优先从注解中获取 当注解为空时返回扫描时的name
   String get key => annotation.key.isEmpty ? name : annotation.key;
@@ -165,6 +184,9 @@ class MirrorField<T, A extends MField, V> {
   ///属性的类型
   TypeToken<V> get fieldType => TypeToken<V>();
 
+  ///是否可以使用null赋值
+  final bool isNotNull;
+
   ///属性get代理执行器
   final MirrorFieldGetInvoker<T, V> getInvoker;
 
@@ -174,6 +196,7 @@ class MirrorField<T, A extends MField, V> {
   const MirrorField(
     this.annotation,
     this.name,
+    this.isNotNull,
     this.getInvoker,
     this.setInvoker,
   );
@@ -208,10 +231,23 @@ class MirrorParam<A extends MParam, PT> {
   ///参数的type
   TypeToken<PT> get paramType => TypeToken<PT>();
 
-  ///参数是否是命名参数 也就是命名函数是非必须参数 不是命名参数就是必须参数
+  ///是否为可选参数
+  final bool isOptional;
+
+  ///是否为必选参数
+  bool get isNeed => !isOptional;
+
+  ///参数是否是命名参数
   final bool isNamed;
 
-  const MirrorParam(this.annotation, this.name, this.isNamed);
+  ///是否是可选的位置参数
+  final bool isPositional;
+
+  ///是否可以使用null赋值
+  final bool isNotNull;
+
+  const MirrorParam(this.annotation, this.name, this.isOptional, this.isNamed,
+      this.isPositional, this.isNotNull);
 
   ///获取key信息 优先从注解中获取 当注解为空时返回扫描时的name
   String get key => annotation.key.isEmpty ? name : annotation.key;
@@ -226,7 +262,7 @@ typedef MirrorFieldGetInvoker<T, V> = V Function(T bean);
 ///属性的set代理执行器
 typedef MirrorFieldSetInvoker<T, V> = void Function(T bean, V value);
 
-///获取函数对象的代理执行器
+// ///获取函数对象的代理执行器
 typedef MirrorFunctionInstance<T> = Function Function(T bean);
 
 ///执行函数调用的代理执行器

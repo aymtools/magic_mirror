@@ -12,8 +12,8 @@ class GImports {
   final Map<String, String> _imports = {};
 
   ///默认加入的lib库
-  GImports({List<GLibrary> otherImportLibrary}) {
-    if (otherImportLibrary != null && otherImportLibrary.isNotEmpty) {
+  GImports({List<GLibrary> otherImportLibrary = const []}) {
+    if (otherImportLibrary.isNotEmpty) {
       addLibs(otherImportLibrary);
     }
   }
@@ -23,12 +23,9 @@ class GImports {
     _otherImportLibrary.addAll(otherImportLibrary);
 
     _imports['package:magic_mirror/magic_mirror.dart'] = '';
-    // if (lib != null && !isMirrorLib) {
-    //   _imports['package:$package/$name.dart'] = '$asName';
-    // }
     if (_otherImportLibrary.isNotEmpty) {
       _otherImportLibrary
-          .where((element) => element.lib != null && !element.isMirrorLib)
+          .where((element) => !element.isMirrorLib)
           .forEach((lib) {
         _imports['package:${lib.package}/${lib.name}.dart'] = '${lib.asName}';
       });
@@ -40,44 +37,40 @@ class GImports {
         .forEach((element) {
       _parseAddImportLib(element.lib);
       element.classes.forEach((cls) {
-        if (cls.annotationValue != null && !cls.annotationValue.isNull) {
+        if (!cls.annotationValue.isNull) {
           _parseAddImportLib(
-              cls.annotationValue.objectValue.type.element.library);
+              cls.annotationValue.objectValue!.type!.element?.library);
         }
         cls.constructors.forEach((constructor) {
-          if (constructor.annotationValue != null &&
-              !constructor.annotationValue.isNull) {
-            _parseAddImportLib(
-                constructor.annotationValue.objectValue.type.element.library);
+          if (!constructor.annotationValue.isNull) {
+            _parseAddImportLib(constructor
+                .annotationValue.objectValue!.type!.element?.library);
           }
           constructor.params.forEach((param) {
-            if (param.annotationValue != null &&
-                !param.annotationValue.isNull) {
+            if (!param.annotationValue.isNull) {
               _parseAddImportLib(
-                  param.annotationValue.objectValue.type.element.library);
+                  param.annotationValue.objectValue!.type!.element?.library);
             }
             _parseTypeAndInnerType(param.type.value);
           });
         });
         cls.fields.forEach((field) {
-          if (field.annotationValue != null && !field.annotationValue.isNull) {
+          if (!field.annotationValue.isNull) {
             _parseAddImportLib(
-                field.annotationValue.objectValue.type.element.library);
+                field.annotationValue.objectValue!.type!.element?.library);
           }
           _parseTypeAndInnerType(field.type.value);
         });
         cls.functions.forEach((function) {
-          if (function.annotationValue != null &&
-              !function.annotationValue.isNull) {
+          if (!function.annotationValue.isNull) {
             _parseAddImportLib(
-                function.annotationValue.objectValue.type.element.library);
+                function.annotationValue.objectValue!.type!.element?.library);
           }
           _parseTypeAndInnerType(function.returnType.value);
           function.params.forEach((param) {
-            if (param.annotationValue != null &&
-                !param.annotationValue.isNull) {
+            if (!param.annotationValue.isNull) {
               _parseAddImportLib(
-                  param.annotationValue.objectValue.type.element.library);
+                  param.annotationValue.objectValue!.type!.element?.library);
             }
             _parseTypeAndInnerType(param.type.value);
           });
@@ -99,9 +92,9 @@ class GImports {
     if (type.isVoid) {
       return 'void';
     }
-    var libAs = type == null || isDartCoreType(type)
+    var libAs = isDartCoreType(type)
         ? ''
-        : _parseAddImportLib(type.element.library).value;
+        : _parseAddImportLib(type.element!.library).value;
 
     var t = type;
     var ts = <String>[];
@@ -125,12 +118,12 @@ class GImports {
         .replaceAll('/', '_')
         .replaceFirst('package:', '')
         .replaceAllMapped(
-            RegExp(r'_\w'), (match) => match.group(0).toUpperCase())
+            RegExp(r'_\w'), (match) => match.group(0)!.toUpperCase())
         .replaceAll('_', '');
     if (asStr.contains('.')) {
       asStr = asStr
           .replaceAllMapped(
-              RegExp(r'\.\w'), (match) => match.group(0).toUpperCase())
+              RegExp(r'\.\w'), (match) => match.group(0)!.toUpperCase())
           .replaceAll('.', '');
     }
     if (asStr.length > 1) {
@@ -146,9 +139,9 @@ class GImports {
   }
 
   ///解析并加入结果
-  MapEntry<String, String> _parseAddImportLib(LibraryElement lib) {
+  MapEntry<String, String> _parseAddImportLib(LibraryElement? lib) {
     if (lib == null) return MapEntry('', '');
-    MapEntry<String, String> r;
+    MapEntry<String, String>? r;
     _otherImportLibrary
         .where((element) => element.lib != null)
         .forEach((element) {
@@ -180,7 +173,7 @@ class GImports {
       var asStr = _formatAsStr(librarySourceUriStr);
       _imports[librarySourceUriStr] = asStr;
     }
-    return MapEntry(librarySourceUriStr, _imports[librarySourceUriStr]);
+    return MapEntry(librarySourceUriStr, _imports[librarySourceUriStr] ?? '');
   }
 
   ///解析并加入结果 根据DartType
@@ -212,14 +205,14 @@ class GLibrary {
   final String asName;
 
   ///类库的类信息 dartFileName转换的来
-  final LibraryElement lib;
+  final LibraryElement? lib;
 
   ///类库中所有的类包信息
   final List<GLibraryInfo> _libs = [];
 
   GLibrary(this.package, this.name, this.asName,
-      {this.lib, List<GLibraryInfo> libs}) {
-    if (libs != null) _libs.addAll(libs);
+      {this.lib, List<GLibraryInfo> libs = const []}) {
+    if (libs.isNotEmpty) _libs.addAll(libs);
   }
 
   ///添加类包信息
@@ -245,14 +238,14 @@ class GLibrary {
   bool isInLib(Element element) {
     return lib == null
         ? false
-        : lib.exportedLibraries.contains(element.library);
+        : lib!.exportedLibraries.contains(element.library);
   }
 
   ///是否时魔镜自身的库
   bool get isMirrorLib => 'magic_mirror' == package;
 
   ///判断是否时当前执行环境的paoject库
-  bool get isProjectLib => (null == asName || asName.isEmpty) && lib == null;
+  bool get isProjectLib => (asName.isEmpty) && lib == null;
 
   ///获取所有的类库信息
   List<GLibraryInfo> get libs => _libs;
@@ -269,9 +262,7 @@ class GLibraryInfo {
   ///所有扫描到的函数信息
   final List<GFunction> functions;
 
-  GLibraryInfo(this.lib, List<GClass> classes, List<GFunction> functions)
-      : classes = classes ?? [],
-        functions = functions ?? [];
+  GLibraryInfo(this.lib, this.classes, this.functions);
 
   ///获取类库对应的uri信息
   String get uriStr => lib.librarySource.uri.toString();
@@ -317,21 +308,13 @@ class GClass {
   ///所有的扫描到的构造函数
   final List<GConstructor> constructors;
 
-  GClass(
-      this.key,
-      this.element,
-      this.annotationValue,
-      List<GConstructor> constructors,
-      List<GField> fields,
-      List<GFunction> functions)
+  GClass(this.key, this.element, ConstantReader? annotationValue,
+      this.constructors, this.fields, this.functions)
       : type = GType(element, element.thisType),
-        constructors = constructors ?? [],
-        functions = functions ?? [],
-        fields = fields ?? [];
+        this.annotationValue = annotationValue ?? ConstantReader(null);
 
   ///判断注解信息是否为空
-  bool get annotationIsNull =>
-      annotationValue == null || annotationValue.isNull;
+  bool get annotationIsNull => annotationValue.isNull;
 }
 
 ///扫描到的类的构造函数信息
@@ -348,8 +331,8 @@ class GConstructor {
   ///函数所需要的参数信息
   final List<GParam> params;
 
-  GConstructor(this.element, this.annotationValue, List<GParam> params)
-      : params = params ?? [];
+  GConstructor(this.element, ConstantReader? annotationValue, this.params)
+      : this.annotationValue = annotationValue ?? ConstantReader(null);
 
   ///获取构造函数的具体key 依据注解和name生成
   String get namedConstructorInKey {
@@ -364,8 +347,7 @@ class GConstructor {
   bool get isDefConstructor => element.name.isEmpty;
 
   ///判断注解信息是否为空
-  bool get annotationIsNull =>
-      annotationValue == null || annotationValue.isNull;
+  bool get annotationIsNull => annotationValue.isNull;
 
 // bool _isConstructorArgMap;
 
@@ -413,9 +395,9 @@ class GFunction {
   ///函数的返回类型
   final GType returnType;
 
-  GFunction(this.element, this.annotationValue, List<GParam> params)
-      : returnType = GType(element.returnType.element, element.returnType),
-        params = params ?? [];
+  GFunction(this.element, ConstantReader? annotationValue, this.params)
+      : returnType = GType(element.returnType.element!, element.returnType),
+        this.annotationValue = annotationValue ?? ConstantReader(null);
 
   ///获取函数的具体key 依据注解和name生成
   String get functionName => annotationIsNull ||
@@ -425,8 +407,7 @@ class GFunction {
       : annotationValue.peek('key').stringValue;
 
   ///判断注解信息是否为空
-  bool get annotationIsNull =>
-      annotationValue == null || annotationValue.isNull;
+  bool get annotationIsNull => annotationValue.isNull;
 }
 
 ///扫描到的属性信息
@@ -456,8 +437,7 @@ class GField {
       : annotationValue.peek('key').stringValue;
 
   ///判断注解信息是否为空
-  bool get annotationIsNull =>
-      annotationValue == null || annotationValue.isNull;
+  bool get annotationIsNull => annotationValue.isNull;
 }
 
 ///扫描到的参数信息
@@ -485,6 +465,5 @@ class GParam {
       : annotationValue.peek('key').stringValue;
 
   ///判断注解信息是否为空
-  bool get annotationIsNull =>
-      annotationValue == null || annotationValue.isNull;
+  bool get annotationIsNull => annotationValue.isNull;
 }

@@ -16,13 +16,13 @@ class Book {
   double price;
 
   @MConstructor()
-  Book(this.name, this.author);
+  Book(this.name, this.author) : this.price = 1.0;
 
   @MConstructor()
   Book.price(this.name, this.author, this.price);
 
   @MConstructor()
-  Book.custom(this.name, {this.author, this.price});
+  Book.custom(this.name, {this.author = '', this.price = 1.0});
 
   @MFunction()
   void printInfo() {
@@ -30,5 +30,13 @@ class Book {
   }
 
   @MFunction()
-  double calculatePrice(double sale) => sale * (price ?? 1);
+  double calculatePrice(double sale) => sale * price;
+
+  @MFunction()
+  double calculatePrice2(double sale, [double? newPrice]) =>
+      sale * (newPrice ?? price);
+
+  @MFunction()
+  double calculatePrice3(double sale, {required double? newPrice}) =>
+      sale * (newPrice ?? price);
 }

@@ -28,7 +28,7 @@ Future<MirrorConfig> _initConfig(BuildStep buildStep) async {
   //
   // Log.log('MirrorSystem :   $pks  ');
   // Log.log('MirrorSystem :   _initConfig  ');
-  MirrorConfig config;
+  MirrorConfig? config;
   var package = buildStep.inputId.package;
   var assetId = AssetId(package, 'lib/mirror_config.dart');
   final resolver = buildStep.resolver;
@@ -57,17 +57,15 @@ Future<MirrorConfig> _initConfig(BuildStep buildStep) async {
   }
   config ??= MirrorConfig();
 
-  var imports = <MImport>[
-    MImport(packageName: 'magic_mirror', libName: 'magic_mirror')
-  ];
+  var imports = <MImport>[_coreImport];
   imports.addAll(config.imports);
   imports.addAll(config.importLibsNames.entries
-      .map((e) => MImport(packageName: e.key, libName: e.value)));
+      .map((e) => MImport(e.key, libName: e.value)));
 
   config = MirrorConfig(
     isGenInvoker: config.isGenInvoker,
     isGenLibExport: config.isGenLibExport,
-    importLibsNames: {'magic_mirror': 'magic_mirror'}
+    importLibsNames: {_coreImport.packageName: _coreImport.libName}
       ..addAll(config.importLibsNames),
     imports: imports,
     genGroupBy: config.genGroupBy,
@@ -79,23 +77,28 @@ Future<MirrorConfig> _initConfig(BuildStep buildStep) async {
 
 ///将所有医用的库扫描库中的类信息
 Future<List<GLibrary>> _importLibs(BuildStep buildStep) {
-  return Stream.fromFutures(config.imports
-      .where((element) => !element.onlyImport && !element.useExport)
-      .map((e) => scanLibrary(buildStep, e))).toList();
+  return Stream.fromFutures(config!.imports
+          .where((element) => !element.onlyImport && !element.useExport)
+          .map((e) => scanLibrary(buildStep, e))
+          .whereType<Future<GLibrary>>())
+      .toList();
 }
 
 ///所有已扫描到的库
 final Map<String, GLibrary> libraries = {};
 
-///记录配置信息
-MirrorConfig _config;
+///核心包的导入信息
+MImport _coreImport =
+    MImport('magic_mirror', libName: 'magic_mirror', onlyImport: false);
 
 ///记录配置信息
-MirrorConfig get config => _config;
+MirrorConfig? _config;
+
+///记录配置信息
+MirrorConfig? get config => _config;
 
 ///设定配置信息
 void setMirrorConfig(MirrorConfig config) {
-  if (config == null) return;
   _config = config;
 }
 
@@ -107,7 +110,7 @@ class MirrorBuilder implements Builder {
   final _writeDartFileFormatter = DartFormatter();
 
   ///缓存已经生成的信息不在二次扫描生成
-  String _implementationTemp, _registerTemp;
+  String _implementationTemp = '', _registerTemp = '';
 
   ///输入和输出定义
   @override
@@ -163,20 +166,17 @@ class MirrorBuilder implements Builder {
     var package = buildStep.inputId.package;
     if (config == null) {
       var conf = await _initConfig(buildStep);
-      if (conf == null) {
-        throw 'can not find lib/mirror_config.dart';
-      }
       setMirrorConfig(conf);
       Log.log(
-          'config info isGenInvoker:${config.isGenInvoker} isGenLibExport:${config.isGenLibExport} '
-          'importLibsNames:${config.imports.map((e) => '${e.packageName}/${e.libName}.dart  onlyImport:${e.onlyImport}  useExport:${e.useExport}')}');
+          'config info isGenInvoker:${conf.isGenInvoker} isGenLibExport:${conf.isGenLibExport} '
+          'importLibsNames:${conf.imports.map((e) => '${e.packageName}/${e.libName}.dart  onlyImport:${e.onlyImport}  useExport:${e.useExport}')}');
 
       var libs = await _importLibs(buildStep);
       libs.forEach((element) {
         libraries[element.name] = element;
       });
 
-      if (config.isGenInvoker) {
+      if (conf.isGenInvoker) {
         // await libraries.values.forEach((e) => _genLibInvoker(e));
       }
     }
@@ -193,33 +193,36 @@ class MirrorBuilder implements Builder {
         libs: libraryInfo.where((element) => element.isNotEmpty).toList());
     AssetsTypeParser parser = (uri) async {
       final libUri = uri.removeFragment().toString();
-      LibraryElement library;
+      LibraryElement? library;
       if (_assetsLibCache.containsKey(libUri)) {
         library = _assetsLibCache[libUri];
       } else {
         library = await buildStep.resolver.libraryFor(AssetId.resolve(libUri));
       }
-      return library.getType(uri.fragment).thisType;
+      return library?.getType(uri.fragment)?.thisType;
     };
-    if (config.isGenInvoker) {
-      _implementationTemp ??= _writeDartFileFormatter.format(
-          await genMirrorImplementation(libraries.values.toList(), parser));
+    if (config!.isGenInvoker) {
+      if (_implementationTemp.isEmpty) {
+        _implementationTemp = _writeDartFileFormatter.format(
+            await genMirrorImplementation(libraries.values.toList(), parser));
+      }
       await buildStep.writeAsString(
           _implementationFileOutput(buildStep), _implementationTemp);
       await buildStep.writeAsString(_projectFileOutput(buildStep),
           _writeDartFileFormatter.format(await genCodeMirrorInfo(lib, parser)));
       // await buildStep.writeAsString(_projectFileOutput(buildStep),
       //     await genCodeMirrorInfo(lib, parser));
-
-      _registerTemp ??= _writeDartFileFormatter.format(genMirrorRegister(
-          package, [
-        'project.mirror.aymtools.dart',
-        'implementation.mirror.aymtools.dart'
-      ]));
+      if (_registerTemp.isEmpty) {
+        _registerTemp = _writeDartFileFormatter.format(genMirrorRegister(
+            package, [
+          'project.mirror.aymtools.dart',
+          'implementation.mirror.aymtools.dart'
+        ]));
+      }
       await buildStep.writeAsString(
           _registerFileOutput(buildStep), _registerTemp);
     }
-    if (config.isGenLibExport) {
+    if (config!.isGenLibExport) {
       await buildStep.writeAsString(_exportFileOutput(buildStep), '');
     }
   }

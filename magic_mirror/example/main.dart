@@ -1,4 +1,5 @@
 import 'package:magic_mirror/magic_mirror.dart';
+
 // 导入Register
 // import 'generated/aymtools/mirror/register.mirror.aymtools.dart';
 
@@ -18,13 +19,13 @@ class Book {
   double price;
 
   @MConstructor()
-  Book(this.name, this.author);
+  Book(this.name, this.author) : price = 1.0;
 
   @MConstructor()
   Book.price(this.name, this.author, this.price);
 
   @MConstructor()
-  Book.custom(this.name, {this.author, this.price});
+  Book.custom(this.name, {this.author = '', this.price = 1.0});
 
   @MFunction()
   void printInfo() {
@@ -41,8 +42,7 @@ void main() {
   // Register.register();
 
   var clazz = MagicMirror.instance.load('/class/book');
-  var book =
-  clazz.newInstanceForMap('', {'name': 'book1', 'author': 'author1'});
+  var book = clazz.newInstance('', {'name': 'book1', 'author': 'author1'});
 
   var authorField = clazz.getField('auth');
   print(authorField.get(book)); // print  author1

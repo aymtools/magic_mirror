@@ -72,7 +72,7 @@ class _KeyGenByClassName implements KeyGen {
       url = '/' + url;
     }
     var simpleName =
-        "${(className?.isNotEmpty ?? false) ? '${className[0].toLowerCase()}${className.substring(1)}' : className}";
+        "${(className.isNotEmpty) ? '${className[0].toLowerCase()}${className.substring(1)}' : className}";
     return '$url/$simpleName';
   }
 }
@@ -84,7 +84,7 @@ class _KeyGenByClassSimpleName implements KeyGen {
   @override
   String gen(
           String key, String tag, int ext, String className, String libUri) =>
-      "/${(className?.isNotEmpty ?? false) ? '${className[0].toLowerCase()}${className.substring(1)}' : className}";
+      "/${(className.isNotEmpty) ? '${className[0].toLowerCase()}${className.substring(1)}' : className}";
 }
 
 ///自动生成 /class/classSequence$num  num自动增长
