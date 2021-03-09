@@ -42,7 +42,7 @@ void main() {
 
   var clazz = MagicMirror.instance.load('/class/book');
   var book =
-  clazz.newInstanceForMap('', {'name': 'book1', 'author': 'author1'});
+  clazz.newInstance('', {'name': 'book1', 'author': 'author1'});
 
   var authorField = clazz.getField('auth');
   print(authorField.get(book)); // print  author1

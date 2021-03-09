@@ -59,7 +59,7 @@ class MImport {
 }
 
 ///基本注解需要的内容
-abstract class AnnBase {
+abstract class _AnnBase {
   ///key 主键
   final String key;
 
@@ -72,43 +72,11 @@ abstract class AnnBase {
   ///flag 标识属性
   final bool flag;
 
-  ///extType 标识Type的属性 暂未实现
-  final Type extType;
-
-  ///tag1 附加内容1
-  final String tag1;
-
-  ///ext1 扩展属性1
-  final int ext1;
-
-  ///flag1 标识属性1
-  final bool flag1;
-
-  ///String的标识列表
-  final List<String> tagList;
-
-  ///int的标识列表
-  final List<int> extList;
-
-  ///Type的标识列表 暂未实现
-  final List<Type> extTypeList;
-
-  const AnnBase(
-      {this.key,
-      this.tag,
-      this.ext,
-      this.flag,
-      this.extType,
-      this.tag1,
-      this.ext1,
-      this.flag1,
-      this.tagList,
-      this.extList,
-      this.extTypeList});
+  const _AnnBase({this.key, this.tag, this.ext, this.flag});
 }
 
 /// 定义Class的注解
-class MClass extends AnnBase {
+class MClass extends _AnnBase {
   static const int KEY_GEN_TYPE_BY_DEF = KeyGen.KEY_GEN_TYPE_BY_DEF;
   static const int KEY_GEN_TYPE_BY_URI = KeyGen.KEY_GEN_TYPE_BY_URI;
   static const int KEY_GEN_TYPE_BY_CLASS_NAME =
@@ -157,11 +125,6 @@ class MClass extends AnnBase {
     String tag = '',
     int ext = -1,
     bool flag = false,
-    String tag1 = '',
-    int ext1 = -1,
-    bool flag1 = false,
-    List<String> tagList = const [],
-    List<int> extList = const [],
     this.keyGenType = KEY_GEN_TYPE_BY_DEF,
     this.needAssignableFrom = const [],
     this.anyOneAssignableFrom = const [],
@@ -173,42 +136,16 @@ class MClass extends AnnBase {
     this.scanFields = false,
     this.scanFieldsUsedBlockList = false,
     this.scanSuperFields = false,
-  }) : super(
-            key: key,
-            tag: tag,
-            ext: ext,
-            flag: flag,
-            tag1: tag1,
-            ext1: ext1,
-            flag1: flag1,
-            tagList: tagList,
-            extList: extList);
+  }) : super(key: key, tag: tag, ext: ext, flag: flag);
 }
 
 /// 指定Class的构造函数
 /// 当使用在默认构造函数上时（非命名构造函数）  会生成两种构造路径
 /// "" 代表默认构造函数 就是非命名构造函数
-class MConstructor extends AnnBase {
-  const MConstructor({
-    String key = '',
-    String tag = '',
-    int ext = -1,
-    bool flag = false,
-    String tag1 = '',
-    int ext1 = -1,
-    bool flag1 = false,
-    List<String> tagList = const [],
-    List<int> extList = const [],
-  }) : super(
-            key: key,
-            tag: tag,
-            ext: ext,
-            flag: flag,
-            tag1: tag1,
-            ext1: ext1,
-            flag1: flag1,
-            tagList: tagList,
-            extList: extList);
+class MConstructor extends _AnnBase {
+  const MConstructor(
+      {String key = '', String tag = '', int ext = -1, bool flag = false})
+      : super(key: key, tag: tag, ext: ext, flag: flag);
 }
 
 ///构造函数必须时必须的map参数 且只有一个参数Map<String,dynamic>类型的参数 默认是uri的参数叠加传入的Map参数 若传入的arg非map则以null的key的值存在
@@ -222,51 +159,17 @@ class MConstructorNot {
 }
 
 /// 函数的参数 构造函数也是 可用来指定map中key 与实际不一致
-class MParam extends AnnBase {
-  const MParam({
-    String key = '',
-    String tag = '',
-    int ext = -1,
-    bool flag = false,
-    String tag1 = '',
-    int ext1 = -1,
-    bool flag1 = false,
-    List<String> tagList = const [],
-    List<int> extList = const [],
-  }) : super(
-            key: key,
-            tag: tag,
-            ext: ext,
-            flag: flag,
-            tag1: tag1,
-            ext1: ext1,
-            flag1: flag1,
-            tagList: tagList,
-            extList: extList);
+class MParam extends _AnnBase {
+  const MParam(
+      {String key = '', String tag = '', int ext = -1, bool flag = false})
+      : super(key: key, tag: tag, ext: ext, flag: flag);
 }
 
 /// 标注Class内的函数
-class MFunction extends AnnBase {
-  const MFunction({
-    String key = '',
-    String tag = '',
-    int ext = -1,
-    bool flag = false,
-    String tag1 = '',
-    int ext1 = -1,
-    bool flag1 = false,
-    List<String> tagList = const [],
-    List<int> extList = const [],
-  }) : super(
-            key: key,
-            tag: tag,
-            ext: ext,
-            flag: flag,
-            tag1: tag1,
-            ext1: ext1,
-            flag1: flag1,
-            tagList: tagList,
-            extList: extList);
+class MFunction extends _AnnBase {
+  const MFunction(
+      {String key = '', String tag = '', int ext = -1, bool flag = false})
+      : super(key: key, tag: tag, ext: ext, flag: flag);
 
   const MFunction.a({
     String key = '',
@@ -279,27 +182,10 @@ class MFunctionNot {
 }
 
 ///指定Class的属性
-class MField extends AnnBase {
-  const MField({
-    String key = '',
-    String tag = '',
-    int ext = -1,
-    bool flag = false,
-    String tag1 = '',
-    int ext1 = -1,
-    bool flag1 = false,
-    List<String> tagList = const [],
-    List<int> extList = const [],
-  }) : super(
-            key: key,
-            tag: tag,
-            ext: ext,
-            flag: flag,
-            tag1: tag1,
-            ext1: ext1,
-            flag1: flag1,
-            tagList: tagList,
-            extList: extList);
+class MField extends _AnnBase {
+  const MField(
+      {String key = '', String tag = '', int ext = -1, bool flag = false})
+      : super(key: key, tag: tag, ext: ext, flag: flag);
 }
 
 ///禁止模式时有效 不扫描的属性

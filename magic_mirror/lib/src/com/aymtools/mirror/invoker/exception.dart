@@ -1,9 +1,10 @@
 import '../tools.dart';
 
-abstract class MMirrorException implements Exception {}
+///当前框架中所有异常信息的父类
+abstract class MagicMirrorException implements Exception {}
 
 ///类信息无法找到异常
-class ClassNotFoundException implements MMirrorException {
+class ClassNotFoundException implements MagicMirrorException {
   ///触发异常的uri
   final String uri;
 
@@ -22,7 +23,7 @@ class ClassNotFoundException implements MMirrorException {
 }
 
 ///函数未找到异常
-class NoSuchFunctionException implements MMirrorException {
+class NoSuchFunctionException implements MagicMirrorException {
   ///所发生异常时的类型
   final Type type;
 
@@ -43,7 +44,7 @@ class NoSuchFunctionException implements MMirrorException {
 }
 
 ///属性未找到异常
-class NoSuchFieldException implements MMirrorException {
+class NoSuchFieldException implements MagicMirrorException {
   ///所发生异常时的类型
   final Type type;
 
@@ -64,7 +65,7 @@ class NoSuchFieldException implements MMirrorException {
 }
 
 ///参数类型异常
-class IllegalArgumentException implements MMirrorException {
+class IllegalArgumentException implements MagicMirrorException {
   ///所发生异常时的类型
   final Type type;
 

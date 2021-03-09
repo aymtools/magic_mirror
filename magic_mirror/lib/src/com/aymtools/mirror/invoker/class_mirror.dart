@@ -15,6 +15,9 @@ class TypeToken<T> {
     return this == other ||
         (other is TypeToken && other.typeValue == typeValue);
   }
+
+  @override
+  int get hashCode => typeValue.hashCode;
 }
 
 ///标注函数的返回值为void
@@ -56,12 +59,12 @@ class MirrorClass<T, A extends MClass> {
       this.fields, this.functions);
 
   ///根据map内的参数来生成一个类的实例
-  T newInstanceForMap(String constructorName, Map<String, dynamic> params) {
+  T newInstance(String constructorName, Map<String, dynamic> params) {
     var c = getConstructor(constructorName);
     if (c == null) {
       throw ClassNotFoundException('$key.$constructorName');
     }
-    return c.newInstanceForMap(params);
+    return c.newInstance(params);
   }
 
   ///根据命名构造函数的key来查找可用的构造函数
@@ -101,7 +104,7 @@ class MirrorConstructor<T, A extends MConstructor> {
       this.annotation, this.name, this.params, this.invoker);
 
   ///根据map内的参数来生成一个类的实例
-  T newInstanceForMap(Map<String, dynamic> params) => invoker.call(params);
+  T newInstance(Map<String, dynamic> params) => invoker.call(params);
 
   ///获取key信息 优先从注解中获取 当注解为空时返回扫描时的name
   String get key => annotation.key.isEmpty ? name : annotation.key;

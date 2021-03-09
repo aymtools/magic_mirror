@@ -53,7 +53,7 @@ class MagicMirror implements IMirrorRegister {
       //     .whereType<MirrorInitializer>()
       //     .forEach((element) => element.onInit(this));
     } else {
-      throw Exception('Mirror is inited');
+      throw Exception('MagicMirror is initialized');
     }
   }
 
@@ -347,7 +347,7 @@ class MagicMirror implements IMirrorRegister {
         params = genParams(param, uriParams, constructor.params.first.key);
         // }
       }
-      return constructor.newInstanceForMap(params);
+      return constructor.newInstance(params);
     }
     throw ClassNotFoundException(classKey);
   }
