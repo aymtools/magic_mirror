@@ -5,14 +5,13 @@ import 'package:source_gen/source_gen.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:analyzer/dart/element/element.dart';
 
-// ignore: library_prefixes
 import 'dart:math' as Math;
 
 import 'builder.dart';
 import 'entities.dart';
 import 'tools.dart';
 
-typedef AssetsTypeParser = Future<DartType> Function(Uri assetsUri);
+typedef AssetsTypeParser = Future<DartType?> Function(Uri assetsUri);
 
 ///生成导入包的缓冲器
 class _GenImports {
@@ -38,8 +37,8 @@ class _GenImports {
   }
 
   ///注解的具体类型的类型转换为包含As的String
-  String annTypeStrMaker(ConstantReader ann) =>
-      ann == null || ann.isNull ? 'null' : typeStrMaker(ann.objectValue.type);
+  String annTypeStrMaker(ConstantReader? ann) =>
+      ann == null || ann.isNull ? 'null' : typeStrMaker(ann.objectValue.type!);
 
   ///获取转换后的需要的所有的导入包信息
   String get importsValue => imports
@@ -60,7 +59,7 @@ String genMirrorRegister(String defPackage, List<String> other) {
       .toList();
   return '''
 import 'package:magic_mirror/magic_mirror.dart';
-${other.map((e) => "import '${e}' as ${imports.getUriAsNameStr(e.replaceAll('.mirror.aymtools', ''))}Register;").fold('', (p, v) => p + v)}
+${other.map((e) => "import '${e}' as ${imports.getUriAsNameStr(e.replaceAll('.mirror.aymtools', ''))}Register;").fold<String>('', (p, v) => p + v)}
 ${_genCodeLibInfoMirrorRegisterTemplate([], true, otherStr)}
   ''';
 }
@@ -68,7 +67,7 @@ ${_genCodeLibInfoMirrorRegisterTemplate([], true, otherStr)}
 ///根据类包信息生成的注册器
 Future<String> genMirrorLibInfoMirror(
     GLibraryInfo libraryInfo, AssetsTypeParser parser,
-    {bool importOtherLib = false, GImports defImports}) async {
+    {bool importOtherLib = false, GImports? defImports}) async {
   var imports = defImports ?? GImports();
   if (importOtherLib) {
     imports.addLibs(libraries.values.toList());
@@ -183,7 +182,7 @@ class Register implements IMirrorRegister {
   static const Register _register = Register._();
 
   static void register() {
-  ${otherRegister.fold('', (p, e) => p + e)}
+  ${otherRegister.fold<String>('', (p, e) => p + e)}
     MagicMirror.register${isFinal ? '' : 's'}(_register);
   }
 
@@ -214,7 +213,7 @@ Future<String> genCodeLibInfoMirrorInfo(
 ) async {
   return (await Stream.fromFutures(
     library.classes.map<Future<String>>(
-      (e) => _genCodeClassMirrorInfo(
+      (e) async => await _genCodeClassMirrorInfo(
           e,
           annTypeStrMaker,
           classTypeStrMaker,
@@ -246,7 +245,7 @@ FutureOr<String> _genCodeClassMirrorInfo(
   var annotationClass = annTypeStrMaker.call(annotation);
 
   var cs = clazz.constructors.map((e) {
-    var named = e.element?.name ?? '';
+    var named = e.element.name;
     var CMD = named.isEmpty
         ? 'return $classTypeName'
         : 'return $classTypeName.${named}';
@@ -353,7 +352,7 @@ Future<String> _genAnnotation(
   String Function(DartType type) typeStrMaker,
   AssetsTypeParser parser,
 ) async {
-  if (reader == null || reader.isNull) return 'null';
+  if (reader.isNull) return 'null';
   if (reader.isString) {
     return "'${reader.stringValue}'";
   } else if (reader.isDouble) {
@@ -383,29 +382,32 @@ Future<String> _genAnnotation(
     return typeStrMaker.call(reader.typeValue);
   } else {
     Log.log('_genAnnotation ${reader.objectValue.type}');
-    final element =
-        reader.objectValue.type.element ?? reader.objectValue.toFunctionValue();
+    final element = reader.objectValue.type!.element ??
+        reader.objectValue.toFunctionValue();
 
     if (element is FunctionElement) {
       var as = typeStrMaker.call(element.type);
       return '$as';
     } else if (element is MethodElement && element.isStatic) {
       var result = '';
-      result += typeStrMaker.call(await parser.call(element.librarySource.uri
-          .replace(fragment: element.enclosingElement.name)));
-      result += '.${element.name}';
+      var obj = await parser.call(element.librarySource.uri
+          .replace(fragment: element.enclosingElement.name));
+      if (obj != null) {
+        result += typeStrMaker.call(obj);
+        result += '.${element.name}';
+      }
       return result;
     } else {
       var result = '';
       var revive = reader.revive();
-      var pArgs = revive?.positionalArguments ?? [];
-      var namedArgs = revive?.namedArguments ?? {};
-      var accessor = revive?.accessor ?? '';
-      if (revive == null) return result;
+      var pArgs = revive.positionalArguments ?? [];
+      var namedArgs = revive.namedArguments ?? {};
+      var accessor = revive.accessor ?? '';
       if (accessor.isNotEmpty) {
         result += '.$accessor';
       }
       var type = await parser.call(revive.source);
+      if (type == null) return '';
       result += typeStrMaker.call(type);
       // Log.log('_genAnnotation $result $namedArgs');
       result += '(';
@@ -448,10 +450,6 @@ Future<FutureOr<String>> _genCodeConstructor(
   String Function(DartType type) typeStrMaker,
   AssetsTypeParser parser,
 ) async {
-  if (constructor == null) {
-    return '';
-  }
-
   var annotation = constructor.annotationValue;
   var annotationClass = constructor.annotationIsNull
       ? 'MConstructor'
@@ -481,9 +479,6 @@ FutureOr<String> _genCodeField(
   String Function(DartType type) typeStrMaker,
   AssetsTypeParser parser,
 ) async {
-  if (field == null) {
-    return '';
-  }
   var annotationClass = field.annotationIsNull
       ? 'MField'
       : annTypeStrMaker.call(field.annotationValue);
@@ -511,10 +506,6 @@ Future<FutureOr<String>> _genCodeFunction(
   String Function(DartType type) typeStrMaker,
   AssetsTypeParser parser,
 ) async {
-  if (function == null) {
-    return '';
-  }
-
   var returnTypeStr = returnTypeStrMaker.call(function);
 
   var annotation = function.annotationValue;
@@ -546,9 +537,6 @@ FutureOr<String> _genCodeParam(
   String Function(DartType type) typeStrMaker,
   AssetsTypeParser parser,
 ) async {
-  if (param == null) {
-    return '';
-  }
   var annotationClass = param.annotationIsNull
       ? 'MParam'
       : annTypeStrMaker.call(param.annotationValue);
@@ -561,108 +549,10 @@ FutureOr<String> _genCodeParam(
   '''
       .trim();
 }
-//
-// ///生成构造函数的代理执行器
-// String _genCodeConstructorInvoker(
-//     String classTypeName,
-//     GConstructor constructor,
-//     String Function(GParam param) maker,
-//     String returnTypeStr) {
-//   if (constructor == null) return '';
-//   var named = constructor.element.name;
-//   var CMD = named.isEmpty
-//       ? 'return $classTypeName'
-//       : 'return $classTypeName.${named}';
-//   if (constructor.isConstructorArgMap) {
-//     return '''
-//    (Map<String, dynamic> params) {
-//      ${_genCodeFunctionInvokerBody(CMD, constructor.params, [
-//       'params'
-//     ], cmdAfter: [])}
-//    }
-//   ''';
-//   }
-//
-//   return '''
-//    (Map<String, dynamic> params) {
-//      ${_genCodeFunctionInvokerForMapParamsSwitch(CMD, constructor.params, 'params', '''
-//         throw new IllegalArgumentException(${classTypeName},
-//             '${constructor.element.name}',
-//             [${constructor.params.map((e) => "Pair('${e.paramKey}',MagicMirror.genType<${maker.call(e)}>())").fold('', (p, e) => p == '' ? e : "$p,$e")}],
-//             params.entries.map((e)=>Pair(e.key, e.value.runtimeType)).toList());
-//      ''', maker)}
-//    }
-//   ''';
-// }
-//
-// ///生成属性的getter的代理执行器
-// String _genCodeFieldGetInvoker(
-//     String classTypeName, GField field, String fieldTypeStr) {
-//   if (field == null) return '';
-//   return '''
-//    (${classTypeName} bean) => bean.${field.element.name}
-//   ''';
-// }
-//
-// ///生成属性的setter的代理执行器
-// String _genCodeFieldSetInvoker(
-//     String classTypeName, GField field, String fieldTypeStr) {
-//   if (field == null) return '';
-//   return '''
-//   (${classTypeName} bean, dynamic  value) {
-//       if (MagicMirror.hasTypeAdapterS2Value<${fieldTypeStr}>(value)) {
-//         bean.${field.element.name} = MagicMirror.convertTypeS<${fieldTypeStr}>(value);
-//       } else {
-//         throw new IllegalArgumentException(${classTypeName},
-//             '${field.element.name}',
-//             [Pair('${field.element.name}', MagicMirror.genType<${fieldTypeStr}>())],
-//             [Pair('${field.element.name}', value.runtimeType)]);
-//       }
-//   }
-//   ''';
-// }
-//
-// ///生成函数的代理执行器
-// String _genCodeFunctionInvoker(String classTypeName, GFunction function,
-//     String Function(GParam param) maker, String returnTypeStr) {
-//   if (function == null) return '';
-//   var CMD =
-//       '${'Void' == returnTypeStr ? '' : 'return'} bean.${function.element.name}';
-//   var cmdAfter =
-//       'Void' == returnTypeStr ? <String>['return Void();'] : <String>[];
-//
-//   return '''
-//    (${classTypeName} bean , Map<String, dynamic> params) {
-//      ${_genCodeFunctionInvokerForMapParamsSwitch(
-//     CMD,
-//     function.params,
-//     'params',
-//     '''
-//         throw new IllegalArgumentException(${classTypeName},
-//             '${function.element.name}',
-//             [${function.params.map((e) => "Pair('${e.paramKey}',MagicMirror.genType<${maker.call(e)}>())").fold('', (p, e) => p == '' ? e : "$p,$e")}],
-//             params.entries.map((e)=>Pair(e.key, e.value.runtimeType)).toList());
-//      ''',
-//     maker,
-//     cmdAfter: cmdAfter,
-//   )}
-//    }
-//   ''';
-// }
-//
-// ///生成直接获取函数对象函数的代理执行器
-// String _genCodeFunctionInstance(String classTypeName, GFunction function) {
-//   if (function == null) return '';
-//   return '''
-//    (${classTypeName} bean ) => bean.${function.element.displayName}
-//   ''';
-// }
 
 ///将函数名 属性名的首字母大写
 String capitalize(String name) {
-  return name == null || name.isEmpty
-      ? ''
-      : '${name[0].toUpperCase()}${name.substring(1)}';
+  return name.isEmpty ? '' : '${name[0].toUpperCase()}${name.substring(1)}';
 }
 
 ///生成函数的调用判断逻辑
@@ -673,7 +563,7 @@ String _genCodeFunctionInvokerForMapParamsSwitch(
     String finalElse,
     String Function(GParam param) maker,
     {List<String> cmdAfter = const []}) {
-  if (params == null || params.isEmpty) {
+  if (params.isEmpty) {
     return _genCodeFunctionInvokerBody(CMD, [], [], cmdAfter: cmdAfter);
   }
   var paramsNamed = params.where((p) => p.element.isNamed).toList();
@@ -749,8 +639,8 @@ String _genCodeFunctionInvokerBody(
 List<List<_IFGenerator>> _combination(List<GParam> source, String paramsMapName,
     String Function(GParam param) maker) {
   var result = <List<_IFGenerator>>[];
-  for (int l = 0, i = Math.pow(2, source.length) - 1; i >= l; i--) {
-    var paras = cloneList(source, (s) => s)
+  for (int l = 0, i = (Math.pow(2, source.length).toInt()) - 1; i >= l; i--) {
+    var paras = cloneList<GParam>(source, (s) => s)
         .map((p) => _IFGenerator(p, paramsMapName, maker))
         .toList();
     for (var j = 0, m = source.length - 1; j <= m; j++) {

@@ -1,5 +1,5 @@
 ///查找第一个符合条件的内容 可以返回null
-E findFistWhere<E>(List<E> list, bool Function(E element) test, {E orElse}) {
+E? findFistWhere<E>(List<E> list, bool Function(E element) test, {E? orElse}) {
   for (var element in list) {
     if (test(element)) return element;
   }

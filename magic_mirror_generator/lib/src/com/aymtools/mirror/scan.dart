@@ -6,8 +6,8 @@ import 'tools.dart';
 import 'package:source_gen/source_gen.dart';
 
 ///扫描类库信息
-Future<GLibrary> scanLibrary(BuildStep buildStep, MImport import) async {
-  GLibrary library;
+Future<GLibrary?> scanLibrary(BuildStep buildStep, MImport import) async {
+  GLibrary? library;
   var libPackageName = import.packageName;
   var libDartFileName = import.libName;
   try {
@@ -46,7 +46,7 @@ GLibraryInfo scanLibraryInfo(LibraryReader libraryReader) {
   var classes = libraryReader
       .annotatedWith(_classChecker)
       .map((element) => _scanClass(element.element, element.annotation))
-      .where((element) => element != null)
+      .whereType<GClass>()
       .toList();
   classes = removeDuplicate(classes, (test) => test.key);
   var info = GLibraryInfo(libraryReader.element, classes, []);
@@ -78,7 +78,7 @@ const TypeChecker _classFieldAnnotation = TypeChecker.fromRuntime(MField);
 const TypeChecker _classFieldNotAnnotation = TypeChecker.fromRuntime(MFieldNot);
 
 ///扫描类信息
-GClass _scanClass(Element element, ConstantReader annotation) {
+GClass? _scanClass(Element element, ConstantReader annotation) {
   if (element.kind != ElementKind.CLASS) return null;
   var from = annotation.peek('needAssignableFrom');
   if (!from.isNull &&
@@ -99,7 +99,7 @@ GClass _scanClass(Element element, ConstantReader annotation) {
           .any((c) => TypeChecker.fromStatic(c).isAssignableFrom(element))) {
     return null;
   }
-  var classAnnotation = genAnnotation<MClass>(annotation);
+  var classAnnotation = genAnnotation<MClass>(annotation) ?? MClass();
   var className = element.displayName;
   var classElement = (element as ClassElement);
 
@@ -202,9 +202,9 @@ List<GField> _scanFields(
       })
       .map((e) => _scanField(e))
       .toList(growable: true);
-  if (scanSuper) {
+  if (scanSuper && element.supertype != null) {
     fields.addAll(
-        _scanFields(element.supertype.element, scanSuper, scanUsedAllowList));
+        _scanFields(element.supertype!.element, scanSuper, scanUsedAllowList));
   }
   return fields;
 }
@@ -227,9 +227,9 @@ List<GFunction> _scanFunctions(
               _classMethodNotAnnotation.firstAnnotationOf(ele) == null))
       .map((e) => _scanFunction(e))
       .toList(growable: true);
-  if (scanSuper) {
+  if (scanSuper && element.supertype != null) {
     functions.addAll(_scanFunctions(
-        element.supertype.element, scanSuper, scanUsedAllowList));
+        element.supertype!.element, scanSuper, scanUsedAllowList));
   }
   return functions;
 }
