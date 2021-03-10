@@ -3,3 +3,6 @@
 
 ## 0.1.0+2
 - Format the code and adjust the reference library version.
+
+## 0.1.1
+- Adjust the naming structure, there will be some incompatibility with 0.1.0
