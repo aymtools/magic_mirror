@@ -13,7 +13,6 @@ T genAnnotation<T>(ConstantReader annotation) {
 ///根据类型的反射来生成
 dynamic _gen(ClassMirror classMirror, ConstantReader annotation) {
   try {
-
     var methodMirror = classMirror.declarations.values
         .whereType<MethodMirror>()
         .where((element) => element.isConstructor)
@@ -155,6 +154,6 @@ bool isDartCoreType(DartType type) =>
 class Log {
   ///记录日志
   static void log(String msg) {
-    print(msg);
+    // print(msg);
   }
 }

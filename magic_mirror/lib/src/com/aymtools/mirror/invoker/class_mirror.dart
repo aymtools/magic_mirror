@@ -148,7 +148,7 @@ class MirrorFunction<T, A extends MFunction, R> {
   R invoke(T bean, Map<String, dynamic> params) => invoker.call(bean, params);
 
   ///获取具体函数
-  MirrorFunctionInstance<T> getFunction(T bean) => function.call(bean);
+  Function getFunction(T bean) => function.call(bean);
 
   ///获取key信息 优先从注解中获取 当注解为空时返回扫描时的name
   String get key => annotation.key.isEmpty ? name : annotation.key;

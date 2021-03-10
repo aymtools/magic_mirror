@@ -1,12 +1,12 @@
 import 'dart:async';
 
-import 'package:magic_mirror/magic_mirror.dart';
-import 'package:source_gen/source_gen.dart';
-import 'package:analyzer/dart/element/type.dart';
-import 'package:analyzer/dart/element/element.dart';
-
 // ignore: library_prefixes
 import 'dart:math' as Math;
+
+import 'package:analyzer/dart/element/element.dart';
+import 'package:analyzer/dart/element/type.dart';
+import 'package:magic_mirror/magic_mirror.dart';
+import 'package:source_gen/source_gen.dart';
 
 import 'builder.dart';
 import 'entities.dart';

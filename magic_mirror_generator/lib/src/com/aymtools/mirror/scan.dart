@@ -1,9 +1,10 @@
 import 'package:analyzer/dart/element/element.dart';
 import 'package:build/build.dart';
 import 'package:magic_mirror/magic_mirror.dart';
+import 'package:source_gen/source_gen.dart';
+
 import 'entities.dart';
 import 'tools.dart';
-import 'package:source_gen/source_gen.dart';
 
 ///扫描类库信息
 Future<GLibrary> scanLibrary(BuildStep buildStep, MImport import) async {

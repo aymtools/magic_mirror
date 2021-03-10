@@ -170,10 +170,6 @@ class MFunction extends _AnnBase {
   const MFunction(
       {String key = '', String tag = '', int ext = -1, bool flag = false})
       : super(key: key, tag: tag, ext: ext, flag: flag);
-
-  const MFunction.a({
-    String key = '',
-  });
 }
 
 ///禁止模式模式时有效 不扫描的方法
