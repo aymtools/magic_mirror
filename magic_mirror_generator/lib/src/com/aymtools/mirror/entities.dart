@@ -1,4 +1,5 @@
 import 'package:analyzer/dart/element/element.dart';
+import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:magic_mirror/magic_mirror.dart';
 import 'package:source_gen/source_gen.dart';
@@ -274,7 +275,7 @@ class GLibraryInfo {
 ///扫描到的类型
 class GType {
   ///类型的具体对象
-  final Element element;
+  final Element? element;
 
   ///对应的类型的dartType
   final DartType value;
@@ -396,7 +397,7 @@ class GFunction {
   final GType returnType;
 
   GFunction(this.element, ConstantReader? annotationValue, this.params)
-      : returnType = GType(element.returnType.element!, element.returnType),
+      : returnType = GType(element.returnType.element, element.returnType),
         this.annotationValue = annotationValue ?? ConstantReader(null);
 
   ///获取函数的具体key 依据注解和name生成
@@ -408,6 +409,10 @@ class GFunction {
 
   ///判断注解信息是否为空
   bool get annotationIsNull => annotationValue.isNull;
+
+  ///是否是空安全 切不能赋值null
+  bool get returnTypeIsNonNullable =>
+      element.type.nullabilitySuffix == NullabilitySuffix.none;
 }
 
 ///扫描到的属性信息
@@ -438,6 +443,10 @@ class GField {
 
   ///判断注解信息是否为空
   bool get annotationIsNull => annotationValue.isNull;
+
+  ///是否是空安全 切不能赋值null
+  bool get isNonNullable =>
+      element.type.nullabilitySuffix == NullabilitySuffix.none;
 }
 
 ///扫描到的参数信息
@@ -466,4 +475,11 @@ class GParam {
 
   ///判断注解信息是否为空
   bool get annotationIsNull => annotationValue.isNull;
+
+  ///是否未必
+  bool get isNeed => element.isRequiredPositional || element.isRequiredNamed;
+
+  ///是否是空安全 切不能赋值null
+  bool get isNonNullable =>
+      element.type.nullabilitySuffix == NullabilitySuffix.none;
 }

@@ -37,6 +37,6 @@ class Book {
       sale * (newPrice ?? price);
 
   @MFunction()
-  double calculatePrice3(double sale, {required double? newPrice}) =>
+  double calculatePrice3( double sale, {required double? newPrice}) =>
       sale * (newPrice ?? price);
 }

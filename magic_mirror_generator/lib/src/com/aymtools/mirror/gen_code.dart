@@ -1,11 +1,10 @@
 import 'dart:async';
+import 'dart:math' as Math;
 
+import 'package:analyzer/dart/element/element.dart';
+import 'package:analyzer/dart/element/type.dart';
 import 'package:magic_mirror/magic_mirror.dart';
 import 'package:source_gen/source_gen.dart';
-import 'package:analyzer/dart/element/type.dart';
-import 'package:analyzer/dart/element/element.dart';
-
-import 'dart:math' as Math;
 
 import 'builder.dart';
 import 'entities.dart';
@@ -266,14 +265,16 @@ FutureOr<String> _genCodeClassMirrorInfo(
     var result = '';
     if (e.element.getter != null) {
       result += '''      
-   static ${fieldTypeStr} get${capitalize(e.fieldName)}(${classTypeName} bean)=> bean.${e.element.name};
+   static ${fieldTypeStr}${e.isNonNullable ? '' : '?'} get${capitalize(e.fieldName)}(${classTypeName} bean)=> bean.${e.element.name};
       ''';
     }
     if (e.element.setter != null) {
       result += '''      
-   static void set${capitalize(e.fieldName)}(${classTypeName} bean , dynamic  value) {
+   static void set${capitalize(e.fieldName)}(${classTypeName} bean , dynamic  value) {       
       if (MagicMirror.hasTypeAdapterS2Value<${fieldTypeStr}>(value)) {
-        bean.${e.element.name} = MagicMirror.convertTypeS<${fieldTypeStr}>(value);
+        ${fieldTypeStr}? ${e.element.name}=MagicMirror.convertTypeS<${fieldTypeStr}>(value);        
+        ${e.isNonNullable ? 'if(${e.element.name} != null)' : ''}        
+        bean.${e.element.name} =  ${e.element.name};
       } else {
         throw new IllegalArgumentException(${classTypeName},
             '${e.element.name}',
@@ -293,7 +294,7 @@ FutureOr<String> _genCodeClassMirrorInfo(
     var cmdAfter =
         'Void' == returnTypeStr ? <String>['return Void();'] : <String>[];
     return '''
-   static ${returnTypeStr} invoke${capitalize(e.functionName)}(${classTypeName} bean, Map<String, dynamic> params){
+   static ${returnTypeStr}${e.returnTypeIsNonNullable ? '' : '?'} invoke${capitalize(e.functionName)}(${classTypeName} bean, Map<String, dynamic> params){
     ${_genCodeFunctionInvokerForMapParamsSwitch(
       CMD,
       e.params,
@@ -487,6 +488,7 @@ FutureOr<String> _genCodeField(
     MirrorField<$classTypeName,${annotationClass},${fieldTypeStr}>(
    const ${field.annotationIsNull ? '$annotationClass()' : await _genCodeAnnotation(field.annotationValue, typeStrMaker, parser)},
     '${field.element.name}',
+     ${field.isNonNullable ? 'true' : 'false'},
     ${field.element.getter == null ? 'null' : 'get${capitalize(field.fieldName)}'},
     ${field.element.setter == null ? 'null' : 'set${capitalize(field.fieldName)}'},
   )
@@ -522,6 +524,7 @@ Future<FutureOr<String>> _genCodeFunction(
     ],
     invoke${capitalize(function.functionName)},
     fun${capitalize(function.functionName)},
+     ${function.returnTypeIsNonNullable ? 'true' : 'false'}
   )
   '''
       .trim();
@@ -541,10 +544,13 @@ FutureOr<String> _genCodeParam(
       ? 'MParam'
       : annTypeStrMaker.call(param.annotationValue);
   return '''
+  //${param.element.type.nullabilitySuffix}
   MirrorParam<$annotationClass,${paramTypeStrMaker.call(param)}>(
     const ${param.annotationIsNull ? '$annotationClass()' : await _genCodeAnnotation(param.annotationValue, typeStrMaker, parser)},
-    '${param.element.name}', 
-    ${param.element.isNamed ? 'true' : 'false'}
+    '${param.element.name}',
+    ${param.element.isOptional ? 'true' : 'false'}, 
+    ${param.element.isNamed ? 'true' : 'false'}, 
+    ${param.isNonNullable ? 'true' : 'false'}
   )
   '''
       .trim();
@@ -566,9 +572,9 @@ String _genCodeFunctionInvokerForMapParamsSwitch(
   if (params.isEmpty) {
     return _genCodeFunctionInvokerBody(CMD, [], [], cmdAfter: cmdAfter);
   }
-  var paramsNamed = params.where((p) => p.element.isNamed).toList();
+  var paramsNamed = params.where((p) => !p.isNeed).toList();
   var paramsNeed = params
-      .where((p) => !p.element.isNamed)
+      .where((p) => p.isNeed)
       .map((p) => _IFGenerator(p, paramsMapName, maker, isSelect: true))
       .toList();
 

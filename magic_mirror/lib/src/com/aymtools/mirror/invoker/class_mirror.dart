@@ -151,17 +151,20 @@ class MirrorFunction<T, A extends MFunction, R> {
   ///函数的返回类型
   TypeToken<R> get returnType => TypeToken<R>();
 
+  ///返回类型是否为非空类型
+  final bool returnTypeIsNonNullable;
+
   ///函数的代理执行器
   final MirrorFunctionInvoker<T, R> invoker;
 
   ///函数对象的获取器
   final MirrorFunctionInstance<T> function;
 
-  const MirrorFunction(
-      this.annotation, this.name, this.params, this.invoker, this.function);
+  const MirrorFunction(this.annotation, this.name, this.params, this.invoker,
+      this.function, this.returnTypeIsNonNullable);
 
   ///执行函数
-  R invoke(T bean, Map<String, dynamic> params) => invoker.call(bean, params);
+  R? invoke(T bean, Map<String, dynamic> params) => invoker.call(bean, params);
 
   ///获取具体函数
   Function getFunction(T bean) => function.call(bean);
@@ -185,27 +188,27 @@ class MirrorField<T, A extends MField, V> {
   TypeToken<V> get fieldType => TypeToken<V>();
 
   ///是否可以使用null赋值
-  final bool isNotNull;
+  final bool isNonNullable;
 
   ///属性get代理执行器
-  final MirrorFieldGetInvoker<T, V> getInvoker;
+  final MirrorFieldGetInvoker<T, V>? getInvoker;
 
   ///属性set代理执行器
-  final MirrorFieldSetInvoker<T, dynamic> setInvoker;
+  final MirrorFieldSetInvoker<T, dynamic>? setInvoker;
 
   const MirrorField(
     this.annotation,
     this.name,
-    this.isNotNull,
+    this.isNonNullable,
     this.getInvoker,
     this.setInvoker,
   );
 
   ///获取对象中的具体属性值
-  V get(T bean) => getInvoker.call(bean);
+  V? get(T bean) => getInvoker?.call(bean);
 
   ///对象中的属性赋值
-  void set(T bean, dynamic value) => setInvoker.call(bean, value);
+  void set(T bean, dynamic value) => setInvoker?.call(bean, value);
 
   ///是否可以set
   bool get hasSetter => setInvoker != null;
@@ -240,14 +243,14 @@ class MirrorParam<A extends MParam, PT> {
   ///参数是否是命名参数
   final bool isNamed;
 
-  ///是否是可选的位置参数
-  final bool isPositional;
+  ///是否是位置参数
+  bool get isPositional => !isNamed;
 
   ///是否可以使用null赋值
-  final bool isNotNull;
+  final bool isNonNullable;
 
   const MirrorParam(this.annotation, this.name, this.isOptional, this.isNamed,
-      this.isPositional, this.isNotNull);
+      this.isNonNullable);
 
   ///获取key信息 优先从注解中获取 当注解为空时返回扫描时的name
   String get key => annotation.key.isEmpty ? name : annotation.key;
@@ -257,7 +260,7 @@ class MirrorParam<A extends MParam, PT> {
 typedef MirrorConstructorInvoker<T> = T Function(Map<String, dynamic> params);
 
 ///属性的get代理执行器
-typedef MirrorFieldGetInvoker<T, V> = V Function(T bean);
+typedef MirrorFieldGetInvoker<T, V> = V? Function(T bean);
 
 ///属性的set代理执行器
 typedef MirrorFieldSetInvoker<T, V> = void Function(T bean, V value);
@@ -266,5 +269,5 @@ typedef MirrorFieldSetInvoker<T, V> = void Function(T bean, V value);
 typedef MirrorFunctionInstance<T> = Function Function(T bean);
 
 ///执行函数调用的代理执行器
-typedef MirrorFunctionInvoker<T, R> = R Function(
+typedef MirrorFunctionInvoker<T, R> = R? Function(
     T bean, Map<String, dynamic> params);

@@ -151,6 +151,7 @@ class MagicMirror implements IMirrorRegister {
   ///尝试将form转换为目标类型
   To? convertType<To>(dynamic from) {
     if (from == null) return null;
+    if (dynamic == To) return from;
     if (from is To) return from;
     Type fromType = from.runtimeType;
     if (fromType == To) {
@@ -159,7 +160,7 @@ class MagicMirror implements IMirrorRegister {
       var converter = _typeAdapter[fromType]?[To];
       return converter?.convert(from);
     }
-    return from as To;
+    return null;
   }
 
   //判断是否包含 from到to的类型转换器
@@ -196,6 +197,7 @@ class MagicMirror implements IMirrorRegister {
   bool hasTypeAdapter(Type from, Type to) =>
       from == to ||
       Object == to ||
+      dynamic == to ||
       (_typeAdapter.containsKey(from) &&
           _typeAdapter[from] != null &&
           _typeAdapter[from]!.containsKey(to));
@@ -367,7 +369,7 @@ class MagicMirror implements IMirrorRegister {
   }
 
   ///执行类中的指定方法
-  R invokeMethod<T, R>(T bean, String methodName,
+  R? invokeMethod<T, R>(T bean, String methodName,
       {Map<String, dynamic> params = const {}}) {
     MirrorClass<T, dynamic> clazz = mirror<T>();
     MirrorFunction<T, MFunction, dynamic> function =
@@ -387,7 +389,7 @@ class MagicMirror implements IMirrorRegister {
   }
 
   ///获取为类对象的属性的具体值
-  V getFieldValue<T, V>(T bean, String fieldName) {
+  V? getFieldValue<T, V>(T bean, String fieldName) {
     MirrorClass<T, dynamic> clazz = mirror<T>();
     MirrorField<T, dynamic, dynamic> field = clazz.getField(fieldName);
     if (field.hasGetter) {
