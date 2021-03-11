@@ -148,7 +148,7 @@ class MagicMirror implements IMirrorRegister {
   ///尝试将form转换为目标类型
   static To? convertTypeS<To>(dynamic from) => instance.convertType(from);
 
-  ///尝试将form转换为目标类型
+  ///尝试将form转换为目标类型  转换失败将返回null
   To? convertType<To>(dynamic from) {
     if (from == null) return null;
     if (dynamic == To) return from;
@@ -157,8 +157,12 @@ class MagicMirror implements IMirrorRegister {
     if (fromType == To) {
       return from as To;
     } else if (hasTypeAdapter(fromType, To)) {
-      var converter = _typeAdapter[fromType]?[To];
-      return converter?.convert(from);
+      try {
+        var converter = _typeAdapter[fromType]?[To];
+        return converter?.convert(from);
+      } catch (e) {
+        return null;
+      }
     }
     return null;
   }
