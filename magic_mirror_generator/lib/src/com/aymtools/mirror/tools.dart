@@ -39,16 +39,16 @@ dynamic _gen(ClassMirror classMirror, ConstantReader annotation) {
           var v = _type(value.type, annotation.peek(_getName(key)));
           if (v != null) r.setField(key, v);
 
-          Log.log(
-              'setField for 2 ${_getName(key)}:${value.toString()} type:${value.type} ');
+          // Log.log(
+          //     'setField for 2 ${_getName(key)}:${value.toString()} type:${value.type} ');
         } catch (e) {
-          Log.log(e.toString());
+          // Log.log(e.toString());
         }
       }
     });
     return r.reflectee;
   } catch (e) {
-    Log.log(e.toString());
+    // Log.log(e.toString());
   }
   return null;
 }

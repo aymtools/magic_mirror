@@ -8,7 +8,6 @@ import 'package:source_gen/source_gen.dart';
 
 import 'builder.dart';
 import 'entities.dart';
-import 'tools.dart';
 
 typedef AssetsTypeParser = Future<DartType?> Function(Uri assetsUri);
 
@@ -388,7 +387,7 @@ Future<String> _genAnnotation(
   } else if (reader.isType) {
     return typeStrMaker.call(reader.typeValue);
   } else {
-    Log.log('_genAnnotation ${reader.objectValue.type}');
+    // Log.log('_genAnnotation ${reader.objectValue.type}');
     final element = reader.objectValue.type!.element ??
         reader.objectValue.toFunctionValue();
 
@@ -550,7 +549,6 @@ FutureOr<String> _genCodeParam(
       ? 'MParam'
       : annTypeStrMaker.call(param.annotationValue);
   return '''
-  //${param.element.type.nullabilitySuffix}
   MirrorParam<$annotationClass,${paramTypeStrMaker.call(param)}>(
     const ${param.annotationIsNull ? '$annotationClass()' : await _genCodeAnnotation(param.annotationValue, typeStrMaker, parser)},
     '${param.element.name}',

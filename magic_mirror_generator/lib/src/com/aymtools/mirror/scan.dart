@@ -1,9 +1,10 @@
 import 'package:analyzer/dart/element/element.dart';
 import 'package:build/build.dart';
 import 'package:magic_mirror/magic_mirror.dart';
+import 'package:source_gen/source_gen.dart';
+
 import 'entities.dart';
 import 'tools.dart';
-import 'package:source_gen/source_gen.dart';
 
 ///扫描类库信息
 Future<GLibrary?> scanLibrary(BuildStep buildStep, MImport import) async {
@@ -19,7 +20,7 @@ Future<GLibrary?> scanLibrary(BuildStep buildStep, MImport import) async {
         libPackageName, libDartFileName, lib.name ?? libPackageName,
         lib: lib, libs: libInfos);
 
-    Log.log('scanLibrary $libPackageName $libDartFileName  ${libInfos.length}');
+    // Log.log('scanLibrary $libPackageName $libDartFileName  ${libInfos.length}');
   } catch (e) {
     print(
         'Can not load package:${libPackageName} name:${libDartFileName} library!! \n $e');
@@ -164,11 +165,11 @@ List<GField> _scanFields(
   var fields = element.fields
       .where((ele) => !ele.displayName.startsWith('_'))
       //当前的gen 不支持set get的属性 不知道后续会不会支持
-      .map((e) {
-        Log.log(
-            '${element.displayName}  ${e.name} getter ${e.getter?.metadata} setter ${e.setter?.metadata}   ann ${e.metadata}');
-        return e;
-      })
+      // .map((e) {
+      //   Log.log(
+      //       '${element.displayName}  ${e.name} getter ${e.getter?.metadata} setter ${e.setter?.metadata}   ann ${e.metadata}');
+      //   return e;
+      // })
       .where((ele) {
         var getter = ele.getter;
         var setter = ele.setter;

@@ -5,10 +5,8 @@ import 'generated/aymtools/mirror/register.mirror.aymtools.dart';
 void main() {
   Register.register();
 
-
   var clazz = MagicMirror.instance.load('/class/book');
-  var book =
-  clazz.newInstance('', {'name': 'book1', 'author': 'author1'});
+  var book = clazz.newInstance('', {'name': 'book1', 'author': 'author1'});
 
   var authorField = clazz.getField('auth');
   print(authorField.get(book)); // print  author1
