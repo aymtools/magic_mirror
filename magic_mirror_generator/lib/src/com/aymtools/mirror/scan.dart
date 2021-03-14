@@ -1,3 +1,4 @@
+import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:build/build.dart';
 import 'package:magic_mirror/magic_mirror.dart';
@@ -39,13 +40,22 @@ Future<List<GLibraryInfo>> _scanExportedLibrary(LibraryElement lib) async {
   return result;
 }
 
+///判断是否时需要生成反射镜像
+const TypeChecker _enableReflectionChecker =
+    TypeChecker.fromRuntime(MReflectionEnable);
+
+///判断是否时需要生成反射镜像
+const TypeChecker _enableDeclarationChecker =
+    TypeChecker.fromRuntime(MAnnotation);
+
 ///判断是否时MClass注解的类
-const TypeChecker _classChecker = TypeChecker.fromRuntime(MClass);
+const TypeChecker _disableReflectionChecker =
+    TypeChecker.fromRuntime(MReflectionDisable);
 
 ///扫描所有的类包信息
 GLibraryInfo scanLibraryInfo(LibraryReader libraryReader) {
   var classes = libraryReader
-      .annotatedWith(_classChecker)
+      .annotatedWith(_enableReflectionChecker)
       .map((element) => _scanClass(element.element, element.annotation))
       .whereType<GClass>()
       .toList();
@@ -54,29 +64,29 @@ GLibraryInfo scanLibraryInfo(LibraryReader libraryReader) {
   return info;
 }
 
-///构造函数的注解判定器
-const TypeChecker _classConstructorAnnotation =
-    TypeChecker.fromRuntime(MConstructor);
-
-///构造函数的注解判定器 禁止模式时使用
-const TypeChecker _classConstructorNotAnnotation =
-    TypeChecker.fromRuntime(MConstructorNot);
-
-///参数的注解判定器
-const TypeChecker _classParamAnnotation = TypeChecker.fromRuntime(MParam);
-
-///函数的注解判定器
-const TypeChecker _classMethodAnnotation = TypeChecker.fromRuntime(MFunction);
-
-///函数的注解判定器 禁止模式时使用
-const TypeChecker _classMethodNotAnnotation =
-    TypeChecker.fromRuntime(MFunctionNot);
-
-///属性的注解判定器
-const TypeChecker _classFieldAnnotation = TypeChecker.fromRuntime(MField);
-
-///属性的注解判定器 禁止模式时使用
-const TypeChecker _classFieldNotAnnotation = TypeChecker.fromRuntime(MFieldNot);
+// ///构造函数的注解判定器
+// const TypeChecker _classConstructorAnnotation =
+//     TypeChecker.fromRuntime(MConstructor);
+//
+// ///构造函数的注解判定器 禁止模式时使用
+// const TypeChecker _classConstructorNotAnnotation =
+//     TypeChecker.fromRuntime(MConstructorNot);
+//
+// ///参数的注解判定器
+// const TypeChecker _classParamAnnotation = TypeChecker.fromRuntime(MParam);
+//
+// ///函数的注解判定器
+// const TypeChecker _classMethodAnnotation = TypeChecker.fromRuntime(MFunction);
+//
+// ///函数的注解判定器 禁止模式时使用
+// const TypeChecker _classMethodNotAnnotation =
+//     TypeChecker.fromRuntime(MFunctionNot);
+//
+// ///属性的注解判定器
+// const TypeChecker _classFieldAnnotation = TypeChecker.fromRuntime(MField);
+//
+// ///属性的注解判定器 禁止模式时使用
+// const TypeChecker _classFieldNotAnnotation = TypeChecker.fromRuntime(MFieldNot);
 
 ///扫描类信息
 GClass? _scanClass(Element element, ConstantReader annotation) {
@@ -100,7 +110,8 @@ GClass? _scanClass(Element element, ConstantReader annotation) {
           .any((c) => TypeChecker.fromStatic(c).isAssignableFrom(element))) {
     return null;
   }
-  var classAnnotation = genAnnotation<MClass>(annotation) ?? MClass();
+  var classAnnotation =
+      genAnnotation<MReflectionEnable>(annotation) ?? MReflectionEnable();
   var className = element.displayName;
   var classElement = (element as ClassElement);
 
@@ -140,13 +151,12 @@ GClass? _scanClass(Element element, ConstantReader annotation) {
 List<GConstructor> _scanConstructors(
     ClassElement element, bool scanUsedAllowList) {
   return element.constructors
+      .where((ele) => !_disableReflectionChecker.hasAnnotationOf(ele))
       .where((ele) => !ele.displayName.startsWith('_'))
       .where((ele) =>
           '' == ele.displayName ||
-          (scanUsedAllowList &&
-              _classConstructorAnnotation.firstAnnotationOf(ele) != null) ||
-          (!scanUsedAllowList &&
-              _classConstructorNotAnnotation.firstAnnotationOf(ele) == null))
+          (!scanUsedAllowList ||
+              _enableDeclarationChecker.firstAnnotationOf(ele) != null))
       .map((e) => _scanConstructor(e))
       .toList(growable: true);
 }
@@ -155,7 +165,7 @@ List<GConstructor> _scanConstructors(
 GConstructor _scanConstructor(ConstructorElement element) {
   return GConstructor(
       element,
-      ConstantReader(_classConstructorAnnotation.firstAnnotationOf(element)),
+      ConstantReader(_enableDeclarationChecker.firstAnnotationOf(element)),
       element.parameters.map((e) => _scanParam(e)).toList(growable: true));
 }
 
@@ -163,44 +173,19 @@ GConstructor _scanConstructor(ConstructorElement element) {
 List<GField> _scanFields(
     ClassElement element, bool scanSuper, bool scanUsedAllowList) {
   var fields = element.fields
+      .where((ele) => !(_disableReflectionChecker.hasAnnotationOf(ele) ||
+          (ele.getter != null &&
+              _disableReflectionChecker.hasAnnotationOf(ele.getter)) ||
+          (ele.setter != null &&
+              _disableReflectionChecker.hasAnnotationOf(ele.setter))))
       .where((ele) => !ele.displayName.startsWith('_'))
-      //当前的gen 不支持set get的属性 不知道后续会不会支持
-      // .map((e) {
-      //   Log.log(
-      //       '${element.displayName}  ${e.name} getter ${e.getter?.metadata} setter ${e.setter?.metadata}   ann ${e.metadata}');
-      //   return e;
-      // })
-      .where((ele) {
-        var getter = ele.getter;
-        var setter = ele.setter;
-
-        if (scanUsedAllowList) {
-          if (_classFieldAnnotation.firstAnnotationOf(ele) != null) {
-            return true;
-          }
-          if (getter != null &&
-              _classFieldAnnotation.firstAnnotationOf(getter) != null) {
-            return true;
-          }
-          if (setter != null &&
-              _classFieldAnnotation.firstAnnotationOf(setter) != null) {
-            return true;
-          }
-        } else {
-          if (_classFieldNotAnnotation.firstAnnotationOf(ele) == null) {
-            return true;
-          }
-          if (getter != null &&
-              _classFieldNotAnnotation.firstAnnotationOf(getter) == null) {
-            return true;
-          }
-          if (setter != null &&
-              _classFieldNotAnnotation.firstAnnotationOf(setter) == null) {
-            return true;
-          }
-        }
-        return false;
-      })
+      .where((ele) =>
+          !scanUsedAllowList ||
+          ((_enableDeclarationChecker.hasAnnotationOf(ele) ||
+              (ele.getter != null &&
+                  _enableDeclarationChecker.hasAnnotationOf(ele.getter)) ||
+              (ele.setter != null &&
+                  _enableDeclarationChecker.hasAnnotationOf(ele.setter)))))
       .map((e) => _scanField(e))
       .toList(growable: true);
   if (scanSuper && element.supertype != null) {
@@ -212,20 +197,24 @@ List<GField> _scanFields(
 
 ///扫描类属性信息 具体信息
 GField _scanField(FieldElement element) {
-  return GField(element,
-      ConstantReader(_classFieldAnnotation.firstAnnotationOf(element)));
+  DartObject? annotation = _enableDeclarationChecker.firstAnnotationOf(element);
+  if (annotation == null && element.getter != null) {
+    annotation = _enableDeclarationChecker.firstAnnotationOf(element.setter);
+  }
+  if (annotation == null && element.getter != null) {
+    annotation = _enableDeclarationChecker.firstAnnotationOf(element.getter);
+  }
+  return GField(element, ConstantReader(annotation));
 }
 
 ///扫描类所有的函数信息
 List<GFunction> _scanFunctions(
     ClassElement element, bool scanSuper, bool scanUsedAllowList) {
   var functions = element.methods
+      .where((ele) => !_disableReflectionChecker.hasAnnotationOf(ele))
       .where((ele) => !ele.displayName.startsWith('_'))
-      .where((ele) =>
-          (scanUsedAllowList &&
-              _classMethodAnnotation.firstAnnotationOf(ele) != null) ||
-          (!scanUsedAllowList &&
-              _classMethodNotAnnotation.firstAnnotationOf(ele) == null))
+      .where((ele) => (!scanUsedAllowList ||
+          _enableDeclarationChecker.firstAnnotationOf(ele) != null))
       .map((e) => _scanFunction(e))
       .toList(growable: true);
   if (scanSuper && element.supertype != null) {
@@ -239,12 +228,12 @@ List<GFunction> _scanFunctions(
 GFunction _scanFunction(MethodElement element) {
   return GFunction(
       element,
-      ConstantReader(_classMethodAnnotation.firstAnnotationOf(element)),
+      ConstantReader(_enableDeclarationChecker.firstAnnotationOf(element)),
       element.parameters.map((e) => _scanParam(e)).toList(growable: true));
 }
 
 //扫描函数所需的参数信息
 GParam _scanParam(ParameterElement element) {
   return GParam(element,
-      ConstantReader(_classParamAnnotation.firstAnnotationOf(element)));
+      ConstantReader(_enableDeclarationChecker.firstAnnotationOf(element)));
 }

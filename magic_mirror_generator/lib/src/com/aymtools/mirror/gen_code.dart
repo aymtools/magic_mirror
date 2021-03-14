@@ -330,13 +330,13 @@ class _${className}Mirror{
     '${clazz.key}',
     const ${await _genCodeAnnotation(clazz.annotationValue, typeStrMaker, parser)},
     '${clazz.element.displayName}',
-    const <MirrorConstructor<$classTypeName,MConstructor>>[
+    const <MirrorConstructor<$classTypeName,MAnnotation>>[
         ${clazz.constructors.isEmpty ? '' : await (await Stream.fromFutures(clazz.constructors.map((e) async => await _genCodeConstructor(classTypeName, e, annTypeStrMaker, paramTypeStrMaker, typeStrMaker, parser)).toList())).where((e) => e.isNotEmpty).reduce((v, e) => '$v,$e')}
     ],
-    const <MirrorField<$classTypeName,MField,dynamic>>[
+    const <MirrorField<$classTypeName,MAnnotation,dynamic>>[
         ${clazz.fields.isEmpty ? '' : await (await Stream.fromFutures(clazz.fields.map((e) async => await _genCodeField(classTypeName, e, annTypeStrMaker, fieldTypeStrMaker, typeStrMaker, parser)).toList())).where((e) => e.isNotEmpty).reduce((v, e) => '$v,$e')}
     ],
-    const <MirrorFunction<$classTypeName,MFunction,dynamic>>[
+    const <MirrorFunction<$classTypeName,MAnnotation,dynamic>>[
         ${clazz.functions.isEmpty ? '' : await (await Stream.fromFutures(clazz.functions.map((e) async => await _genCodeFunction(classTypeName, e, annTypeStrMaker, paramTypeStrMaker, returnTypeStrMaker, typeStrMaker, parser)).toList())).where((e) => e.isNotEmpty).reduce((v, e) => '$v,$e')}
     ],
   );
@@ -458,7 +458,7 @@ Future<FutureOr<String>> _genCodeConstructor(
 ) async {
   var annotation = constructor.annotationValue;
   var annotationClass = constructor.annotationIsNull
-      ? 'MConstructor'
+      ? 'MAnnotation'
       : annTypeStrMaker.call(constructor.annotationValue);
 
   return '''
@@ -486,7 +486,7 @@ FutureOr<String> _genCodeField(
   AssetsTypeParser parser,
 ) async {
   var annotationClass = field.annotationIsNull
-      ? 'MField'
+      ? 'MAnnotation'
       : annTypeStrMaker.call(field.annotationValue);
   var fieldTypeStr = fieldTypeStrMaker.call(field);
   return '''
@@ -517,7 +517,7 @@ Future<FutureOr<String>> _genCodeFunction(
 
   var annotation = function.annotationValue;
   var annotationClass = function.annotationIsNull
-      ? 'MConstructor'
+      ? 'MAnnotation'
       : annTypeStrMaker.call(function.annotationValue);
 
   return '''
@@ -546,7 +546,7 @@ FutureOr<String> _genCodeParam(
   AssetsTypeParser parser,
 ) async {
   var annotationClass = param.annotationIsNull
-      ? 'MParam'
+      ? 'MAnnotation'
       : annTypeStrMaker.call(param.annotationValue);
   return '''
   MirrorParam<$annotationClass,${paramTypeStrMaker.call(param)}>(
@@ -583,7 +583,15 @@ String _genCodeFunctionInvokerForMapParamsSwitch(
       .map((p) => _IFGenerator(p, paramsMapName, maker, isSelect: true))
       .toList();
 
-  var ifGenerators = _combination(paramsNamed, paramsMapName, maker);
+  List<List<_IFGenerator>> ifGenerators;
+  if (findFistWhere<GParam>(
+          paramsNamed, (e) => e.element.isOptionalPositional) ==
+      null) {
+    ifGenerators = _combination(paramsNamed, paramsMapName, maker);
+  } else {
+    ifGenerators = _combination_(paramsNamed, paramsMapName, maker);
+  }
+
   var ifsStr = ifGenerators
       .map((e) =>
           cloneList<_IFGenerator>(paramsNeed, (ifg) => ifg.clone())..addAll(e))
@@ -661,6 +669,22 @@ String _genCodeFunctionInvokerBody(
     codeBuffer.write(cmdAfter.join('  '));
   }
   return codeBuffer.toString();
+}
+
+List<List<_IFGenerator>> _combination_(List<GParam> source,
+    String paramsMapName, String Function(GParam param) maker) {
+  var result = <List<_IFGenerator>>[];
+  for (int i = source.length, j = 0; i >= j; i--) {
+    var paras = cloneList<GParam>(source, (s) => s)
+        .map((p) => _IFGenerator(p, paramsMapName, maker))
+        .toList();
+    for (int k = 0; k < i; k++) {
+      paras[k].isSelect =true;
+    }
+    result.add(paras);
+  }
+
+  return result;
 }
 
 //相比穷举的快速生成方案 参考自来源https://zhenbianshu.github.io/2019/01/charming_alg_permutation_and_combination.html

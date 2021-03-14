@@ -30,7 +30,7 @@ class Void {
 }
 
 ///扫描到的类信息
-class MirrorClass<T, A extends MClass> {
+class MirrorClass<T, A extends MReflectionEnable> {
   ///依据的key uri类型
   final String key;
 
@@ -47,13 +47,13 @@ class MirrorClass<T, A extends MClass> {
   TypeToken<T> get type => TypeToken<T>();
 
   ///所有的扫描到的构造函数
-  final List<MirrorConstructor<T, MConstructor>> constructors;
+  final List<MirrorConstructor<T, MAnnotation>> constructors;
 
   ///所有的扫描到的属性
-  final List<MirrorField<T, MField, dynamic>> fields;
+  final List<MirrorField<T, MAnnotation, dynamic>> fields;
 
   ///所有的扫描到的函数 不包含构造函数 和 get set
-  final List<MirrorFunction<T, MFunction, dynamic>> functions;
+  final List<MirrorFunction<T, MAnnotation, dynamic>> functions;
 
   const MirrorClass(this.key, this.annotation, this.name, this.constructors,
       this.fields, this.functions);
@@ -65,9 +65,9 @@ class MirrorClass<T, A extends MClass> {
   }
 
   ///根据命名构造函数的key来查找可用的构造函数
-  MirrorConstructor<T, MConstructor> getConstructor(String? constructorName) {
+  MirrorConstructor<T, MAnnotation> getConstructor(String? constructorName) {
     var constructorNameStr = constructorName ?? '';
-    var constructor = findFistWhere<MirrorConstructor<T, MConstructor>>(
+    var constructor = findFistWhere<MirrorConstructor<T, MAnnotation>>(
         constructors, (e) => e.key == constructorNameStr);
     if (constructor == null) {
       throw NoSuchFunctionException(T, constructorNameStr);
@@ -76,8 +76,8 @@ class MirrorClass<T, A extends MClass> {
   }
 
   ///根据函数的key 来查找可用的函数
-  MirrorFunction<T, MFunction, dynamic> getFunction(String functionName) {
-    var function = findFistWhere<MirrorFunction<T, MFunction, dynamic>>(
+  MirrorFunction<T, MAnnotation, dynamic> getFunction(String functionName) {
+    var function = findFistWhere<MirrorFunction<T, MAnnotation, dynamic>>(
         functions, (e) => e.key == functionName);
     if (function == null) {
       throw NoSuchFunctionException(T, functionName);
@@ -86,8 +86,8 @@ class MirrorClass<T, A extends MClass> {
   }
 
   ///根据属性的key 来查找可用的属性
-  MirrorField<T, MField, dynamic> getField(String fieldName) {
-    var field = findFistWhere<MirrorField<T, MField, dynamic>>(
+  MirrorField<T, MAnnotation, dynamic> getField(String fieldName) {
+    var field = findFistWhere<MirrorField<T, MAnnotation, dynamic>>(
         fields, (e) => e.key == fieldName);
     if (field == null) {
       throw NoSuchFunctionException(T, fieldName);
@@ -97,7 +97,7 @@ class MirrorClass<T, A extends MClass> {
 }
 
 ///扫描到的类的构造函数信息
-class MirrorConstructor<T, A extends MConstructor> {
+class MirrorConstructor<T, A extends MAnnotation> {
   ///扫描时的注解信息
   final A annotation;
 
@@ -108,7 +108,7 @@ class MirrorConstructor<T, A extends MConstructor> {
   final String name;
 
   ///函数所需要的参数信息
-  final List<MirrorParam<MParam, dynamic>> params;
+  final List<MirrorParam<MAnnotation, dynamic>> params;
 
   ///具体的执行器
   final MirrorConstructorInvoker<T> invoker;
@@ -135,7 +135,7 @@ class MirrorConstructor<T, A extends MConstructor> {
 }
 
 ///扫描到的函数信息
-class MirrorFunction<T, A extends MFunction, R> {
+class MirrorFunction<T, A extends MAnnotation, R> {
   ///扫描时的注解信息
   final A annotation;
 
@@ -146,7 +146,7 @@ class MirrorFunction<T, A extends MFunction, R> {
   final String name;
 
   ///函数所需要的参数信息
-  final List<MirrorParam<MParam, dynamic>> params;
+  final List<MirrorParam<MAnnotation, dynamic>> params;
 
   ///函数的返回类型
   TypeToken<R> get returnType => TypeToken<R>();
@@ -174,7 +174,7 @@ class MirrorFunction<T, A extends MFunction, R> {
 }
 
 ///扫描到的属性信息
-class MirrorField<T, A extends MField, V> {
+class MirrorField<T, A extends MAnnotation, V> {
   ///扫描时的注解信息
   final A annotation;
 
@@ -221,7 +221,7 @@ class MirrorField<T, A extends MField, V> {
 }
 
 ///扫描到的参数信息
-class MirrorParam<A extends MParam, PT> {
+class MirrorParam<A extends MAnnotation, PT> {
   ///扫描时的注解信息
   final A annotation;
 

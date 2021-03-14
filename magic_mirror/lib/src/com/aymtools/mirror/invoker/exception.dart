@@ -113,26 +113,3 @@ class IllegalArgumentException implements MagicMirrorException {
   }
 }
 
-// ///参数自动转换类型时出现异常
-// class ArgumentConvertException implements MagicMirrorException {
-//   ///转换的原始类型
-//   final Type from;
-//
-//   ///转换的目标类型
-//   final Type to;
-//
-//   final source;
-//
-//   ///其他信息
-//   final message;
-//
-//   ArgumentConvertException(this.from, this.to, this.source, {this.message});
-//
-//   @override
-//   String toString() {
-//     final def =
-//         'ArgumentConvertException:\nThe source:${source} cannot from $from convert to $to';
-//     if (message == null) return def;
-//     return '$def\n$message';
-//   }
-// }

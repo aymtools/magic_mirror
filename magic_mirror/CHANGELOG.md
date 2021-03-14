@@ -5,4 +5,7 @@
 - Format the code and adjust the reference library version.
 
 ## 0.2.0-dev.1
-- Support NullSafe.
+- Support NullSafety.
+
+## version: 0.2.0-dev.2
+- Unify all naming conventions.

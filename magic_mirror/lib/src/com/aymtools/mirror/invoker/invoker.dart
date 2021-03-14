@@ -1,5 +1,8 @@
-import 'package:magic_mirror/magic_mirror.dart';
-
+import '../core.dart';
+import '../tools.dart';
+import 'class_mirror.dart';
+import 'exception.dart';
+import 'initializer.dart';
 import 'type_adapter.dart';
 
 ///类信息注册器
@@ -266,7 +269,7 @@ class MagicMirror implements IMirrorRegister {
 
   ///根据注解类型 CLass的类型来获取对应的类信息
   List<MirrorClass<ExtendsType, AnnotationType>>
-      findClasses<AnnotationType extends MClass, ExtendsType>() =>
+      findClasses<AnnotationType extends MReflectionEnable, ExtendsType>() =>
           _mirrorClasses
               // .where((element) =>
               //     element.type is TypeToken<ExtendsType> &&
@@ -275,26 +278,22 @@ class MagicMirror implements IMirrorRegister {
               .toList();
 
   ///根据注解类型 CLass的类型来获取对应的类信息
-  List<String> findKeys<AnnotationType extends MClass, ExtendsType>() =>
+  List<String> findKeys<AnnotationType extends MReflectionEnable, ExtendsType>() =>
       findClasses<AnnotationType, ExtendsType>().map((e) => e.key).toList();
 
   ///根据注解类型 CLass的类型来获取对应的类信息
-  List<MirrorClass<dynamic, AnnotationType>>
-      findClassesByAnnotation<AnnotationType extends MClass>() => _mirrorClasses
-          .whereType<MirrorClass<dynamic, AnnotationType>>()
-          // .where(
-          //     (element) => element.annotationType is TypeToken<AnnotationType>)
-          .toList();
+  List<MirrorClass<dynamic, AnnotationType>> findClassesByAnnotation<
+          AnnotationType extends MReflectionEnable>() =>
+      _mirrorClasses.whereType<MirrorClass<dynamic, AnnotationType>>().toList();
 
   ///根据注解类型来获取对应的类信息
-  List<String> findKeysByAnnotation<AnnotationType extends MClass>() =>
+  List<String> findKeysByAnnotation<AnnotationType extends MReflectionEnable>() =>
       findClassesByAnnotation<AnnotationType>().map((e) => e.key).toList();
 
   ///根据CLass的类型来获取对应的类信息
-  List<MirrorClass<ExtendsType, MClass>> findClassesByExtends<ExtendsType>() =>
-      _mirrorClasses
-          .whereType<MirrorClass<ExtendsType, MClass>>()
-          // .where((element) => element.type is TypeToken<ExtendsType>)
+  List<MirrorClass<ExtendsType, MReflectionEnable>>
+      findClassesByExtends<ExtendsType>() => _mirrorClasses
+          .whereType<MirrorClass<ExtendsType, MReflectionEnable>>()
           .toList();
 
   ///根据CLass的类型来获取对应的类信息
@@ -306,18 +305,18 @@ class MagicMirror implements IMirrorRegister {
   List<MirrorClass> classInfos() => _register?.classInfos() ?? [];
 
   ///根据key信息自动加载对应的类信息
-  MirrorClass<T, MClass> load<T>(String classKey) {
+  MirrorClass<T, MReflectionEnable> load<T>(String classKey) {
     if (_mirrorClassesK.containsKey(classKey)) {
-      return _mirrorClassesK[classKey] as MirrorClass<T, MClass>;
+      return _mirrorClassesK[classKey] as MirrorClass<T, MReflectionEnable>;
     }
     throw ClassNotFoundException(classKey);
   }
 
   ///根据具体类型 加载对应的类信息 ，可能会找不到 未注册
-  MirrorClass<T, MClass> mirror<T>() {
+  MirrorClass<T, MReflectionEnable> mirror<T>() {
     Type type = genType<T>();
     if (_mirrorClassesT.containsKey(type)) {
-      return _mirrorClassesT[type] as MirrorClass<T, MClass>;
+      return _mirrorClassesT[type] as MirrorClass<T, MReflectionEnable>;
     }
     throw ClassNotConfigException(type);
   }
@@ -351,8 +350,8 @@ class MagicMirror implements IMirrorRegister {
       String classKey, String? namedConstructor, Map<String, String> uriParams,
       {dynamic param}) {
     var params = <String, dynamic>{};
-    MirrorClass<T, MClass> clazz = load<T>(classKey);
-    MirrorConstructor<T, MConstructor> constructor =
+    MirrorClass<T, MReflectionEnable> clazz = load<T>(classKey);
+    MirrorConstructor<T, MAnnotation> constructor =
         clazz.getConstructor(namedConstructor);
     if (constructor.params.isNotEmpty) {
       params = genParams(param, uriParams, constructor.params.first.key);
@@ -376,7 +375,7 @@ class MagicMirror implements IMirrorRegister {
   R? invokeMethod<T, R>(T bean, String methodName,
       {Map<String, dynamic> params = const {}}) {
     MirrorClass<T, dynamic> clazz = mirror<T>();
-    MirrorFunction<T, MFunction, dynamic> function =
+    MirrorFunction<T, MAnnotation, dynamic> function =
         clazz.getFunction(methodName);
     return function.invoke(bean, params);
   }

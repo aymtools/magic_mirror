@@ -1,7 +1,7 @@
 import 'keygen.dart';
 
-/// 定义Class生成器注解 dart特殊机制 自动化的入口 必须为lib/mirror_config.dart 内
-class MirrorConfig {
+/// 定义Class生成器注解 dart特殊机制 自动化的入口 最好为lib/mirror_config.dart 内初始化速度最快
+class MMirrorConfig {
   ///需要扫描的类库
   final Map<String, String> importLibsNames;
 
@@ -17,17 +17,15 @@ class MirrorConfig {
   ///自动根据不同策略生成调用器的顺序，有可能增加调用器的执行效率 暂未实现
   final int genGroupBy;
 
+  ///导包时的完整自定义类库信息
   final List<MImport> imports;
 
-  // final Function function;
-
-  const MirrorConfig({
+  const MMirrorConfig({
     this.isGenInvoker = true,
     this.isGenLibExport = false,
     this.importLibsNames = const {},
     this.imports = const [],
     this.genGroupBy = GEN_GROUP_BY_NONE,
-    // this.function,
   });
 }
 
@@ -43,7 +41,7 @@ class MImport {
 }
 
 ///基本注解需要的内容
-abstract class AnnBase {
+class MAnnotation {
   ///key 主键
   final String key;
 
@@ -56,12 +54,12 @@ abstract class AnnBase {
   ///flag 标识属性
   final bool flag;
 
-  const AnnBase(
+  const MAnnotation(
       {this.key = '', this.tag = '', this.ext = -1, this.flag = false});
 }
 
-/// 定义Class的注解
-class MClass extends AnnBase {
+/// 定义需要扫描的类或者函数的 扫描配置的注解
+class MReflectionEnable extends MAnnotation {
   static const int KEY_GEN_TYPE_BY_DEF = KeyGen.KEY_GEN_TYPE_BY_DEF;
   static const int KEY_GEN_TYPE_BY_URI = KeyGen.KEY_GEN_TYPE_BY_URI;
   static const int KEY_GEN_TYPE_BY_CLASS_NAME =
@@ -105,7 +103,7 @@ class MClass extends AnnBase {
   ///扫描属性时是否扫描父类的属性
   final bool scanSuperFields;
 
-  const MClass({
+  const MReflectionEnable({
     String key = '',
     String tag = '',
     int ext = -1,
@@ -114,62 +112,16 @@ class MClass extends AnnBase {
     this.needAssignableFrom = const [],
     this.anyOneAssignableFrom = const [],
     this.scanConstructors = true,
-    this.scanConstructorsUsedBlockList = false,
+    this.scanConstructorsUsedBlockList = true,
     this.scanFunctions = false,
-    this.scanFunctionsUsedBlockList = false,
+    this.scanFunctionsUsedBlockList = true,
     this.scanSuperFunctions = false,
     this.scanFields = false,
-    this.scanFieldsUsedBlockList = false,
+    this.scanFieldsUsedBlockList = true,
     this.scanSuperFields = false,
   }) : super(key: key, tag: tag, ext: ext, flag: flag);
 }
 
-/// 指定Class的构造函数
-/// 当使用在默认构造函数上时（非命名构造函数）  会生成两种构造路径
-/// "" 代表默认构造函数 就是非命名构造函数
-class MConstructor extends AnnBase {
-  const MConstructor(
-      {String key = '', String tag = '', int ext = -1, bool flag = false})
-      : super(key: key, tag: tag, ext: ext, flag: flag);
-}
-
-///构造函数必须时必须的map参数 且只有一个参数Map<String,dynamic>类型的参数 默认是uri的参数叠加传入的Map参数 若传入的arg非map则以null的key的值存在
-// class MConstructorMapArg extends MConstructor {
-//   const MConstructorMapArg({String key = ''}) : super(key: key);
-// }
-
-///禁止模式模式时有效 不扫描的构造函数
-class MConstructorNot {
-  const MConstructorNot();
-}
-
-/// 函数的参数 构造函数也是 可用来指定map中key 与实际不一致
-class MParam extends AnnBase {
-  const MParam(
-      {String key = '', String tag = '', int ext = -1, bool flag = false})
-      : super(key: key, tag: tag, ext: ext, flag: flag);
-}
-
-/// 标注Class内的函数
-class MFunction extends AnnBase {
-  const MFunction(
-      {String key = '', String tag = '', int ext = -1, bool flag = false})
-      : super(key: key, tag: tag, ext: ext, flag: flag);
-}
-
-///禁止模式模式时有效 不扫描的方法
-class MFunctionNot {
-  const MFunctionNot();
-}
-
-///指定Class的属性
-class MField extends AnnBase {
-  const MField(
-      {String key = '', String tag = '', int ext = -1, bool flag = false})
-      : super(key: key, tag: tag, ext: ext, flag: flag);
-}
-
-///禁止模式时有效 不扫描的属性
-class MFieldNot {
-  const MFieldNot();
+class MReflectionDisable extends MAnnotation {
+  const MReflectionDisable();
 }

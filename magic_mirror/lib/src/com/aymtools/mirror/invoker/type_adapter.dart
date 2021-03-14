@@ -19,15 +19,15 @@ abstract class TypeConvertAdapter<From, To> extends TypeConvert<From, To> {
 }
 
 ///定义自定义的转换器
-class TypeAdapter extends MClass {
+class TypeAdapter extends MReflectionEnable {
   const TypeAdapter({String adapterName = ''})
       : super(
             key: adapterName == ''
                 ? 'typeAdapter://mirror.aymtools.com/'
                 : 'typeAdapter://mirror.aymtools.com/' + adapterName,
             keyGenType: adapterName == ''
-                ? MClass.KEY_GEN_TYPE_BY_SEQUENCE_URI
-                : MClass.KEY_GEN_TYPE_BY_URI,
+                ? MReflectionEnable.KEY_GEN_TYPE_BY_SEQUENCE_URI
+                : MReflectionEnable.KEY_GEN_TYPE_BY_URI,
             needAssignableFrom: const <Type>[TypeConvert]);
 }
 
