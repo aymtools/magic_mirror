@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import '../core.dart';
 import '../tools.dart';
 import 'exception.dart';
@@ -122,6 +124,19 @@ class MirrorConstructor<T, A extends MAnnotation> {
   ///根据map内的参数来生成一个类的实例
   T newInstance(Map<String, dynamic> params) => invoker.call(params);
 
+  ///执行函数
+  T newInstance2(List positional, Map<String, dynamic> named) {
+    var params = <String, dynamic>{};
+    params.addAll(named);
+
+    for (int i = 0, j = min(positional.length, this.params.length);
+        i < j;
+        i++) {
+      params[this.params[i].key] = positional[i];
+    }
+    return newInstance(params);
+  }
+
   ///获取key信息 优先从注解中获取 当注解为空时返回扫描时的name
   String get key => annotation.key.isEmpty ? name : annotation.key;
 
@@ -165,6 +180,19 @@ class MirrorFunction<T, A extends MAnnotation, R> {
 
   ///执行函数
   R? invoke(T bean, Map<String, dynamic> params) => invoker.call(bean, params);
+
+  ///执行函数
+  R? invoke2(T bean, List positional, Map<String, dynamic> named) {
+    var params = <String, dynamic>{};
+    params.addAll(named);
+
+    for (int i = 0, j = min(positional.length, this.params.length);
+        i < j;
+        i++) {
+      params[this.params[i].key] = positional[i];
+    }
+    return invoke(bean, params);
+  }
 
   ///获取具体函数
   Function getFunction(T bean) => function.call(bean);
