@@ -305,7 +305,7 @@ class MagicMirror implements IMirrorRegister {
   List<MirrorClass> classInfos() => _register?.classInfos() ?? [];
 
   ///根据key信息自动加载对应的类信息
-  MirrorClass<T, MReflectionEnable> load<T>(String classKey) {
+  MirrorClass<T, MReflectionEnable> loadClass<T>(String classKey) {
     if (_mirrorClassesK.containsKey(classKey)) {
       return _mirrorClassesK[classKey] as MirrorClass<T, MReflectionEnable>;
     }
@@ -313,7 +313,7 @@ class MagicMirror implements IMirrorRegister {
   }
 
   ///根据具体类型 加载对应的类信息 ，可能会找不到 未注册
-  MirrorClass<T, MReflectionEnable> mirror<T>() {
+  MirrorClass<T, MReflectionEnable> mirrorClass<T>() {
     Type type = genType<T>();
     if (_mirrorClassesT.containsKey(type)) {
       return _mirrorClassesT[type] as MirrorClass<T, MReflectionEnable>;
@@ -324,7 +324,7 @@ class MagicMirror implements IMirrorRegister {
   ///判断根据key和命名构造函数 是否可以构造该类的实例
   bool canNewInstance(String classKey, String namedConstructor) {
     try {
-      MirrorClass clazz = load(classKey);
+      MirrorClass clazz = loadClass(classKey);
       clazz.getConstructor(namedConstructor);
       return true;
     } on MagicMirrorException {
@@ -350,7 +350,7 @@ class MagicMirror implements IMirrorRegister {
       String classKey, String? namedConstructor, Map<String, String> uriParams,
       {dynamic param}) {
     var params = <String, dynamic>{};
-    MirrorClass<T, MReflectionEnable> clazz = load<T>(classKey);
+    MirrorClass<T, MReflectionEnable> clazz = loadClass<T>(classKey);
     MirrorConstructor<T, MAnnotation> constructor =
         clazz.getConstructor(namedConstructor);
     if (constructor.params.isNotEmpty) {
@@ -374,7 +374,7 @@ class MagicMirror implements IMirrorRegister {
   ///执行类中的指定方法
   R? invokeMethod<T, R>(T bean, String methodName,
       {Map<String, dynamic> params = const {}}) {
-    MirrorClass<T, dynamic> clazz = mirror<T>();
+    MirrorClass<T, dynamic> clazz = mirrorClass<T>();
     MirrorFunction<T, MAnnotation, dynamic> function =
         clazz.getFunction(methodName);
     return function.invoke(bean, params);
@@ -382,7 +382,7 @@ class MagicMirror implements IMirrorRegister {
 
   ///执行为类对象的属性赋值
   void setFieldValue<T, V>(T bean, String fieldName, V value) {
-    MirrorClass<T, dynamic> clazz = mirror<T>();
+    MirrorClass<T, dynamic> clazz = mirrorClass<T>();
     MirrorField<T, dynamic, dynamic> field = clazz.getField(fieldName);
     if (field.hasSetter) {
       field.set(bean, value);
@@ -393,7 +393,7 @@ class MagicMirror implements IMirrorRegister {
 
   ///获取为类对象的属性的具体值
   V? getFieldValue<T, V>(T bean, String fieldName) {
-    MirrorClass<T, dynamic> clazz = mirror<T>();
+    MirrorClass<T, dynamic> clazz = mirrorClass<T>();
     MirrorField<T, dynamic, dynamic> field = clazz.getField(fieldName);
     if (field.hasGetter) {
       return field.get(bean);
@@ -404,7 +404,7 @@ class MagicMirror implements IMirrorRegister {
 
   ///将map中的值自动赋值到对应是属性上
   void setFieldValues<T>(T bean, Map<String, dynamic> values) {
-    MirrorClass<T, dynamic> clazz = mirror<T>();
+    MirrorClass<T, dynamic> clazz = mirrorClass<T>();
     clazz.fields.where((element) => element.hasSetter).forEach((element) {
       if (values.containsKey(element.key)) {
         try {
@@ -419,7 +419,7 @@ class MagicMirror implements IMirrorRegister {
   ///将所有的可获取的属性全部获取 为map
   Map<String, dynamic> getFieldValues<T>(T bean) {
     var result = <String, dynamic>{};
-    MirrorClass<T, dynamic> clazz = mirror<T>();
+    MirrorClass<T, dynamic> clazz = mirrorClass<T>();
     clazz.fields.where((element) => element.hasGetter).forEach((element) {
       result[element.key] = element.get(bean);
     });

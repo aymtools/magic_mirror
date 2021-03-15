@@ -1,4 +1,4 @@
 import 'package:magic_mirror/magic_mirror.dart';
 
-@MirrorConfig()
+@MMirrorConfig()
 class RouterFactory {}
