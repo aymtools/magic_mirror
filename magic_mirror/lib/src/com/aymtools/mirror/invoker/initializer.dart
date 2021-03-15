@@ -14,7 +14,7 @@ class OnInitializer extends MReflectionEnable {
       : super(
           scanConstructors: true,
           key: 'initializer://mirror.aymtools.com/',
-          keyGenType: KeyGen.KEY_GEN_TYPE_BY_SEQUENCE_URI,
+          genUriType: GenUri.GEN_URI_TYPE_BY_SEQUENCE_KEY,
           needAssignableFrom: const <Type>[Initializer],
         );
 }

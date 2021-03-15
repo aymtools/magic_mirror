@@ -60,18 +60,17 @@ class MAnnotation {
 
 /// 定义需要扫描的类或者函数的 扫描配置的注解
 class MReflectionEnable extends MAnnotation {
-  static const int KEY_GEN_TYPE_BY_DEF = KeyGen.KEY_GEN_TYPE_BY_DEF;
-  static const int KEY_GEN_TYPE_BY_URI = KeyGen.KEY_GEN_TYPE_BY_URI;
-  static const int KEY_GEN_TYPE_BY_CLASS_NAME =
-      KeyGen.KEY_GEN_TYPE_BY_CLASS_NAME;
-  static const int KEY_GEN_TYPE_BY_CLASS_SIMPLE_NAME =
-      KeyGen.KEY_GEN_TYPE_BY_CLASS_SIMPLE_NAME;
-  static const int KEY_GEN_TYPE_BY_SEQUENCE = KeyGen.KEY_GEN_TYPE_BY_SEQUENCE;
-  static const int KEY_GEN_TYPE_BY_SEQUENCE_URI =
-      KeyGen.KEY_GEN_TYPE_BY_SEQUENCE_URI;
+  static const int KEY_GEN_TYPE_BY_DEF = GenUri.GEN_URI_TYPE_BY_DEF;
+  static const int KEY_GEN_TYPE_BY_KEY = GenUri.GEN_URI_TYPE_BY_KEY;
+  static const int KEY_GEN_TYPE_BY_NAME = GenUri.GEN_URI_TYPE_BY_NAME;
+  static const int KEY_GEN_TYPE_BY_SIMPLE_NAME =
+      GenUri.GEN_URI_TYPE_BY_SIMPLE_NAME;
+  static const int KEY_GEN_TYPE_BY_SEQUENCE = GenUri.GEN_URI_TYPE_BY_SEQUENCE;
+  static const int KEY_GEN_TYPE_BY_SEQUENCE_KEY =
+      GenUri.GEN_URI_TYPE_BY_SEQUENCE_KEY;
 
-  ///生成主键时的策略
-  final int keyGenType;
+  ///生成识别uri的策略
+  final int genUriType;
 
   ///必须是继承目标或实现目标的类
   final List<Type> needAssignableFrom;
@@ -108,7 +107,7 @@ class MReflectionEnable extends MAnnotation {
     String tag = '',
     int ext = -1,
     bool flag = false,
-    this.keyGenType = KEY_GEN_TYPE_BY_DEF,
+    this.genUriType = KEY_GEN_TYPE_BY_DEF,
     this.needAssignableFrom = const [],
     this.anyOneAssignableFrom = const [],
     this.scanConstructors = true,

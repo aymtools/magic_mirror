@@ -2,7 +2,7 @@ import 'package:magic_mirror/magic_mirror.dart';
 
 @MReflectionEnable(
     key: '/class/book',
-    keyGenType: KeyGen.KEY_GEN_TYPE_BY_URI,
+    genUriType: GenUri.GEN_URI_TYPE_BY_KEY,
     scanFields: true,
     scanFunctions: true)
 class Book {

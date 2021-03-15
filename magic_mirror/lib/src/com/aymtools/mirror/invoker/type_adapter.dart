@@ -1,4 +1,5 @@
 import '../core.dart';
+import '../keygen.dart';
 import 'initializer.dart';
 import 'invoker.dart';
 
@@ -25,9 +26,9 @@ class TypeAdapter extends MReflectionEnable {
             key: adapterName == ''
                 ? 'typeAdapter://mirror.aymtools.com/'
                 : 'typeAdapter://mirror.aymtools.com/' + adapterName,
-            keyGenType: adapterName == ''
-                ? MReflectionEnable.KEY_GEN_TYPE_BY_SEQUENCE_URI
-                : MReflectionEnable.KEY_GEN_TYPE_BY_URI,
+            genUriType: adapterName == ''
+                ? GenUri.GEN_URI_TYPE_BY_SEQUENCE_KEY
+                : GenUri.GEN_URI_TYPE_BY_KEY,
             needAssignableFrom: const <Type>[TypeConvert]);
 }
 

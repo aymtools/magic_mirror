@@ -115,12 +115,12 @@ GClass? _scanClass(Element element, ConstantReader annotation) {
   var className = element.displayName;
   var classElement = (element as ClassElement);
 
-  var keyGen = KeyGen(classAnnotation.keyGenType);
+  var keyGen = GenUri(classAnnotation.genUriType);
   var sourceUri = element.librarySource.uri.toString();
   var uriKey = keyGen.gen(classAnnotation.key, classAnnotation.tag,
       classAnnotation.ext, className, sourceUri);
   if ('' == uriKey) {
-    keyGen = KeyGen(KeyGen.KEY_GEN_TYPE_BY_CLASS_NAME);
+    keyGen = GenUri(GenUri.GEN_URI_TYPE_BY_NAME);
     uriKey = keyGen.gen(classAnnotation.key, classAnnotation.tag,
         classAnnotation.ext, className, sourceUri);
   }
