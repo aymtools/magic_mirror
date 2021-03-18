@@ -61,9 +61,35 @@ class MirrorClass<T, A extends MReflectionEnable> {
       this.fields, this.functions);
 
   ///根据map内的参数来生成一个类的实例
-  T newInstance(String? constructorName, Map<String, dynamic> params) {
+  T newInstance(
+      [String? constructorName, Map<String, dynamic> params = const {}]) {
     var c = getConstructor(constructorName);
     return c.newInstance(params);
+  }
+
+  ///根据map内的参数来生成一个类的实例
+  T newInstance1(
+      {String? constructorName, Map<String, dynamic> params = const {}}) {
+    var c = getConstructor(constructorName);
+    return c.newInstance(params);
+  }
+
+  ///根据参数定位 和 命名参数 来生成实例
+  T newInstance2(
+      {String? constructorName,
+      required List positional,
+      Map<String, dynamic> params = const {}}) {
+    var c = getConstructor(constructorName);
+    return c.newInstance2(positional, params);
+  }
+
+  ///根据uri参数 和 不确定类型的参数 来生成实例
+  newInstance3(
+      {String? constructorName,
+      Map<String, String> uriParams = const {},
+      dynamic objParam}) {
+    var c = getConstructor(constructorName);
+    return c.newInstance3(uriParams, objParam: objParam);
   }
 
   ///根据命名构造函数的key来查找可用的构造函数
@@ -122,10 +148,11 @@ class MirrorConstructor<T, A extends MAnnotation> {
       this.annotation, this.name, this.params, this.invoker);
 
   ///根据map内的参数来生成一个类的实例
-  T newInstance(Map<String, dynamic> params) => invoker.call(params);
+  T newInstance([Map<String, dynamic> params = const {}]) =>
+      invoker.call(params);
 
   ///执行函数
-  T newInstance2(List positional, Map<String, dynamic> named) {
+  T newInstance2(List positional, [Map<String, dynamic> named = const {}]) {
     var params = <String, dynamic>{};
     params.addAll(named);
 
@@ -133,6 +160,15 @@ class MirrorConstructor<T, A extends MAnnotation> {
         i < j;
         i++) {
       params[this.params[i].key] = positional[i];
+    }
+    return newInstance(params);
+  }
+
+  ///执行函数
+  T newInstance3(Map<String, String> uriParams, {dynamic objParam}) {
+    var params = <String, dynamic>{};
+    if (params.isNotEmpty) {
+      params = genParams(objParam, uriParams, this.params.first.key);
     }
     return newInstance(params);
   }
@@ -179,10 +215,12 @@ class MirrorFunction<T, A extends MAnnotation, R> {
       this.function, this.returnTypeIsNonNullable);
 
   ///执行函数
-  R? invoke(T bean, Map<String, dynamic> params) => invoker.call(bean, params);
+  R? invoke(T bean, [Map<String, dynamic> params = const {}]) =>
+      invoker.call(bean, params);
 
   ///执行函数
-  R? invoke2(T bean, List positional, Map<String, dynamic> named) {
+  R? invoke2(T bean,
+      [List positional = const [], Map<String, dynamic> named = const {}]) {
     var params = <String, dynamic>{};
     params.addAll(named);
 

@@ -2,7 +2,6 @@
 
 Provides [Dart Build System](https://github.com/dart-lang/build) builders for handling Class-Information.
 
-
 ## magic_mirror_generator [![Pub Package](https://img.shields.io/pub/v/magic_mirror_generator.svg)](https://pub.dev/packages/magic_mirror_generator)
 
 * Package: https://pub.dev/packages/magic_mirror_generator

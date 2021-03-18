@@ -278,8 +278,9 @@ FutureOr<String> _genCodeClassMirrorInfo(
    static void set${capitalize(e.fieldName)}(${classTypeName} bean , dynamic  value) {       
       if (MagicMirror.hasTypeAdapterS2Value<${fieldTypeStr}>(value)) {
         ${fieldTypeStr}? ${e.element.name}=MagicMirror.convertTypeS<${fieldTypeStr}>(value);        
-        ${e.isNonNullable ? 'if(${e.element.name} != null)' : ''}        
-        bean.${e.element.name} =  ${e.element.name};
+        ${e.isNonNullable ? 'if(${e.element.name} != null) {' : ''}        
+        bean.${e.element.name} =  ${e.element.name};return;
+         ${e.isNonNullable ? '}' : ''}     
       }
        throw new IllegalArgumentException(${classTypeName},
             '${e.element.name}',
@@ -679,7 +680,7 @@ List<List<_IFGenerator>> _combination_(List<GParam> source,
         .map((p) => _IFGenerator(p, paramsMapName, maker))
         .toList();
     for (int k = 0; k < i; k++) {
-      paras[k].isSelect =true;
+      paras[k].isSelect = true;
     }
     result.add(paras);
   }

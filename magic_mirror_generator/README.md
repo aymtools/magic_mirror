@@ -6,10 +6,9 @@ The builders generate code when they find members annotated with classes defined
 in [package:magic_mirror](https://pub.dev/packages/magic_mirror).
 
 - To generate to/from Class-Information code for a class, annotate it with
-  `@MClass`. You can provide arguments to `MClass` to
-  configure the generated code.
+  `@MClass`. You can provide arguments to `MClass` to configure the generated code.
   [annotation values](https://pub.dev/packages/magic_mirror).
 
-
 ## Setup and Example
+
 Please go [package:magic_mirror](https://pub.dev/packages/magic_mirror).
