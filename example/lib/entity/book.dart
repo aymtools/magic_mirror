@@ -24,8 +24,7 @@ class Book {
 
   double calculatePrice(double sale) => sale * price;
 
-  double calculatePrice2(double sale,
-          [double newPrice, bool member = false]) =>
+  double calculatePrice2(double sale, [double newPrice, bool member = false]) =>
       sale * (newPrice ?? price);
 
   double calculatePrice3(double sale, {double newPrice}) =>

@@ -272,24 +272,26 @@ class MagicMirror implements IMirrorRegister {
               .toList();
 
   ///根据注解类型 CLass的类型来获取对应的类信息
-  List<String> findClassesUris<AnnotationType extends MReflectionEnable, ExtendsType>() =>
+  List<String> findClassesUris<AnnotationType extends MReflectionEnable,
+          ExtendsType>() =>
       findClasses<AnnotationType, ExtendsType>().map((e) => e.key).toList();
 
   ///根据注解类型 CLass的类型来获取对应的类信息
   List<MirrorClass<dynamic, AnnotationType>>
-      findClassesByAnnotation<AnnotationType extends MReflectionEnable>() => mirrorClassesK
-          .values
-          .where(
-              (element) => element.annotationType is TypeToken<AnnotationType>)
-          .toList();
+      findClassesByAnnotation<AnnotationType extends MReflectionEnable>() =>
+          mirrorClassesK.values
+              .where((element) =>
+                  element.annotationType is TypeToken<AnnotationType>)
+              .toList();
 
   ///根据注解类型来获取对应的类信息
-  List<String> findClassesUrisByAnnotation<AnnotationType extends MReflectionEnable>() =>
-      findClassesByAnnotation<AnnotationType>().map((e) => e.key).toList();
+  List<String>
+      findClassesUrisByAnnotation<AnnotationType extends MReflectionEnable>() =>
+          findClassesByAnnotation<AnnotationType>().map((e) => e.key).toList();
 
   ///根据CLass的类型来获取对应的类信息
-  List<MirrorClass<ExtendsType, MReflectionEnable>> findClassesByExtends<ExtendsType>() =>
-      mirrorClassesK.values
+  List<MirrorClass<ExtendsType, MReflectionEnable>>
+      findClassesByExtends<ExtendsType>() => mirrorClassesK.values
           .where((element) => element.type is TypeToken<ExtendsType>)
           .toList();
 

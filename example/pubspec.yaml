@@ -10,9 +10,9 @@ dependencies:
   magic_mirror: ^0.1.0
 
 dependency_overrides:
-#  analyzer: '0.39.17'
-#  build_resolvers: '1.3.10'
-#  dart_style: '1.3.6'
+  #  analyzer: '0.39.17'
+  #  build_resolvers: '1.3.10'
+  #  dart_style: '1.3.6'
   magic_mirror:
     path: ../magic_mirror
   magic_mirror_generator:
