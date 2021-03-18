@@ -112,4 +112,3 @@ class IllegalArgumentException implements MagicMirrorException {
     return '$def\n$message';
   }
 }
-

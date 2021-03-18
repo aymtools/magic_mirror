@@ -192,12 +192,13 @@ class MirrorBuilder implements Builder {
     var lib = GLibrary(package, package, '',
         libs: libraryInfo.where((element) => element.isNotEmpty).toList());
     AssetsTypeParser parser = (uri) async {
-      final libUri = uri.removeFragment().toString();
+      final uriLib = uri.removeFragment();
+      final libUri = uriLib.toString();
       LibraryElement? library;
       if (_assetsLibCache.containsKey(libUri)) {
         library = _assetsLibCache[libUri];
       } else {
-        library = await buildStep.resolver.libraryFor(AssetId.resolve(libUri));
+        library = await buildStep.resolver.libraryFor(AssetId.resolve(uriLib));
       }
       return library?.getType(uri.fragment)?.thisType;
     };

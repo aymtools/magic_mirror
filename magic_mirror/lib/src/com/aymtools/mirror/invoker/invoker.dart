@@ -262,10 +262,11 @@ class MagicMirror implements IMirrorRegister {
   }
 
   ///获取所有的自动扫描到的类型转换器
-  List<String> loadTypeAdapter() => findClassesKeys<TypeAdapter, TypeConvert>();
+  List<String> loadTypeAdapter() => findClassesUris<TypeAdapter, TypeConvert>();
 
   ///获取所有的自动扫描到的初始化触发器
-  List<String> loadInitializer() => findClassesKeys<OnInitializer, Initializer>();
+  List<String> loadInitializer() =>
+      findClassesUris<OnInitializer, Initializer>();
 
   ///根据注解类型 CLass的类型来获取对应的类信息
   List<MirrorClass<ExtendsType, AnnotationType>>
@@ -278,7 +279,8 @@ class MagicMirror implements IMirrorRegister {
               .toList();
 
   ///根据注解类型 CLass的类型来获取对应的类信息
-  List<String> findClassesKeys<AnnotationType extends MReflectionEnable, ExtendsType>() =>
+  List<String> findClassesUris<AnnotationType extends MReflectionEnable,
+          ExtendsType>() =>
       findClasses<AnnotationType, ExtendsType>().map((e) => e.key).toList();
 
   ///根据注解类型 CLass的类型来获取对应的类信息
@@ -287,8 +289,9 @@ class MagicMirror implements IMirrorRegister {
       _mirrorClasses.whereType<MirrorClass<dynamic, AnnotationType>>().toList();
 
   ///根据注解类型来获取对应的类信息
-  List<String> findClassesKeysByAnnotation<AnnotationType extends MReflectionEnable>() =>
-      findClassesByAnnotation<AnnotationType>().map((e) => e.key).toList();
+  List<String>
+      findClassesUrisByAnnotation<AnnotationType extends MReflectionEnable>() =>
+          findClassesByAnnotation<AnnotationType>().map((e) => e.key).toList();
 
   ///根据CLass的类型来获取对应的类信息
   List<MirrorClass<ExtendsType, MReflectionEnable>>
@@ -297,7 +300,7 @@ class MagicMirror implements IMirrorRegister {
           .toList();
 
   ///根据CLass的类型来获取对应的类信息
-  List<String> findClassesKeysByExtends<ExtendsType>() =>
+  List<String> findClassesUrisByExtends<ExtendsType>() =>
       findClassesByExtends<ExtendsType>().map((e) => e.key).toList();
 
   ///获取所有的注册的类信息列表
