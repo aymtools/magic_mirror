@@ -1,5 +1,8 @@
-import 'package:magic_mirror/magic_mirror.dart';
-
+import '../core.dart';
+import '../tools.dart';
+import 'class_mirror.dart';
+import 'exception.dart';
+import 'initializer.dart';
 import 'type_adapter.dart';
 
 ///类信息注册器
@@ -81,19 +84,14 @@ class MagicMirror implements IMirrorRegister {
 
   ///注册类型转换器
   void registerTypeAdapter<From, To>(TypeConvert<From, To> convert) {
-    if (convert != null) {
-      if (_typeAdapter[convert.from] == null) {
-        _typeAdapter[convert.from] = <Type, TypeConvert>{};
-      }
-      _typeAdapter[convert.from][convert.to] = convert;
+    var adapter =
+        _typeAdapter.putIfAbsent(convert.from, () => <Type, TypeConvert>{});
+    adapter[convert.to] = convert;
 
-      if (convert is TypeConvertAdapter<From, To>) {
-        if (_typeAdapter[convert.to] == null) {
-          _typeAdapter[convert.to] = <Type, TypeConvert>{};
-        }
-        _typeAdapter[convert.to][convert.from] =
-            _TypeReverse<From, To>(convert);
-      }
+    if (convert is TypeConvertAdapter<From, To>) {
+      var adapter2 =
+          _typeAdapter.putIfAbsent(convert.to, () => <Type, TypeConvert>{});
+      adapter2[convert.from] = _TypeReverse<From, To>(convert);
     }
   }
 
@@ -158,10 +156,14 @@ class MagicMirror implements IMirrorRegister {
     if (fromType == To) {
       return from as To;
     } else if (hasTypeAdapter(fromType, To)) {
-      var converter = _typeAdapter[fromType][To];
-      return converter.convert(from);
+      try {
+        var converter = _typeAdapter[fromType][To];
+        return converter.convert(from);
+      } catch (e) {
+        return null;
+      }
     }
-    return from as To;
+    return null;
   }
 
   //判断是否包含 from到to的类型转换器
@@ -253,14 +255,15 @@ class MagicMirror implements IMirrorRegister {
   }
 
   ///获取所有的自动扫描到的类型转换器
-  List<String> loadTypeAdapter() => findKeys<TypeAdapter, TypeConvert>();
+  List<String> loadTypeAdapter() => findClassesUris<TypeAdapter, TypeConvert>();
 
   ///获取所有的自动扫描到的初始化触发器
-  List<String> loadInitializer() => findKeys<OnInitializer, Initializer>();
+  List<String> loadInitializer() =>
+      findClassesUris<OnInitializer, Initializer>();
 
   ///根据注解类型 CLass的类型来获取对应的类信息
   List<MirrorClass<ExtendsType, AnnotationType>>
-      findClasses<AnnotationType extends MClass, ExtendsType>() =>
+      findClasses<AnnotationType extends MReflectionEnable, ExtendsType>() =>
           mirrorClassesK.values
               .where((element) =>
                   element.type is TypeToken<ExtendsType> &&
@@ -269,29 +272,29 @@ class MagicMirror implements IMirrorRegister {
               .toList();
 
   ///根据注解类型 CLass的类型来获取对应的类信息
-  List<String> findKeys<AnnotationType extends MClass, ExtendsType>() =>
+  List<String> findClassesUris<AnnotationType extends MReflectionEnable, ExtendsType>() =>
       findClasses<AnnotationType, ExtendsType>().map((e) => e.key).toList();
 
   ///根据注解类型 CLass的类型来获取对应的类信息
   List<MirrorClass<dynamic, AnnotationType>>
-      findClassesByAnnotation<AnnotationType extends MClass>() => mirrorClassesK
+      findClassesByAnnotation<AnnotationType extends MReflectionEnable>() => mirrorClassesK
           .values
           .where(
               (element) => element.annotationType is TypeToken<AnnotationType>)
           .toList();
 
   ///根据注解类型来获取对应的类信息
-  List<String> findKeysByAnnotation<AnnotationType extends MClass>() =>
+  List<String> findClassesUrisByAnnotation<AnnotationType extends MReflectionEnable>() =>
       findClassesByAnnotation<AnnotationType>().map((e) => e.key).toList();
 
   ///根据CLass的类型来获取对应的类信息
-  List<MirrorClass<ExtendsType, MClass>> findClassesByExtends<ExtendsType>() =>
+  List<MirrorClass<ExtendsType, MReflectionEnable>> findClassesByExtends<ExtendsType>() =>
       mirrorClassesK.values
           .where((element) => element.type is TypeToken<ExtendsType>)
           .toList();
 
   ///根据CLass的类型来获取对应的类信息
-  List<String> findKeysByExtends<ExtendsType>() =>
+  List<String> findClassesUrisByExtends<ExtendsType>() =>
       findClassesByExtends<ExtendsType>().map((e) => e.key).toList();
 
   ///获取所有的注册的类信息列表
@@ -299,13 +302,13 @@ class MagicMirror implements IMirrorRegister {
   List<MirrorClass> classInfos() => _register?.classInfos() ?? [];
 
   ///根据key信息自动加载对应的类信息
-  MirrorClass<T, MClass> load<T>(String classKey) =>
+  MirrorClass<T, MReflectionEnable> loadClass<T>(String classKey) =>
       mirrorClassesK.containsKey(classKey)
-          ? mirrorClassesK[classKey] as MirrorClass<T, MClass>
+          ? mirrorClassesK[classKey] as MirrorClass<T, MReflectionEnable>
           : null;
 
   ///根据具体类型 加载对应的类信息 ，可能会找不到 未注册
-  MirrorClass<T, dynamic> mirror<T>() {
+  MirrorClass<T, dynamic> mirrorClass<T>() {
     Type type = genType<T>();
     return mirrorClassesT.containsKey(type)
         ? mirrorClassesT[type] as MirrorClass<T, dynamic>
@@ -314,7 +317,7 @@ class MagicMirror implements IMirrorRegister {
 
   ///判断根据key和命名构造函数 是否可以构造该类的实例
   bool canNewInstance(String classKey, String namedConstructor) {
-    MirrorClass clazz = load(classKey);
+    MirrorClass clazz = loadClass(classKey);
     return clazz != null && clazz.getConstructor(namedConstructor) != null;
   }
 
@@ -336,8 +339,8 @@ class MagicMirror implements IMirrorRegister {
       String classKey, String namedConstructor, Map<String, String> uriParams,
       {dynamic param}) {
     var params = <String, dynamic>{};
-    MirrorClass<T, MClass> clazz = load<T>(classKey);
-    MirrorConstructor<T, MConstructor> constructor;
+    MirrorClass<T, MReflectionEnable> clazz = loadClass<T>(classKey);
+    MirrorConstructor<T, MAnnotation> constructor;
     if (clazz != null &&
         (constructor = clazz.getConstructor(namedConstructor)) != null) {
       if (constructor.params.isNotEmpty) {
@@ -367,9 +370,9 @@ class MagicMirror implements IMirrorRegister {
   ///执行类中的指定方法
   R invokeMethod<T, R>(T bean, String methodName,
       {Map<String, dynamic> params}) {
-    MirrorClass<T, dynamic> clazz = mirror<T>();
+    MirrorClass<T, dynamic> clazz = mirrorClass<T>();
     if (clazz != null) {
-      MirrorFunction<T, MFunction, R> function;
+      MirrorFunction<T, MAnnotation, R> function;
       if ((function = clazz.getFunction(methodName)) != null) {
         return function.invoke(bean, params);
       } else {
@@ -382,7 +385,7 @@ class MagicMirror implements IMirrorRegister {
 
   ///执行为类对象的属性赋值
   void setFieldValue<T, V>(T bean, String fieldName, V value) {
-    MirrorClass<T, dynamic> clazz = mirror<T>();
+    MirrorClass<T, dynamic> clazz = mirrorClass<T>();
     if (clazz != null) {
       MirrorField<T, dynamic, dynamic> field;
       if ((field = clazz.getField(fieldName)) != null && field.hasSetter) {
@@ -397,7 +400,7 @@ class MagicMirror implements IMirrorRegister {
 
   ///获取为类对象的属性的具体值
   V getFieldValue<T, V>(T bean, String fieldName) {
-    MirrorClass<T, dynamic> clazz = mirror<T>();
+    MirrorClass<T, dynamic> clazz = mirrorClass<T>();
     if (clazz != null) {
       MirrorField<T, dynamic, dynamic> field;
       if ((field = clazz.getField(fieldName)) != null && field.hasGetter) {
@@ -412,7 +415,7 @@ class MagicMirror implements IMirrorRegister {
 
   ///将map中的值自动赋值到对应是属性上
   void setFieldValues<T>(T bean, Map<String, dynamic> values) {
-    MirrorClass<T, dynamic> clazz = mirror<T>();
+    MirrorClass<T, dynamic> clazz = mirrorClass<T>();
     if (clazz != null) {
       clazz.fields.where((element) => element.hasSetter).forEach((element) {
         if (values.containsKey(element.key)) {
@@ -431,7 +434,7 @@ class MagicMirror implements IMirrorRegister {
   ///将所有的可获取的属性全部获取 为map
   Map<String, dynamic> getFieldValues<T>(T bean) {
     var result = <String, dynamic>{};
-    MirrorClass<T, dynamic> clazz = mirror<T>();
+    MirrorClass<T, dynamic> clazz = mirrorClass<T>();
     if (clazz != null) {
       clazz.fields.where((element) => element.hasGetter).forEach((element) {
         result[element.key] = element.get(bean);

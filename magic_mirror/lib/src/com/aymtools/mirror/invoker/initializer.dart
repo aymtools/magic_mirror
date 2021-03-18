@@ -1,4 +1,5 @@
 import '../core.dart';
+import '../keygen.dart';
 import 'invoker.dart';
 
 ///魔镜初始化触发器 的父类
@@ -8,12 +9,12 @@ abstract class Initializer {
 }
 
 ///魔镜初始化触发器 的注解
-class OnInitializer extends MClass {
+class OnInitializer extends MReflectionEnable {
   const OnInitializer()
       : super(
           scanConstructors: true,
           key: 'initializer://mirror.aymtools.com/',
-          keyGenType: MClass.KEY_GEN_TYPE_BY_SEQUENCE_URI,
+          genUriType: GenUri.GEN_URI_TYPE_BY_SEQUENCE_KEY,
           needAssignableFrom: const <Type>[Initializer],
         );
 }

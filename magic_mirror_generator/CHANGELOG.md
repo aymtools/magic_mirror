@@ -5,4 +5,7 @@
 - Format the code and adjust the reference library version.
 
 ## 0.1.1
-- Adjust the naming structure, there will be some incompatibility with 0.1.0
+- Adjust the naming structure, there will be some incompatibility with 0.1.0.
+
+## 0.1.1+1
+- It is ready to be called synchronously with the subsequent 0.2.0 version.

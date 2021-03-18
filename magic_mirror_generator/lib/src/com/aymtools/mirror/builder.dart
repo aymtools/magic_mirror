@@ -17,10 +17,10 @@ import 'tools.dart';
 Builder mirror(BuilderOptions options) => MirrorBuilder();
 
 ///查找配置信息
-final TypeChecker _configChecker = TypeChecker.fromRuntime(MirrorConfig);
+final TypeChecker _configChecker = TypeChecker.fromRuntime(MMirrorConfig);
 
 ///从lib/mirror_config.dart中加载配置信息
-Future<MirrorConfig> _initConfig(BuildStep buildStep) async {
+Future<MMirrorConfig> _initConfig(BuildStep buildStep) async {
   // var pks=Set<String>();
   // currentMirrorSystem().libraries.forEach((key, value) {
   //   pks.add(value.uri?.pathSegments[0]);
@@ -28,7 +28,7 @@ Future<MirrorConfig> _initConfig(BuildStep buildStep) async {
   //
   // Log.log('MirrorSystem :   $pks  ');
   // Log.log('MirrorSystem :   _initConfig  ');
-  MirrorConfig config;
+  MMirrorConfig config;
   var package = buildStep.inputId.package;
   var assetId = AssetId(package, 'lib/mirror_config.dart');
   final resolver = buildStep.resolver;
@@ -55,16 +55,16 @@ Future<MirrorConfig> _initConfig(BuildStep buildStep) async {
       }
     }
   }
-  config ??= MirrorConfig();
+  config ??= MMirrorConfig();
 
   var imports = <MImport>[
-    MImport(packageName: 'magic_mirror', libName: 'magic_mirror')
+    MImport( 'magic_mirror', libName: 'magic_mirror')
   ];
   imports.addAll(config.imports);
   imports.addAll(config.importLibsNames.entries
-      .map((e) => MImport(packageName: e.key, libName: e.value)));
+      .map((e) => MImport( e.key, libName: e.value)));
 
-  config = MirrorConfig(
+  config = MMirrorConfig(
     isGenInvoker: config.isGenInvoker,
     isGenLibExport: config.isGenLibExport,
     importLibsNames: {'magic_mirror': 'magic_mirror'}
@@ -88,13 +88,13 @@ Future<List<GLibrary>> _importLibs(BuildStep buildStep) {
 final Map<String, GLibrary> libraries = {};
 
 ///记录配置信息
-MirrorConfig _config;
+MMirrorConfig _config;
 
 ///记录配置信息
-MirrorConfig get config => _config;
+MMirrorConfig get config => _config;
 
 ///设定配置信息
-void setMirrorConfig(MirrorConfig config) {
+void setMirrorConfig(MMirrorConfig config) {
   if (config == null) return;
   _config = config;
 }

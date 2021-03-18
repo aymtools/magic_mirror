@@ -3,48 +3,40 @@ import 'package:magic_mirror/magic_mirror.dart';
 // 导入Register
 // import 'generated/aymtools/mirror/register.mirror.aymtools.dart';
 
-@MClass(
+@MReflectionEnable(
     key: '/class/book',
-    keyGenType: KeyGen.KEY_GEN_TYPE_BY_URI,
+    genUriType: GenUri.GEN_URI_TYPE_BY_KEY,
     scanFields: true,
     scanFunctions: true)
 class Book {
-  @MField()
   String name;
 
-  @MField(key: 'auth')
   String author;
 
-  @MField()
   double price;
 
-  @MConstructor()
-  Book(this.name, this.author);
+  Book(this.name, this.author) : price = 1.0;
 
-  @MConstructor()
   Book.price(this.name, this.author, this.price);
 
-  @MConstructor()
-  Book.custom(this.name, {this.author, this.price});
+  Book.custom(this.name, {this.author = '', this.price = 1.0});
 
-  @MFunction()
   void printInfo() {
     print('book info name:$name author:$author price:$price');
   }
 
-  @MFunction()
   double calculatePrice(double sale) => sale * (price ?? 1);
 }
 
-@MirrorConfig()
+@MMirrorConfig()
 void main() {
   //注册相关的类信息
   // Register.register();
 
-  var clazz = MagicMirror.instance.load('/class/book');
+  var clazz = MagicMirror.instance.loadClass('/class/book');
   var book = clazz.newInstance('', {'name': 'book1', 'author': 'author1'});
 
-  var authorField = clazz.getField('auth');
+  var authorField = clazz.getField('author');
   print(authorField.get(book)); // print  author1
 
   var priceField = clazz.getField('price');

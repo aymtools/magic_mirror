@@ -6,11 +6,11 @@ void main() {
   Register.register();
 
 
-  var clazz = MagicMirror.instance.load('/class/book');
+  var clazz = MagicMirror.instance.loadClass('/class/book');
   var book =
   clazz.newInstance('', {'name': 'book1', 'author': 'author1'});
 
-  var authorField = clazz.getField('auth');
+  var authorField = clazz.getField('author');
   print(authorField.get(book)); // print  author1
 
   var priceField = clazz.getField('price');

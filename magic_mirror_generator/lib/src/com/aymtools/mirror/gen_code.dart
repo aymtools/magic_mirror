@@ -1,6 +1,4 @@
 import 'dart:async';
-
-// ignore: library_prefixes
 import 'dart:math' as Math;
 
 import 'package:analyzer/dart/element/element.dart';
@@ -252,12 +250,18 @@ FutureOr<String> _genCodeClassMirrorInfo(
         : 'return $classTypeName.${named}';
     return '''
    static ${classTypeName} newInstance${capitalize(e.namedConstructorInKey)}(Map<String, dynamic> params){
-   ${_genCodeFunctionInvokerForMapParamsSwitch(CMD, e.params, 'params', '''
+   ${_genCodeFunctionInvokerForMapParamsSwitch(
+      CMD,
+      e.params,
+      'params',
+      paramTypeStrMaker,
+      switchEnd: '''
         throw new IllegalArgumentException(${classTypeName},
             '${named}',
             [${e.params.map((e) => "Pair('${e.paramKey}',MagicMirror.genType<${paramTypeStrMaker.call(e)}>())").fold('', (p, e) => p == '' ? e : "$p,$e")}],
             params.entries.map((e)=>Pair(e.key, e.value.runtimeType)).toList());
-     ''', paramTypeStrMaker)}
+     ''',
+    )}
    }
    ''';
   }).toList();
@@ -275,12 +279,13 @@ FutureOr<String> _genCodeClassMirrorInfo(
    static void set${capitalize(e.fieldName)}(${classTypeName} bean , dynamic  value) {
       if (MagicMirror.hasTypeAdapterS2Value<${fieldTypeStr}>(value)) {
         bean.${e.element.name} = MagicMirror.convertTypeS<${fieldTypeStr}>(value);
-      } else {
+        return;
+      }
         throw new IllegalArgumentException(${classTypeName},
             '${e.element.name}',
             [Pair('${e.element.name}', MagicMirror.genType<${fieldTypeStr}>())],
             [Pair('${e.element.name}', value.runtimeType)]);
-      }
+      
   }
       ''';
     }
@@ -299,13 +304,13 @@ FutureOr<String> _genCodeClassMirrorInfo(
       CMD,
       e.params,
       'params',
-      '''
+      paramTypeStrMaker,
+      switchEnd: '''
         throw new IllegalArgumentException(${classTypeName},
             '${e.element.name}',
             [${e.params.map((e) => "Pair('${e.paramKey}',MagicMirror.genType<${paramTypeStrMaker.call(e)}>())").fold('', (p, e) => p == '' ? e : "$p,$e")}],
             params.entries.map((e)=>Pair(e.key, e.value.runtimeType)).toList());
      ''',
-      paramTypeStrMaker,
       cmdAfter: cmdAfter,
     )}
    }
@@ -325,13 +330,13 @@ class _${className}Mirror{
     '${clazz.key}',
     const ${await _genCodeAnnotation(clazz.annotationValue, typeStrMaker, parser)},
     '${clazz.element.displayName}',
-    const <MirrorConstructor<$classTypeName,MConstructor>>[
+    const <MirrorConstructor<$classTypeName,MAnnotation>>[
         ${clazz.constructors.isEmpty ? '' : await (await Stream.fromFutures(clazz.constructors.map((e) async => await _genCodeConstructor(classTypeName, e, annTypeStrMaker, paramTypeStrMaker, typeStrMaker, parser)).toList())).where((e) => e.isNotEmpty).reduce((v, e) => '$v,$e')}
     ],
-    const <MirrorField<$classTypeName,MField,dynamic>>[
+    const <MirrorField<$classTypeName,MAnnotation,dynamic>>[
         ${clazz.fields.isEmpty ? '' : await (await Stream.fromFutures(clazz.fields.map((e) async => await _genCodeField(classTypeName, e, annTypeStrMaker, fieldTypeStrMaker, typeStrMaker, parser)).toList())).where((e) => e.isNotEmpty).reduce((v, e) => '$v,$e')}
     ],
-    const <MirrorFunction<$classTypeName,MFunction,dynamic>>[
+    const <MirrorFunction<$classTypeName,MAnnotation,dynamic>>[
         ${clazz.functions.isEmpty ? '' : await (await Stream.fromFutures(clazz.functions.map((e) async => await _genCodeFunction(classTypeName, e, annTypeStrMaker, paramTypeStrMaker, returnTypeStrMaker, typeStrMaker, parser)).toList())).where((e) => e.isNotEmpty).reduce((v, e) => '$v,$e')}
     ],
   );
@@ -391,9 +396,12 @@ Future<String> _genAnnotation(
       return '$as';
     } else if (element is MethodElement && element.isStatic) {
       var result = '';
-      result += typeStrMaker.call(await parser.call(element.librarySource.uri
-          .replace(fragment: element.enclosingElement.name)));
-      result += '.${element.name}';
+      var obj = await parser.call(element.librarySource.uri
+          .replace(fragment: element.enclosingElement.name));
+      if (obj != null) {
+        result += typeStrMaker.call(obj);
+        result += '.${element.name}';
+      }
       return result;
     } else {
       var result = '';
@@ -406,6 +414,7 @@ Future<String> _genAnnotation(
         result += '.$accessor';
       }
       var type = await parser.call(revive.source);
+      if (type == null) return '';
       result += typeStrMaker.call(type);
       // Log.log('_genAnnotation $result $namedArgs');
       result += '(';
@@ -454,7 +463,7 @@ Future<FutureOr<String>> _genCodeConstructor(
 
   var annotation = constructor.annotationValue;
   var annotationClass = constructor.annotationIsNull
-      ? 'MConstructor'
+      ? 'MAnnotation'
       : annTypeStrMaker.call(constructor.annotationValue);
 
   return '''
@@ -485,7 +494,7 @@ FutureOr<String> _genCodeField(
     return '';
   }
   var annotationClass = field.annotationIsNull
-      ? 'MField'
+      ? 'MAnnotation'
       : annTypeStrMaker.call(field.annotationValue);
   var fieldTypeStr = fieldTypeStrMaker.call(field);
   return '''
@@ -519,7 +528,7 @@ Future<FutureOr<String>> _genCodeFunction(
 
   var annotation = function.annotationValue;
   var annotationClass = function.annotationIsNull
-      ? 'MConstructor'
+      ? 'MAnnotation'
       : annTypeStrMaker.call(function.annotationValue);
 
   return '''
@@ -550,113 +559,18 @@ FutureOr<String> _genCodeParam(
     return '';
   }
   var annotationClass = param.annotationIsNull
-      ? 'MParam'
+      ? 'MAnnotation'
       : annTypeStrMaker.call(param.annotationValue);
   return '''
   MirrorParam<$annotationClass,${paramTypeStrMaker.call(param)}>(
     const ${param.annotationIsNull ? '$annotationClass()' : await _genCodeAnnotation(param.annotationValue, typeStrMaker, parser)},
-    '${param.element.name}', 
+    '${param.element.name}',
+    ${param.element.isOptional ? 'true' : 'false'}, 
     ${param.element.isNamed ? 'true' : 'false'}
   )
   '''
       .trim();
 }
-//
-// ///生成构造函数的代理执行器
-// String _genCodeConstructorInvoker(
-//     String classTypeName,
-//     GConstructor constructor,
-//     String Function(GParam param) maker,
-//     String returnTypeStr) {
-//   if (constructor == null) return '';
-//   var named = constructor.element.name;
-//   var CMD = named.isEmpty
-//       ? 'return $classTypeName'
-//       : 'return $classTypeName.${named}';
-//   if (constructor.isConstructorArgMap) {
-//     return '''
-//    (Map<String, dynamic> params) {
-//      ${_genCodeFunctionInvokerBody(CMD, constructor.params, [
-//       'params'
-//     ], cmdAfter: [])}
-//    }
-//   ''';
-//   }
-//
-//   return '''
-//    (Map<String, dynamic> params) {
-//      ${_genCodeFunctionInvokerForMapParamsSwitch(CMD, constructor.params, 'params', '''
-//         throw new IllegalArgumentException(${classTypeName},
-//             '${constructor.element.name}',
-//             [${constructor.params.map((e) => "Pair('${e.paramKey}',MagicMirror.genType<${maker.call(e)}>())").fold('', (p, e) => p == '' ? e : "$p,$e")}],
-//             params.entries.map((e)=>Pair(e.key, e.value.runtimeType)).toList());
-//      ''', maker)}
-//    }
-//   ''';
-// }
-//
-// ///生成属性的getter的代理执行器
-// String _genCodeFieldGetInvoker(
-//     String classTypeName, GField field, String fieldTypeStr) {
-//   if (field == null) return '';
-//   return '''
-//    (${classTypeName} bean) => bean.${field.element.name}
-//   ''';
-// }
-//
-// ///生成属性的setter的代理执行器
-// String _genCodeFieldSetInvoker(
-//     String classTypeName, GField field, String fieldTypeStr) {
-//   if (field == null) return '';
-//   return '''
-//   (${classTypeName} bean, dynamic  value) {
-//       if (MagicMirror.hasTypeAdapterS2Value<${fieldTypeStr}>(value)) {
-//         bean.${field.element.name} = MagicMirror.convertTypeS<${fieldTypeStr}>(value);
-//       } else {
-//         throw new IllegalArgumentException(${classTypeName},
-//             '${field.element.name}',
-//             [Pair('${field.element.name}', MagicMirror.genType<${fieldTypeStr}>())],
-//             [Pair('${field.element.name}', value.runtimeType)]);
-//       }
-//   }
-//   ''';
-// }
-//
-// ///生成函数的代理执行器
-// String _genCodeFunctionInvoker(String classTypeName, GFunction function,
-//     String Function(GParam param) maker, String returnTypeStr) {
-//   if (function == null) return '';
-//   var CMD =
-//       '${'Void' == returnTypeStr ? '' : 'return'} bean.${function.element.name}';
-//   var cmdAfter =
-//       'Void' == returnTypeStr ? <String>['return Void();'] : <String>[];
-//
-//   return '''
-//    (${classTypeName} bean , Map<String, dynamic> params) {
-//      ${_genCodeFunctionInvokerForMapParamsSwitch(
-//     CMD,
-//     function.params,
-//     'params',
-//     '''
-//         throw new IllegalArgumentException(${classTypeName},
-//             '${function.element.name}',
-//             [${function.params.map((e) => "Pair('${e.paramKey}',MagicMirror.genType<${maker.call(e)}>())").fold('', (p, e) => p == '' ? e : "$p,$e")}],
-//             params.entries.map((e)=>Pair(e.key, e.value.runtimeType)).toList());
-//      ''',
-//     maker,
-//     cmdAfter: cmdAfter,
-//   )}
-//    }
-//   ''';
-// }
-//
-// ///生成直接获取函数对象函数的代理执行器
-// String _genCodeFunctionInstance(String classTypeName, GFunction function) {
-//   if (function == null) return '';
-//   return '''
-//    (${classTypeName} bean ) => bean.${function.element.displayName}
-//   ''';
-// }
 
 ///将函数名 属性名的首字母大写
 String capitalize(String name) {
@@ -670,24 +584,36 @@ String _genCodeFunctionInvokerForMapParamsSwitch(
     String CMD,
     List<GParam> params,
     String paramsMapName,
-    String finalElse,
     String Function(GParam param) maker,
-    {List<String> cmdAfter = const []}) {
-  if (params == null || params.isEmpty) {
+    {String finalElse = '',
+    String switchEnd = '',
+    List<String> cmdAfter = const []}) {
+  if (params==null||params.isEmpty) {
     return _genCodeFunctionInvokerBody(CMD, [], [], cmdAfter: cmdAfter);
   }
-  var paramsNamed = params.where((p) => p.element.isNamed).toList();
+  var paramsNamed = params.where((p) => !p.isNeed).toList();
   var paramsNeed = params
-      .where((p) => !p.element.isNamed)
+      .where((p) => p.isNeed)
       .map((p) => _IFGenerator(p, paramsMapName, maker, isSelect: true))
       .toList();
 
-  var ifGenerators = _combination(paramsNamed, paramsMapName, maker);
+  List<List<_IFGenerator>> ifGenerators;
+  if (findFistWhere<GParam>(
+          paramsNamed, (e) => e.element.isOptionalPositional) ==
+      null) {
+    ifGenerators = _combination(paramsNamed, paramsMapName, maker);
+  } else {
+    ifGenerators = _combination_(paramsNamed, paramsMapName, maker);
+  }
+
   var ifsStr = ifGenerators
       .map((e) =>
           cloneList<_IFGenerator>(paramsNeed, (ifg) => ifg.clone())..addAll(e))
       .map((list) => _genCodeFunctionInvokerForMapNamedParamsSwitch(CMD, list,
-          cmdAfter: cmdAfter))
+          cmdBefore: list.where((element) => element.isSelect).map((e) => '''
+          var ${e.param.element.name} = 
+              MagicMirror.convertTypeS<${e.paramType}>(${paramsMapName}['${e.param.paramKey}']);
+          ''').toList(), cmdAfter: cmdAfter))
       .where((str) => '' != str)
       .map((ifs) => ifs.trimRight().endsWith('}') ? '\n$ifs else ' : ifs)
       .fold('', (i, s) => '$i$s');
@@ -695,8 +621,11 @@ String _genCodeFunctionInvokerForMapParamsSwitch(
   if (ifsStr.trimRight().endsWith('else')) {
     ifsStr = ifsStr.substring(0, ifsStr.length - 6);
   }
-  if (ifsStr.trimRight().endsWith('}')) {
+  if (ifsStr.trimRight().endsWith('}') && finalElse.isNotEmpty) {
     ifsStr += 'else {$finalElse}';
+  }
+  if (switchEnd.isNotEmpty) {
+    ifsStr += switchEnd;
   }
   return (ifsStr);
 }
@@ -704,14 +633,24 @@ String _genCodeFunctionInvokerForMapParamsSwitch(
 ///生成函数的调用判断逻辑
 String _genCodeFunctionInvokerForMapNamedParamsSwitch(
     String CMD, List<_IFGenerator> params,
-    {List<String> cmdAfter = const []}) {
+    {List<String> cmdBefore = const [], List<String> cmdAfter = const []}) {
   var values =
       params.where((ifg) => ifg.isSelect).map((ifg) => ifg.contentStr).toList();
   var wheres =
       params.map((e) => e.whereStr).fold('', (p, e) => '$p && $e').substring(3);
+
+  if (findFistWhere<_IFGenerator>(
+          params, (p) => p.isSelect && p.param.isNeed) !=
+      null) {
+    cmdBefore = List.of(cmdBefore, growable: true);
+    cmdBefore.add('''
+    if(${params.where((element) => element.isSelect && element.param.isNeed).map((e) => '${e.param.element.name} != null').join('&&')})
+    ''');
+  }
+
   return '''
   if (${wheres.trimRight().endsWith("&&") ? wheres.substring(0, wheres.length - 3) : wheres} ) {
-    ${_genCodeFunctionInvokerBody(CMD, params.where((ifg) => ifg.isSelect).map((ifg) => ifg.param).toList(), values, cmdAfter: cmdAfter)} \n 
+    ${_genCodeFunctionInvokerBody(CMD, params.where((ifg) => ifg.isSelect).map((ifg) => ifg.param).toList(), values, cmdBefore: cmdBefore, cmdAfter: cmdAfter)} \n 
    }
   ''';
 }
@@ -719,12 +658,13 @@ String _genCodeFunctionInvokerForMapNamedParamsSwitch(
 ///生成函数的调用判断逻辑
 String _genCodeFunctionInvokerBody(
     String CMD, List<GParam> params, List<String> values,
-    {List<String> cmdAfter = const []}) {
+    {List<String> cmdBefore = const [], List<String> cmdAfter = const []}) {
   if (params.length != values.length) {
     throw Exception('_genCodeFunctionInvokerBody params.length!=values.length');
   }
 
   var codeBuffer = StringBuffer();
+  codeBuffer.write(cmdBefore.join(' '));
   codeBuffer.write('$CMD(');
   for (var i = 0; i < params.length; i++) {
     var param = params[i];
@@ -740,9 +680,25 @@ String _genCodeFunctionInvokerBody(
   }
   codeBuffer.write(');');
   if (cmdAfter.isNotEmpty) {
-    codeBuffer.write(cmdAfter.reduce((v, e) => v + e));
+    codeBuffer.write(cmdAfter.join('  '));
   }
   return codeBuffer.toString();
+}
+
+List<List<_IFGenerator>> _combination_(List<GParam> source,
+    String paramsMapName, String Function(GParam param) maker) {
+  var result = <List<_IFGenerator>>[];
+  for (int i = source.length, j = 0; i >= j; i--) {
+    var paras = cloneList<GParam>(source, (s) => s)
+        .map((p) => _IFGenerator(p, paramsMapName, maker))
+        .toList();
+    for (int k = 0; k < i; k++) {
+      paras[k].isSelect =true;
+    }
+    result.add(paras);
+  }
+
+  return result;
 }
 
 //相比穷举的快速生成方案 参考自来源https://zhenbianshu.github.io/2019/01/charming_alg_permutation_and_combination.html
@@ -775,31 +731,37 @@ class _IFGenerator {
   ///是否是已选模式
   bool isSelect;
 
-  ///设定参数转换为string时的转换器
-  final String Function(GParam param) makeParamTypeStr;
+  ///判断的参数类型
+  final String paramType;
 
-  _IFGenerator(this.param, this.paramsMapName, this.makeParamTypeStr,
+  // ///设定参数转换为string时的转换器
+  // final String Function(GParam param) makeParamTypeStr;
+
+  _IFGenerator(this.param, this.paramsMapName,
+      String Function(GParam param) makeParamTypeStr,
+      {this.isSelect = false})
+      : this.paramType = makeParamTypeStr.call(param);
+
+  _IFGenerator._clone(this.param, this.paramsMapName, this.paramType,
       {this.isSelect = false});
 
   ///生成的where内容
   String get whereStr {
     if (!isSelect) return "!$paramsMapName.containsKey('${param.paramKey}')";
     var w =
-        "($paramsMapName.containsKey('${param.paramKey}') && MagicMirror.hasTypeAdapterS2Value<${makeParamTypeStr.call(param)}>($paramsMapName['${param.paramKey}']))";
+        "($paramsMapName.containsKey('${param.paramKey}') && MagicMirror.hasTypeAdapterS2Value<$paramType>($paramsMapName['${param.paramKey}']))";
     return w;
   }
 
   ///生成的具体执行内容
   String get contentStr {
     if (!isSelect) return '';
-    var c = '';
-    c = "MagicMirror.convertTypeS($paramsMapName['${param.paramKey}'])";
-    return c;
+    return param.element.name;
   }
 
   ///深clone
   _IFGenerator clone() {
-    var r = _IFGenerator(param, paramsMapName, makeParamTypeStr,
+    var r = _IFGenerator._clone(param, paramsMapName, this.paramType,
         isSelect: isSelect);
     return r;
   }

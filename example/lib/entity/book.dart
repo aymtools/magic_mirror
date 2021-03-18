@@ -1,34 +1,36 @@
 import 'package:magic_mirror/magic_mirror.dart';
 
-@MClass(
+@MReflectionEnable(
     key: '/class/book',
-    keyGenType: KeyGen.KEY_GEN_TYPE_BY_URI,
+    genUriType: GenUri.GEN_URI_TYPE_BY_KEY,
     scanFields: true,
     scanFunctions: true)
 class Book {
-  @MField()
   String name;
 
-  @MField(key: 'auth')
   String author;
 
-  @MField()
   double price;
 
-  @MConstructor()
-  Book(this.name, this.author);
+  Book(this.name, this.author) : this.price = 1.0;
 
-  @MConstructor()
   Book.price(this.name, this.author, this.price);
 
-  @MConstructor()
-  Book.custom(this.name, {this.author, this.price});
+  Book.custom(this.name, {this.author = '', this.price = 1.0});
 
-  @MFunction()
   void printInfo() {
     print('book info name:$name author:$author price:$price');
   }
 
-  @MFunction()
-  double calculatePrice(double sale) => sale * (price ?? 1);
+  double calculatePrice(double sale) => sale * price;
+
+  double calculatePrice2(double sale,
+          [double newPrice, bool member = false]) =>
+      sale * (newPrice ?? price);
+
+  double calculatePrice3(double sale, {double newPrice}) =>
+      sale * (newPrice ?? price);
+
+  @MReflectionDisable()
+  double calculatePriceSale(double sale) => sale * (price);
 }

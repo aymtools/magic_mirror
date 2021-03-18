@@ -22,6 +22,25 @@ class ClassNotFoundException implements MagicMirrorException {
   }
 }
 
+///类信息无法找到异常
+class ClassNotConfigException implements MagicMirrorException {
+  ///触发异常的uri
+  final Type type;
+
+  ///其他信息
+  final message;
+
+  ClassNotConfigException(this.type, {this.message});
+
+  @override
+  String toString() {
+    final def =
+        'ClassNotConfigException:\n For ${type} can not found Class config!';
+    if (message == null) return def;
+    return '$def\n$message';
+  }
+}
+
 ///函数未找到异常
 class NoSuchFunctionException implements MagicMirrorException {
   ///所发生异常时的类型

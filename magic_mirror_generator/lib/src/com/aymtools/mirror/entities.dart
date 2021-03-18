@@ -12,8 +12,8 @@ class GImports {
   final Map<String, String> _imports = {};
 
   ///默认加入的lib库
-  GImports({List<GLibrary> otherImportLibrary}) {
-    if (otherImportLibrary != null && otherImportLibrary.isNotEmpty) {
+  GImports({List<GLibrary> otherImportLibrary = const []}) {
+    if (otherImportLibrary.isNotEmpty) {
       addLibs(otherImportLibrary);
     }
   }
@@ -23,9 +23,6 @@ class GImports {
     _otherImportLibrary.addAll(otherImportLibrary);
 
     _imports['package:magic_mirror/magic_mirror.dart'] = '';
-    // if (lib != null && !isMirrorLib) {
-    //   _imports['package:$package/$name.dart'] = '$asName';
-    // }
     if (_otherImportLibrary.isNotEmpty) {
       _otherImportLibrary
           .where((element) => element.lib != null && !element.isMirrorLib)
@@ -180,7 +177,7 @@ class GImports {
       var asStr = _formatAsStr(librarySourceUriStr);
       _imports[librarySourceUriStr] = asStr;
     }
-    return MapEntry(librarySourceUriStr, _imports[librarySourceUriStr]);
+    return MapEntry(librarySourceUriStr, _imports[librarySourceUriStr] ?? '');
   }
 
   ///解析并加入结果 根据DartType
@@ -487,4 +484,7 @@ class GParam {
   ///判断注解信息是否为空
   bool get annotationIsNull =>
       annotationValue == null || annotationValue.isNull;
+
+  ///是否未必
+  bool get isNeed => element.isRequiredPositional || element.isRequiredNamed;
 }
