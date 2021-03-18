@@ -84,7 +84,7 @@ class MirrorClass<T, A extends MReflectionEnable> {
   }
 
   ///根据uri参数 和 不确定类型的参数 来生成实例
-  newInstance3(
+  T newInstance3(
       {String? constructorName,
       Map<String, String> uriParams = const {},
       dynamic objParam}) {
@@ -152,7 +152,7 @@ class MirrorConstructor<T, A extends MAnnotation> {
       invoker.call(params);
 
   ///执行函数
-  T newInstance2(List positional, [Map<String, dynamic> named = const {}]) {
+  T newInstance2([List positional, Map<String, dynamic> named = const {}]) {
     var params = <String, dynamic>{};
     params.addAll(named);
 
