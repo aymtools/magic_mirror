@@ -3,6 +3,7 @@ library magic_mirror;
 export 'src/com/aymtools/mirror/compatible/class_mirror.dart';
 export 'src/com/aymtools/mirror/compatible/core.dart';
 export 'src/com/aymtools/mirror/compatible/invoker.dart';
+export 'src/com/aymtools/mirror/compatible/keygen.dart';
 export 'src/com/aymtools/mirror/core.dart';
 export 'src/com/aymtools/mirror/invoker/class_mirror.dart';
 export 'src/com/aymtools/mirror/invoker/exception.dart';
