@@ -1,30 +1,20 @@
 import '../../../../../magic_mirror.dart';
 
 extension Compatible on MagicMirror {
-  // ///根据注解类型 CLass的类型来获取对应的类信息
-  // List<MirrorClass<ExtendsType, AnnotationType>>
-  //     findClasses<AnnotationType extends MClass, ExtendsType>() =>
-  //         _mirrorClasses
-  //             // .where((element) =>
-  //             //     element.type is TypeToken<ExtendsType> &&
-  //             //     element.annotationType is TypeToken<AnnotationType>)
-  //             .whereType<MirrorClass<ExtendsType, AnnotationType>>()
-  //             .toList();
-  //
-  // ///根据注解类型 CLass的类型来获取对应的类信息
-  // List<MirrorClass<dynamic, AnnotationType>>
-  //     findClassesByAnnotation<AnnotationType extends MClass>() => _mirrorClasses
-  //         .whereType<MirrorClass<dynamic, AnnotationType>>()
-  //         // .where(
-  //         //     (element) => element.annotationType is TypeToken<AnnotationType>)
-  //         .toList();
-  //
-  // ///根据CLass的类型来获取对应的类信息
-  // List<MirrorClass<ExtendsType, MClass>> findClassesByExtends<ExtendsType>() =>
-  //     _mirrorClasses
-  //         .whereType<MirrorClass<ExtendsType, MClass>>()
-  //         // .where((element) => element.type is TypeToken<ExtendsType>)
-  //         .toList();
+  ///根据注解类型 CLass的类型来获取对应的类信息
+  @deprecated
+  List<String> findKeys<AnnotationType extends MClass, ExtendsType>() =>
+      findClasses<AnnotationType, ExtendsType>().map((e) => e.key).toList();
+
+  ///根据注解类型来获取对应的类信息
+  @deprecated
+  List<String> findKeysByAnnotation<AnnotationType extends MClass>() =>
+      findClassesByAnnotation<AnnotationType>().map((e) => e.key).toList();
+
+  ///根据CLass的类型来获取对应的类信息
+  @deprecated
+  List<String> findKeysByExtends<ExtendsType>() =>
+      findClassesByExtends<ExtendsType>().map((e) => e.key).toList();
 
   ///根据key信息自动加载对应的类信息
   MirrorClass<T, MClass> load<T>(String classKey) {

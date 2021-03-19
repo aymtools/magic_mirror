@@ -133,3 +133,21 @@ class Log {
     print(msg);
   }
 }
+
+///对Iterable扩展一些当前库中常用的函数
+extension IterableExt<E> on Iterable<E> {
+  E? get firstOrNull {
+    Iterator<E> it = iterator;
+    if (!it.moveNext()) {
+      return null;
+    }
+    return it.current;
+  }
+
+  E? firstOrNullWhere(bool test(E element)) {
+    for (E element in this) {
+      if (test(element)) return element;
+    }
+    return null;
+  }
+}

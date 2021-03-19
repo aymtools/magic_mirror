@@ -36,8 +36,10 @@ Future<MMirrorConfig> _initConfig(BuildStep buildStep) async {
   LibraryElement lib;
   if (await buildStep.canRead(assetId) && await resolver.isLibrary(assetId)) {
     lib = await resolver.libraryFor(assetId);
-    var annotation =
-        LibraryReader(lib).annotatedWith(_configChecker).first?.annotation;
+    var annotation = LibraryReader(lib)
+        .annotatedWith(_configChecker)
+        .firstOrNull
+        ?.annotation;
     config = genAnnotation(annotation);
   }
   if (config == null) {
@@ -46,7 +48,7 @@ Future<MMirrorConfig> _initConfig(BuildStep buildStep) async {
         final library = await buildStep.resolver.libraryFor(input);
         var annotation = LibraryReader(library)
             .annotatedWith(_configChecker)
-            .first
+            .firstOrNull
             ?.annotation;
         if (annotation != null) {
           config = genAnnotation(annotation);

@@ -10,10 +10,14 @@
 
 - Support NullSafety.
 
-## version: 0.2.0-dev.2
+## 0.2.0-dev.2
 
 - Unify all naming conventions.
 
-## version: 0.2.0-dev.3
+## 0.2.0-dev.3
 
 - When fixing the setter, the trigger exception cannot be returned normally.
+
+## 0.2.0-dev.4
+
+- Upgrade all dependent libraries to null-safety.

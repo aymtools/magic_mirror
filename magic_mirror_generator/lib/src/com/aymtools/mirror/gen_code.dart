@@ -407,9 +407,9 @@ Future<String> _genAnnotation(
     } else {
       var result = '';
       var revive = reader.revive();
-      var pArgs = revive.positionalArguments ?? [];
-      var namedArgs = revive.namedArguments ?? {};
-      var accessor = revive.accessor ?? '';
+      var pArgs = revive.positionalArguments;
+      var namedArgs = revive.namedArguments;
+      var accessor = revive.accessor;
       if (accessor.isNotEmpty) {
         result += '.$accessor';
       }

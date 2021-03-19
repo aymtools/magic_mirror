@@ -152,7 +152,8 @@ class MirrorConstructor<T, A extends MAnnotation> {
       invoker.call(params);
 
   ///执行函数
-  T newInstance2([List positional, Map<String, dynamic> named = const {}]) {
+  T newInstance2(
+      [List positional = const [], Map<String, dynamic> named = const {}]) {
     var params = <String, dynamic>{};
     params.addAll(named);
 

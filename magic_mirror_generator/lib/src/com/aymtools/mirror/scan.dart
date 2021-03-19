@@ -92,22 +92,24 @@ GLibraryInfo scanLibraryInfo(LibraryReader libraryReader) {
 GClass? _scanClass(Element element, ConstantReader annotation) {
   if (element.kind != ElementKind.CLASS) return null;
   var from = annotation.peek('needAssignableFrom');
-  if (!from.isNull &&
+  if (from != null &&
+      !from.isNull &&
       from.isList &&
       from.listValue.isNotEmpty &&
       !from.listValue
           .map((e) => e.toTypeValue())
-          .every((c) => TypeChecker.fromStatic(c).isAssignableFrom(element))) {
+          .every((c) => TypeChecker.fromStatic(c!).isAssignableFrom(element))) {
     return null;
   }
 
   var fromAnyOne = annotation.peek('anyOneAssignableFrom');
-  if (!fromAnyOne.isNull &&
+  if (fromAnyOne != null &&
+      !fromAnyOne.isNull &&
       fromAnyOne.isList &&
       fromAnyOne.listValue.isNotEmpty &&
       !fromAnyOne.listValue
           .map((e) => e.toTypeValue())
-          .any((c) => TypeChecker.fromStatic(c).isAssignableFrom(element))) {
+          .any((c) => TypeChecker.fromStatic(c!).isAssignableFrom(element))) {
     return null;
   }
   var classAnnotation =
@@ -175,17 +177,17 @@ List<GField> _scanFields(
   var fields = element.fields
       .where((ele) => !(_disableReflectionChecker.hasAnnotationOf(ele) ||
           (ele.getter != null &&
-              _disableReflectionChecker.hasAnnotationOf(ele.getter)) ||
+              _disableReflectionChecker.hasAnnotationOf(ele.getter!)) ||
           (ele.setter != null &&
-              _disableReflectionChecker.hasAnnotationOf(ele.setter))))
+              _disableReflectionChecker.hasAnnotationOf(ele.setter!))))
       .where((ele) => !ele.displayName.startsWith('_'))
       .where((ele) =>
           !scanUsedAllowList ||
           ((_enableDeclarationChecker.hasAnnotationOf(ele) ||
               (ele.getter != null &&
-                  _enableDeclarationChecker.hasAnnotationOf(ele.getter)) ||
+                  _enableDeclarationChecker.hasAnnotationOf(ele.getter!)) ||
               (ele.setter != null &&
-                  _enableDeclarationChecker.hasAnnotationOf(ele.setter)))))
+                  _enableDeclarationChecker.hasAnnotationOf(ele.setter!)))))
       .map((e) => _scanField(e))
       .toList(growable: true);
   if (scanSuper && element.supertype != null) {
@@ -199,10 +201,10 @@ List<GField> _scanFields(
 GField _scanField(FieldElement element) {
   DartObject? annotation = _enableDeclarationChecker.firstAnnotationOf(element);
   if (annotation == null && element.getter != null) {
-    annotation = _enableDeclarationChecker.firstAnnotationOf(element.setter);
+    annotation = _enableDeclarationChecker.firstAnnotationOf(element.setter!);
   }
   if (annotation == null && element.getter != null) {
-    annotation = _enableDeclarationChecker.firstAnnotationOf(element.getter);
+    annotation = _enableDeclarationChecker.firstAnnotationOf(element.getter!);
   }
   return GField(element, ConstantReader(annotation));
 }

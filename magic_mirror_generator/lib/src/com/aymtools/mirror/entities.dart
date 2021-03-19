@@ -40,17 +40,17 @@ class GImports {
       element.classes.forEach((cls) {
         if (!cls.annotationValue.isNull) {
           _parseAddImportLib(
-              cls.annotationValue.objectValue!.type!.element?.library);
+              cls.annotationValue.objectValue.type!.element?.library);
         }
         cls.constructors.forEach((constructor) {
           if (!constructor.annotationValue.isNull) {
-            _parseAddImportLib(constructor
-                .annotationValue.objectValue!.type!.element?.library);
+            _parseAddImportLib(
+                constructor.annotationValue.objectValue.type!.element?.library);
           }
           constructor.params.forEach((param) {
             if (!param.annotationValue.isNull) {
               _parseAddImportLib(
-                  param.annotationValue.objectValue!.type!.element?.library);
+                  param.annotationValue.objectValue.type!.element?.library);
             }
             _parseTypeAndInnerType(param.type.value);
           });
@@ -58,20 +58,20 @@ class GImports {
         cls.fields.forEach((field) {
           if (!field.annotationValue.isNull) {
             _parseAddImportLib(
-                field.annotationValue.objectValue!.type!.element?.library);
+                field.annotationValue.objectValue.type!.element?.library);
           }
           _parseTypeAndInnerType(field.type.value);
         });
         cls.functions.forEach((function) {
           if (!function.annotationValue.isNull) {
             _parseAddImportLib(
-                function.annotationValue.objectValue!.type!.element?.library);
+                function.annotationValue.objectValue.type!.element?.library);
           }
           _parseTypeAndInnerType(function.returnType.value);
           function.params.forEach((param) {
             if (!param.annotationValue.isNull) {
               _parseAddImportLib(
-                  param.annotationValue.objectValue!.type!.element?.library);
+                  param.annotationValue.objectValue.type!.element?.library);
             }
             _parseTypeAndInnerType(param.type.value);
           });
@@ -338,10 +338,11 @@ class GConstructor {
   ///获取构造函数的具体key 依据注解和name生成
   String get namedConstructorInKey {
     return annotationIsNull ||
-            annotationValue.peek('key').isNull ||
-            annotationValue.peek('key').stringValue.isEmpty
+            annotationValue.peek('key') == null ||
+            annotationValue.peek('key')!.isNull ||
+            annotationValue.peek('key')!.stringValue.isEmpty
         ? element.name
-        : annotationValue.peek('key').stringValue;
+        : annotationValue.peek('key')!.stringValue;
   }
 
   ///是否时默认构造函数
@@ -402,10 +403,11 @@ class GFunction {
 
   ///获取函数的具体key 依据注解和name生成
   String get functionName => annotationIsNull ||
-          annotationValue.peek('key').isNull ||
-          annotationValue.peek('key').stringValue.isEmpty
+          annotationValue.peek('key') == null ||
+          annotationValue.peek('key')!.isNull ||
+          annotationValue.peek('key')!.stringValue.isEmpty
       ? element.name
-      : annotationValue.peek('key').stringValue;
+      : annotationValue.peek('key')!.stringValue;
 
   ///判断注解信息是否为空
   bool get annotationIsNull => annotationValue.isNull;
@@ -436,10 +438,11 @@ class GField {
 
   ///获取属性的具体key 依据注解和name生成
   String get fieldName => annotationIsNull ||
-          annotationValue.peek('key').isNull ||
-          annotationValue.peek('key').stringValue.isEmpty
+          annotationValue.peek('key') == null ||
+          annotationValue.peek('key')!.isNull ||
+          annotationValue.peek('key')!.stringValue.isEmpty
       ? element.name
-      : annotationValue.peek('key').stringValue;
+      : annotationValue.peek('key')!.stringValue;
 
   ///判断注解信息是否为空
   bool get annotationIsNull => annotationValue.isNull;
@@ -468,10 +471,11 @@ class GParam {
 
   ///获取参数的具体key 依据注解和name生成
   String get paramKey => annotationIsNull ||
-          annotationValue.peek('key').isNull ||
-          annotationValue.peek('key').stringValue.isEmpty
+          annotationValue.peek('key') == null ||
+          annotationValue.peek('key')!.isNull ||
+          annotationValue.peek('key')!.stringValue.isEmpty
       ? element.name
-      : annotationValue.peek('key').stringValue;
+      : annotationValue.peek('key')!.stringValue;
 
   ///判断注解信息是否为空
   bool get annotationIsNull => annotationValue.isNull;
