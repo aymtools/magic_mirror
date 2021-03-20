@@ -57,12 +57,10 @@ Future<MMirrorConfig> _initConfig(BuildStep buildStep) async {
   }
   config ??= MMirrorConfig();
 
-  var imports = <MImport>[
-    MImport( 'magic_mirror', libName: 'magic_mirror')
-  ];
+  var imports = <MImport>[MImport('magic_mirror', libName: 'magic_mirror')];
   imports.addAll(config.imports);
   imports.addAll(config.importLibsNames.entries
-      .map((e) => MImport( e.key, libName: e.value)));
+      .map((e) => MImport(e.key, libName: e.value)));
 
   config = MMirrorConfig(
     isGenInvoker: config.isGenInvoker,

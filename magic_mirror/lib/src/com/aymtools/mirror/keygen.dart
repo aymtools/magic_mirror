@@ -5,10 +5,13 @@ abstract class GenUri {
 
   ///依据key解析为Uri
   static const int GEN_URI_TYPE_BY_KEY = 1;
+
   ///依据路径+名字
   static const int GEN_URI_TYPE_BY_NAME = 2;
+
   ///依据只包含类名 函数名
   static const int GEN_URI_TYPE_BY_SIMPLE_NAME = 3;
+
   ///自增长
   static const int GEN_URI_TYPE_BY_SEQUENCE = 4;
 

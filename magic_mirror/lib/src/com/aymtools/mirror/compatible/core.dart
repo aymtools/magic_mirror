@@ -13,12 +13,12 @@ class MirrorConfig extends MMirrorConfig {
     List<MImport> imports = const [],
     int genGroupBy = GEN_GROUP_BY_NONE,
   }) : super(
-    isGenInvoker: isGenInvoker,
-    isGenLibExport: isGenLibExport,
-    importLibsNames: importLibsNames,
-    imports: imports,
-    genGroupBy: genGroupBy,
-  );
+          isGenInvoker: isGenInvoker,
+          isGenLibExport: isGenLibExport,
+          importLibsNames: importLibsNames,
+          imports: imports,
+          genGroupBy: genGroupBy,
+        );
 }
 
 /// 定义Class的注解
@@ -41,22 +41,22 @@ class MClass extends MReflectionEnable {
     bool scanFieldsUsedBlockList = false,
     bool scanSuperFields = false,
   }) : super(
-    key: key,
-    tag: tag,
-    ext: ext,
-    flag: flag,
-    genUriType: keyGenType,
-    needAssignableFrom: needAssignableFrom,
-    anyOneAssignableFrom: anyOneAssignableFrom,
-    scanConstructors: scanConstructors,
-    scanConstructorsUsedBlockList: scanConstructorsUsedBlockList,
-    scanFunctions: scanFunctions,
-    scanFunctionsUsedBlockList: scanFunctionsUsedBlockList,
-    scanSuperFunctions: scanSuperFunctions,
-    scanFields: scanFields,
-    scanFieldsUsedBlockList: scanFieldsUsedBlockList,
-    scanSuperFields: scanSuperFields,
-  );
+          key: key,
+          tag: tag,
+          ext: ext,
+          flag: flag,
+          genUriType: keyGenType,
+          needAssignableFrom: needAssignableFrom,
+          anyOneAssignableFrom: anyOneAssignableFrom,
+          scanConstructors: scanConstructors,
+          scanConstructorsUsedBlockList: scanConstructorsUsedBlockList,
+          scanFunctions: scanFunctions,
+          scanFunctionsUsedBlockList: scanFunctionsUsedBlockList,
+          scanSuperFunctions: scanSuperFunctions,
+          scanFields: scanFields,
+          scanFieldsUsedBlockList: scanFieldsUsedBlockList,
+          scanSuperFields: scanSuperFields,
+        );
 }
 
 /// 指定Class的构造函数

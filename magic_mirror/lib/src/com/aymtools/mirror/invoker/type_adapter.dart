@@ -26,7 +26,7 @@ class TypeAdapter extends MReflectionEnable {
             key: adapterName == null || adapterName == ''
                 ? 'typeAdapter://mirror.aymtools.com/'
                 : 'typeAdapter://mirror.aymtools.com/' + adapterName,
-      genUriType: adapterName == null || adapterName == ''
+            genUriType: adapterName == null || adapterName == ''
                 ? GenUri.GEN_URI_TYPE_BY_SEQUENCE_KEY
                 : GenUri.GEN_URI_TYPE_BY_KEY,
             needAssignableFrom: const <Type>[TypeConvert]);

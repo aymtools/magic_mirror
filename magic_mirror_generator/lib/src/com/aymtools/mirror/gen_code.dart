@@ -588,7 +588,7 @@ String _genCodeFunctionInvokerForMapParamsSwitch(
     {String finalElse = '',
     String switchEnd = '',
     List<String> cmdAfter = const []}) {
-  if (params==null||params.isEmpty) {
+  if (params == null || params.isEmpty) {
     return _genCodeFunctionInvokerBody(CMD, [], [], cmdAfter: cmdAfter);
   }
   var paramsNamed = params.where((p) => !p.isNeed).toList();
@@ -693,7 +693,7 @@ List<List<_IFGenerator>> _combination_(List<GParam> source,
         .map((p) => _IFGenerator(p, paramsMapName, maker))
         .toList();
     for (int k = 0; k < i; k++) {
-      paras[k].isSelect =true;
+      paras[k].isSelect = true;
     }
     result.add(paras);
   }

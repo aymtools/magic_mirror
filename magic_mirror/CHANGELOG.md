@@ -17,3 +17,7 @@
 ## 0.1.2+1
 
 - Compatible with the 0.1.x version of KeyGen.
+
+## 0.1.2+2
+
+- Fix the parameter judgment when using newInstance3.
