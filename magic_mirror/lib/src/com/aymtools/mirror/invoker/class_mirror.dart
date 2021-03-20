@@ -168,7 +168,7 @@ class MirrorConstructor<T, A extends MAnnotation> {
   ///执行函数
   T newInstance3(Map<String, String> uriParams, {dynamic objParam}) {
     var params = <String, dynamic>{};
-    if (params.isNotEmpty) {
+    if (this.params.isNotEmpty) {
       params = genParams(objParam, uriParams, this.params.first.key);
     }
     return newInstance(params);

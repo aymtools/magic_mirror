@@ -21,3 +21,7 @@
 ## 0.2.0-dev.4
 
 - Upgrade all dependent libraries to null-safety.
+
+## 0.2.0-dev.5
+
+- Fix the parameter judgment when using newInstance3.
