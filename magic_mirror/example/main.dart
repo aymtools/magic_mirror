@@ -3,6 +3,7 @@ import 'package:magic_mirror/magic_mirror.dart';
 // 导入Register
 // import 'generated/aymtools/mirror/register.mirror.aymtools.dart';
 
+///启用生成镜像信息
 @MReflectionEnable(
     key: '/class/book',
     genUriType: GenUri.GEN_URI_TYPE_BY_KEY,
@@ -36,6 +37,7 @@ void main() {
   //注册相关的类信息
   // Register.register();
 
+  ///加载类镜像
   var clazz = MagicMirror.instance.loadClass('/class/book');
   var book = clazz.newInstance('', {'name': 'book1', 'author': 'author1'});
 

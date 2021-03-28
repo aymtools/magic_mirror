@@ -1,5 +1,6 @@
 import '../../../../../magic_mirror.dart';
 
+///提供之前版本的兼容包
 extension Compatible on MagicMirror {
   ///根据注解类型 CLass的类型来获取对应的类信息
   @deprecated

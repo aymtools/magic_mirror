@@ -1,6 +1,6 @@
 import '../keygen.dart';
 
-///定义查找class的键的生成策略 返回结果必定为为uri
+///定义查找class的键的生成策略 返回结果必定为为uri 兼容包
 @deprecated
 abstract class KeyGen implements GenUri {
   static const int KEY_GEN_TYPE_BY_DEF = GenUri.GEN_URI_TYPE_BY_DEF;
