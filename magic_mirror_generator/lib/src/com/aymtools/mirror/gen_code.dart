@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:math' as Math;
+import 'dart:math' as math;
 
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
@@ -164,7 +164,7 @@ String _genCodeLibInfoMirrorRegister(
 ) {
   var classes = <String>[];
   libraryClass.forEach((clazz) {
-    classes.add(typeStrMaker.call(clazz).replaceAll('.', ''));
+    classes.add(capitalize(typeStrMaker.call(clazz).replaceAll('.', '')));
   });
 
   return _genCodeLibInfoMirrorRegisterTemplate(classes, false, []);
@@ -239,6 +239,7 @@ FutureOr<String> _genCodeClassMirrorInfo(
 ) async {
   var classTypeName = classTypeStrMaker.call(clazz);
   var className = classTypeName.replaceAll('.', '');
+  className = capitalize(className);
   var annotation = clazz.annotationValue;
   var annotationClass = annTypeStrMaker.call(annotation);
 
@@ -692,7 +693,7 @@ List<List<_IFGenerator>> _combination_(List<GParam> source,
 List<List<_IFGenerator>> _combination(List<GParam> source, String paramsMapName,
     String Function(GParam param) maker) {
   var result = <List<_IFGenerator>>[];
-  for (int l = 0, i = (Math.pow(2, source.length).toInt()) - 1; i >= l; i--) {
+  for (int l = 0, i = (math.pow(2, source.length).toInt()) - 1; i >= l; i--) {
     var paras = cloneList<GParam>(source, (s) => s)
         .map((p) => _IFGenerator(p, paramsMapName, maker))
         .toList();

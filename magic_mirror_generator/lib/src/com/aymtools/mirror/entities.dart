@@ -127,9 +127,9 @@ class GImports {
               RegExp(r'\.\w'), (match) => match.group(0)!.toUpperCase())
           .replaceAll('.', '');
     }
-    if (asStr.length > 1) {
-      asStr = asStr[0].toUpperCase() + asStr.substring(1);
-    }
+    // if (asStr.length > 1) {
+    //   asStr = asStr[0].toUpperCase() + asStr.substring(1);
+    // }
     var i = 0;
     var asStrTemp = asStr;
     while (_imports.containsValue(asStrTemp)) {
