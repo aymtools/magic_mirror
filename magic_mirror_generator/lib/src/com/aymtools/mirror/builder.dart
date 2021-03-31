@@ -42,7 +42,9 @@ Future<MMirrorConfig> _initConfig(BuildStep buildStep) async {
   }
   if (config == null) {
     await for (final input in buildStep.findAssets(Glob(r'lib/**'))) {
-      if (!input.path.startsWith('lib/generated')) {
+      if (!input.path.startsWith('lib/generated') &&
+          input.path.endsWith('.dart') &&
+          await buildStep.resolver.isLibrary(input)) {
         final library = await buildStep.resolver.libraryFor(input);
         var annotation = LibraryReader(library)
             .annotatedWith(_configChecker)
@@ -181,7 +183,9 @@ class MirrorBuilder implements Builder {
 
     final libraryInfo = <GLibraryInfo>[];
     await for (final input in buildStep.findAssets(Glob(r'lib/**'))) {
-      if (!input.path.startsWith('lib/generated')) {
+      if (!input.path.startsWith('lib/generated') &&
+          input.path.endsWith('.dart') &&
+          await buildStep.resolver.isLibrary(input)) {
         final library = await buildStep.resolver.libraryFor(input);
         libraryInfo.add(scanLibraryInfo(LibraryReader(library)));
       }

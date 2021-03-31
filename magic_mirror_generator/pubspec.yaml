@@ -1,6 +1,6 @@
 name: magic_mirror_generator
 description: The core package providing Generators for Class-Information tasks.
-version: 0.1.2
+version: 0.1.2+1
 homepage: https://github.com/aymtools/magic_mirror
 
 environment:
