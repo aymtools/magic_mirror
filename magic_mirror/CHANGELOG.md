@@ -49,3 +49,7 @@
 ## 0.2.0+1
 
 - Provide all historical version change information.
+
+## 0.2.0+2
+
+- All compatible functions in the compatibility package use @deprecated annotation

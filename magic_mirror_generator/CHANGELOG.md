@@ -37,3 +37,7 @@
 ## 0.2.0+1
 
 - Provide all historical version change information.
+
+## 0.2.0+1
+
+- Fix the problem of scanning failure when other non-dart files appear in the code directory during scanning
