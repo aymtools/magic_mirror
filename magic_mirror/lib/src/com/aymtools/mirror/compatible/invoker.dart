@@ -3,13 +3,15 @@ import 'package:magic_mirror/magic_mirror.dart';
 extension Compatible on MagicMirror {
   ///根据注解类型 CLass的类型来获取对应的类信息
   @deprecated
-  List<String> findKeys<AnnotationType extends MReflectionEnable, ExtendsType>() =>
-      findClasses<AnnotationType, ExtendsType>().map((e) => e.key).toList();
+  List<String>
+      findKeys<AnnotationType extends MReflectionEnable, ExtendsType>() =>
+          findClasses<AnnotationType, ExtendsType>().map((e) => e.key).toList();
 
   ///根据注解类型来获取对应的类信息
   @deprecated
-  List<String> findKeysByAnnotation<AnnotationType extends MReflectionEnable>() =>
-      findClassesByAnnotation<AnnotationType>().map((e) => e.key).toList();
+  List<String>
+      findKeysByAnnotation<AnnotationType extends MReflectionEnable>() =>
+          findClassesByAnnotation<AnnotationType>().map((e) => e.key).toList();
 
   ///根据CLass的类型来获取对应的类信息
   @deprecated
