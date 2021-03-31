@@ -21,3 +21,7 @@
 ## 0.1.2+2
 
 - Fix the parameter judgment when using newInstance3.
+
+## 0.1.2+3
+
+- Fix the conversion exception to class search.

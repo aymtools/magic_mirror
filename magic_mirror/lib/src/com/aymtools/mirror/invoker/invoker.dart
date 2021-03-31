@@ -265,9 +265,9 @@ class MagicMirror implements IMirrorRegister {
   List<MirrorClass<ExtendsType, AnnotationType>>
       findClasses<AnnotationType extends MReflectionEnable, ExtendsType>() =>
           mirrorClassesK.values
-              .where((element) =>
-                  element.type is TypeToken<ExtendsType> &&
-                  element.annotationType is TypeToken<AnnotationType>)
+              // .where((element) =>
+              //     element.type is TypeToken<ExtendsType> &&
+              //     element.annotationType is TypeToken<AnnotationType>)
               .whereType<MirrorClass<ExtendsType, AnnotationType>>()
               .toList();
 
@@ -280,8 +280,9 @@ class MagicMirror implements IMirrorRegister {
   List<MirrorClass<dynamic, AnnotationType>>
       findClassesByAnnotation<AnnotationType extends MReflectionEnable>() =>
           mirrorClassesK.values
-              .where((element) =>
-                  element.annotationType is TypeToken<AnnotationType>)
+              // .where((element) =>
+              //     element.annotationType is TypeToken<AnnotationType>)
+              .whereType<MirrorClass<dynamic, AnnotationType>>()
               .toList();
 
   ///根据注解类型来获取对应的类信息
@@ -292,7 +293,8 @@ class MagicMirror implements IMirrorRegister {
   ///根据CLass的类型来获取对应的类信息
   List<MirrorClass<ExtendsType, MReflectionEnable>>
       findClassesByExtends<ExtendsType>() => mirrorClassesK.values
-          .where((element) => element.type is TypeToken<ExtendsType>)
+          // .where((element) => element.type is TypeToken<ExtendsType>)
+          .whereType<MirrorClass<ExtendsType, MReflectionEnable>>()
           .toList();
 
   ///根据CLass的类型来获取对应的类信息
@@ -310,10 +312,10 @@ class MagicMirror implements IMirrorRegister {
           : null;
 
   ///根据具体类型 加载对应的类信息 ，可能会找不到 未注册
-  MirrorClass<T, dynamic> mirrorClass<T>() {
+  MirrorClass<T, MReflectionEnable> mirrorClass<T>() {
     Type type = genType<T>();
     return mirrorClassesT.containsKey(type)
-        ? mirrorClassesT[type] as MirrorClass<T, dynamic>
+        ? mirrorClassesT[type] as MirrorClass<T, MReflectionEnable>
         : null;
   }
 
